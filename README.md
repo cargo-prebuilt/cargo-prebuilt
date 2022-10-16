@@ -27,7 +27,7 @@ To download multiple crates with versions:
 
 ## Download
 
-You can download prebuilt binaries [here](https://github.com/crow-rest/cargo-prebuilt-index/releases/tag/cargo-prebuilt-0.1.0).
+You can download prebuilt binaries [here](https://github.com/crow-rest/cargo-prebuilt-index/releases/tag/cargo-prebuilt-0.1.1).
 
 ## Current Limitations
 

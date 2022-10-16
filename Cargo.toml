@@ -1,6 +1,6 @@
 [package]
 name = "cargo-prebuilt"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["harmless-tech"]
 description = "Download prebuilt crate binaries for amd64 and arm64 platforms"
