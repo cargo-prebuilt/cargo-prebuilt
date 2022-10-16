@@ -3,11 +3,18 @@ name = "cargo-prebuilt"
 version = "0.1.0"
 edition = "2021"
 authors = ["harmless-tech"]
-description = "Download prebuilt crate binaries for amd64 and arm64 platforms."
+description = "Download prebuilt crate binaries for amd64 and arm64 platforms"
 readme = "README.md"
 license = "MIT"
+#homepage = ""
+repository = "https://github.com/crow-rest/cargo-prebuilt"
+tags = ["cargo", "cargo-subcommand", "binary"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+exclude = [
+    "justfile"
+]
 
 [dependencies]
 file-mode = "0.1.2"
