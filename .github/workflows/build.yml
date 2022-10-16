@@ -1,0 +1,89 @@
+name: Rust Build and Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-x64-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - name: Update Rust
+        run: rustup update
+      - name: Rust Version
+        run: rustc --version
+      - name: Run tests
+        run: cargo test --verbose --workspace --all-features
+      - name: Build
+        run: cargo build --verbose --workspace
+      - name: Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: artifacts-linux-x64
+          path: |
+            target/debug/cargo-prebuilt
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-x64-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - name: Update Rust
+        run: rustup update
+      - name: Rust Version
+        run: rustc --version
+      - name: Run tests
+        run: cargo test --verbose --workspace --all-features
+      - name: Build
+        run: cargo build --verbose --workspace
+      - name: Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: artifacts-macos-x64
+          path: |
+            target/debug/cargo-prebuilt
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-x64-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - name: Update Rust
+        run: rustup update
+      - name: Rust Version
+        run: rustc --version
+      - name: Run tests
+        run: cargo test --verbose --workspace --all-features
+      - name: Build
+        run: cargo build --verbose --workspace
+      - name: Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: artifacts-win-x64
+          path: |
+            target/debug/cargo-prebuilt.exe

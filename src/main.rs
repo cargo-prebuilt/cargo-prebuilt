@@ -1,4 +1,3 @@
-use file_mode::ModePath;
 use sha2::{Digest, Sha256};
 use std::{
     env,
@@ -128,9 +127,6 @@ fn main() -> Result<(), String> {
         let hash: Vec<u8> = hasher.finalize().to_vec();
         let hash = hex::encode(hash);
 
-        dbg!(&d_sha);
-        dbg!(&hash);
-
         if !(hash.eq(&d_sha)) {
             println!("Hashes do not match.");
             std::process::exit(256);
@@ -164,6 +160,7 @@ fn main() -> Result<(), String> {
             // Try to allow execution on unix based systems
             #[cfg(target_family = "unix")]
             {
+                use file_mode::ModePath;
                 let _ = path.set_mode("+x");
             }
 
