@@ -1,0 +1,23 @@
+[package]
+name = "cargo-prebuilt"
+version = "0.1.0"
+edition = "2021"
+authors = ["harmless-tech"]
+description = "Download prebuilt crate binaries for amd64 and arm64 platforms."
+readme = "README.md"
+license = "MIT"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+file-mode = "0.1.2"
+hex = "0.4.3"
+reqwest = { version = "0.11.12", default-features = false, features = ["rustls-tls", "blocking"] }
+sha2 = "0.10.6"
+zip = { version = "0.6.3", default-features = false }
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true
