@@ -1,5 +1,9 @@
 # cargo-prebuilt
 
+[![Rust Build and Test](https://github.com/crow-rest/cargo-prebuilt/actions/workflows/build.yml/badge.svg?event=push)](https://github.com/crow-rest/cargo-prebuilt/actions/workflows/build.yml)
+[![Rust Checks](https://github.com/crow-rest/cargo-prebuilt/actions/workflows/checks.yml/badge.svg?event=push)](https://github.com/crow-rest/cargo-prebuilt/actions/workflows/checks.yml)
+![Crates.io](https://img.shields.io/crates/v/cargo-prebuilt)
+
 Download prebuilt binaries of some crate.io crates.
 <br><br>
 Currently cargo-prebuilt targets these platforms for every binary:
