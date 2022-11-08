@@ -5,8 +5,12 @@
 ![Crates.io](https://img.shields.io/crates/v/cargo-prebuilt)
 
 Download prebuilt binaries of some crate.io crates.
-<br><br>
-See targets and prebuilt crates [here](https://github.com/crow-rest/cargo-prebuilt-index/blob/main/README.md).
+
+See supported targets and a list prebuilt crates [here](https://github.com/crow-rest/cargo-prebuilt-index).
+
+*(Some targets may not be prebuilt for some crates)*
+
+Request a crate to be added [here](https://github.com/crow-rest/cargo-prebuilt-index/issues/new?assignees=&labels=add-crate%2C+under-consideration&template=request-crate.md&title=).
 
 ## How to Use
 
@@ -22,12 +26,14 @@ To download a version of a crate:
 To download multiple crates with versions:
 ```cargo prebuilt CRATE_1@V1,CRATE_2,CRATE_3@V3,...```
 
+Crates will always be installed into the $CARGO_HOME/bin directory.
+
 ## Download
 
-You can download prebuilt binaries [here](https://github.com/crow-rest/cargo-prebuilt-index/releases/tag/cargo-prebuilt-0.2.0).
+You can download prebuilt binaries of cargo-prebuilt [here](https://github.com/crow-rest/cargo-prebuilt-index/releases/tag/cargo-prebuilt-0.2.0).
 
 ## Current Limitations
 
-- When using a crate version it must be the extact semver version.
+- When using a crate version it must be the exact semver version.
 - Does not use *cargo install* as a backup.
 - Error messages may be confusing or missing.
