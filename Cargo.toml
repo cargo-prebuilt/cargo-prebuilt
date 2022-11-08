@@ -3,7 +3,7 @@ name = "cargo-prebuilt"
 version = "0.1.1"
 edition = "2021"
 authors = ["harmless-tech"]
-description = "Download prebuilt crate binaries for amd64 and arm64 platforms"
+description = "Download prebuilt crate binaries for many different platforms"
 readme = "README.md"
 license = "MIT"
 #homepage = ""
@@ -20,11 +20,13 @@ exclude = [
 ]
 
 [dependencies]
-file-mode = "0.1.2"
+flate2 = "1.0.24"
 hex = "0.4.3"
-reqwest = { version = "0.11.12", default-features = false, features = ["rustls-tls", "blocking"] }
+rustls = "0.20.7"
 sha2 = "0.10.6"
-zip = { version = "0.6.3", default-features = false }
+tar = "0.4.38"
+ureq = "2.5.0"
+webpki-roots = "0.22.5"
 
 [profile.release]
 opt-level = 3

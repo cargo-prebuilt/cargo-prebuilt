@@ -87,3 +87,43 @@ jobs:
           name: artifacts-win-x64
           path: |
             target/debug/cargo-prebuilt.exe
+            
+
+  cross-builds:
+    strategy:
+      matrix:
+        target:
+          - x86_64-unknown-linux-musl
+          - aarch64-unknown-linux-gnu
+          - aarch64-unknown-linux-musl
+          - riscv64gc-unknown-linux-gnu
+          - i686-unknown-linux-gnu
+          - powerpc64-unknown-linux-gnu
+          - powerpc64le-unknown-linux-gnu
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}
+      - name: Update Rust
+        run: rustup update
+      - name: Rust Version
+        run: rustc --version
+      - uses: taiki-e/install-action@v1
+        with:
+          tool: cross
+      - name: Run tests
+        run: cross test --verbose --workspace --all-features --target ${{ matrix.target }}
+      - name: Build
+        run: cross build --verbose --workspace --target ${{ matrix.target }}
+      - name: Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.target }}
+          path: |
+            target/${{ matrix.target }}/debug/cargo-prebuilt

@@ -1,11 +1,8 @@
+use flate2::read::GzDecoder;
 use sha2::{Digest, Sha256};
-use std::{
-    env,
-    fs::File,
-    io::{Read, Write},
-    path::Path,
-    str,
-};
+use std::{env, io::Read, path::PathBuf, str, sync::Arc};
+use tar::Archive;
+use ureq::Error;
 
 static TARGET: &str = env!("TARGET");
 static DOWNLOAD_URL: &str = "https://github.com/crow-rest/cargo-prebuilt-index/releases/download";
@@ -18,7 +15,29 @@ fn main() -> Result<(), String> {
     let cargo_home = env::var("CARGO_HOME").map_err(|_e| "$CARGO_HOME is not set.".to_string())?;
     let cargo_bin = format!("{}/bin", cargo_home);
 
-    // Get pkg
+    // Setup agent
+    let mut root_store = rustls::RootCertStore::empty();
+    root_store.add_server_trust_anchors(webpki_roots::TLS_SERVER_ROOTS.0.iter().map(|ta| {
+        rustls::OwnedTrustAnchor::from_subject_spki_name_constraints(
+            ta.subject,
+            ta.spki,
+            ta.name_constraints,
+        )
+    }));
+
+    let tls_config = rustls::ClientConfig::builder()
+        .with_safe_default_cipher_suites()
+        .with_safe_default_kx_groups()
+        .with_safe_default_protocol_versions()
+        .unwrap()
+        .with_root_certificates(root_store)
+        .with_no_client_auth();
+
+    let agent = ureq::AgentBuilder::new()
+        .tls_config(Arc::new(tls_config))
+        .build();
+
+    // Get pkgs
     let pkgs = match args.get(0) {
         Some(args) => args.split(','),
         None => return Err("Missing pkgs in args.".to_string()),
@@ -26,145 +45,111 @@ fn main() -> Result<(), String> {
 
     for pkg in pkgs {
         let mut id = pkg;
-        let mut version = None; // None will pull the latest version
+        let mut version: Option<String> = None; // None will pull the latest version
 
         // If there is a version string get it
         if let Some((i, j)) = id.split_once('@') {
             id = i;
-            version = Some(j)
+            version = Some(j.to_string())
         }
 
-        // Download the index
-        let res = reqwest::blocking::get(format!("{}/stable-index/{}", DOWNLOAD_URL, id)).map_err(
-            |_e| "Error trying to get index, make sure your crate is listed.".to_string(),
-        )?;
-        let text = res.text().map_err(|_e| "Malformed response.".to_string())?;
-
-        // Process index
-        let text = text.trim();
-        let lines: Vec<&str> = text.split('\n').collect();
-        let lines = lines.iter().filter_map(|l| {
-            if !l.starts_with('#') {
-                Some(l.trim())
-            }
-            else {
-                None
-            }
-        });
-
-        let mut info = None;
-        for l in lines {
-            let (v, link) = match l.split_once(' ') {
-                Some(ss) => ss,
-                None => {
-                    println!("Malformed index.");
-                    std::process::exit(1);
+        // Get latest version
+        if version.is_none() {
+            let res = match agent
+                .get(&format!("{}/stable-index/{}", DOWNLOAD_URL, id))
+                .call()
+            {
+                Ok(response) => {
+                    let s = response.into_string().expect("Malformed latest string.");
+                    s.trim().to_string()
                 }
+                Err(Error::Status(code, _)) => {
+                    if code == 404 {
+                        panic!("Crate {} not found in index!", id);
+                    }
+                    else {
+                        panic!("Error {} for crate {}. (1)", code, id);
+                    }
+                }
+                Err(_) => panic!("Connection error."),
             };
 
-            if version.is_none() || v.eq(version.unwrap()) {
-                info = Some((v, link));
+            version = Some(res);
+        }
+
+        let version = version.unwrap();
+
+        // Download package
+        let pre_url = format!("{}/{}-{}/{}", DOWNLOAD_URL, id, version, TARGET);
+
+        let mut tar_bytes: Vec<u8> = Vec::new();
+        match agent.get(&format!("{}.tar.gz", pre_url)).call() {
+            Ok(response) => {
+                response
+                    .into_reader()
+                    .read_to_end(&mut tar_bytes)
+                    .expect("Failed when reading in tar.gz bytes.");
             }
-        }
-
-        if info.is_none() {
-            return Err(format!("Version {:?} for {} not found.", version, id));
-        }
-
-        // Download the binary's index
-        let res = reqwest::blocking::get(info.unwrap().1)
-            .map_err(|_e| "Error trying to get binary index.".to_string())?;
-        let text = res.text().map_err(|_e| "Malformed response.".to_string())?;
-
-        // Process binary index
-        let text = text.trim();
-        let lines: Vec<&str> = text.split('\n').collect();
-
-        let mut download = None;
-        for l in lines {
-            let (target, link) = match l.split_once(' ') {
-                Some(ss) => ss,
-                None => {
-                    println!("Malformed binary index.");
-                    std::process::exit(1);
+            Err(Error::Status(code, _)) => {
+                if code == 404 {
+                    panic!(
+                        "Crate {}, version {}, and target {} was not found!",
+                        id, version, TARGET
+                    );
                 }
-            };
-
-            if target.eq(TARGET) {
-                download = Some(link);
+                else {
+                    panic!("Error {} for crate {}. (2)", code, id);
+                }
             }
+            Err(_) => panic!("Connection error."),
         }
 
-        if download.is_none() {
-            return Err("Could not find a target triple that matches yours.".to_string());
-        }
-
-        let (d_zip, d_sha) = match download.unwrap().split_once(' ') {
-            Some(ss) => ss,
-            None => {
-                println!("Malformed downloads.");
-                std::process::exit(1);
+        let sha_hash = match agent.get(&format!("{}.sha256", pre_url)).call() {
+            Ok(response) => {
+                let s = response.into_string().expect("Malformed hash string.");
+                s.trim().to_string()
             }
+            Err(Error::Status(code, _)) => {
+                if code == 404 {
+                    panic!(
+                        "Crate {}, version {}, and target {} was not found! (Hash)",
+                        id, version, TARGET
+                    );
+                }
+                else {
+                    panic!("Error {} for crate {}. (3)", code, id);
+                }
+            }
+            Err(_) => panic!("Connection error."),
         };
-
-        // Download zip
-        let res =
-            reqwest::blocking::get(d_zip).map_err(|_e| "Error trying to get zip.".to_string())?;
-        let bytes = res
-            .bytes()
-            .map_err(|_e| "Could not get bytes from zip download.".to_string())?;
-
-        // Download hash
-        let res =
-            reqwest::blocking::get(d_sha).map_err(|_e| "Error trying to get zip.".to_string())?;
-        let d_sha = res
-            .text()
-            .map_err(|_e| "Malformed remote hash.".to_string())?;
 
         // Check hash
         let mut hasher = Sha256::new();
-        hasher.update(&bytes);
+        hasher.update(&tar_bytes);
         let hash: Vec<u8> = hasher.finalize().to_vec();
         let hash = hex::encode(hash);
 
-        if !(hash.eq(&d_sha)) {
+        if !(hash.eq(&sha_hash)) {
             println!("Hashes do not match.");
             std::process::exit(256);
         }
 
-        // Extract zip
-        let reader = std::io::Cursor::new(bytes);
-        let mut archive = zip::ZipArchive::new(reader).unwrap();
-
-        // Put bins
-        let mut files = Vec::new();
-        for f in archive.file_names() {
-            if f.starts_with("bins/") {
-                files.push(String::from(f));
+        // Untar Tar
+        let reader = std::io::Cursor::new(tar_bytes);
+        let mut archive = Archive::new(GzDecoder::new(reader));
+        match archive.entries() {
+            Ok(es) => {
+                for e in es {
+                    let mut e = e.expect("Malformed entry.");
+                    let path = PathBuf::from(format!(
+                        "{}/{}",
+                        cargo_bin,
+                        e.path().unwrap().to_str().unwrap()
+                    ));
+                    e.unpack(path).expect("Could not extract bins from tar");
+                }
             }
-        }
-
-        for f in files.iter_mut() {
-            let mut bin = archive.by_name(f).unwrap();
-            let _ = f.drain(0..5);
-
-            let path_str = format!("{}/{}", cargo_bin, f);
-            let path = Path::new(&path_str);
-            let mut file =
-                File::create(&path).map_err(|_e| "Could create file to write to.".to_string())?;
-
-            let mut buffer = Vec::new();
-            bin.read_to_end(&mut buffer).unwrap();
-            file.write_all(&buffer).unwrap();
-
-            // Try to allow execution on unix based systems
-            #[cfg(target_family = "unix")]
-            {
-                use file_mode::ModePath;
-                let _ = path.set_mode("+x");
-            }
-
-            println!("Installed {} at {}.", f, path_str);
+            Err(_) => panic!("Downloaded tar failed to be read."),
         }
     }
 
