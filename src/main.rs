@@ -15,26 +15,10 @@ fn main() -> Result<(), String> {
     let cargo_home = env::var("CARGO_HOME").map_err(|_e| "$CARGO_HOME is not set.".to_string())?;
     let cargo_bin = format!("{}/bin", cargo_home);
 
-    // Setup agent
-    let mut root_store = rustls::RootCertStore::empty();
-    root_store.add_server_trust_anchors(webpki_roots::TLS_SERVER_ROOTS.0.iter().map(|ta| {
-        rustls::OwnedTrustAnchor::from_subject_spki_name_constraints(
-            ta.subject,
-            ta.spki,
-            ta.name_constraints,
-        )
-    }));
-
-    let tls_config = rustls::ClientConfig::builder()
-        .with_safe_default_cipher_suites()
-        .with_safe_default_kx_groups()
-        .with_safe_default_protocol_versions()
-        .unwrap()
-        .with_root_certificates(root_store)
-        .with_no_client_auth();
-
     let agent = ureq::AgentBuilder::new()
-        .tls_config(Arc::new(tls_config))
+        .tls_connector(Arc::new(
+            native_tls::TlsConnector::new().expect("Could not create TlsConnector"),
+        ))
         .build();
 
     // Get pkgs

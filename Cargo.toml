@@ -22,11 +22,10 @@ exclude = [
 [dependencies]
 flate2 = "1.0.24"
 hex = "0.4.3"
-rustls = "0.20.7"
+native-tls = { version = "0.2.11", features = ["vendored"] }
 sha2 = "0.10.6"
 tar = "0.4.38"
-ureq = "2.5.0"
-webpki-roots = "0.22.5"
+ureq = { version = "2.5.0", default-features = false, features = ["gzip", "native-tls", "native-certs"] }
 
 [profile.release]
 opt-level = 3

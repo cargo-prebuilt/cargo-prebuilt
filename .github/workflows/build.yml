@@ -20,7 +20,7 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             target
-          key: ${{ runner.os }}-x64-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-x86_64-unknown-linux-gnu-${{ hashFiles('**/Cargo.lock') }}
       - name: Update Rust
         run: rustup update
       - name: Rust Version
@@ -46,7 +46,7 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             target
-          key: ${{ runner.os }}-x64-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-x86_64-apple-darwin-${{ hashFiles('**/Cargo.lock') }}
       - name: Update Rust
         run: rustup update
       - name: Rust Version
@@ -72,7 +72,7 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             target
-          key: ${{ runner.os }}-x64-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-x86_64-pc-windows-msvc-${{ hashFiles('**/Cargo.lock') }}
       - name: Update Rust
         run: rustup update
       - name: Rust Version
@@ -87,7 +87,36 @@ jobs:
           name: artifacts-win-x64
           path: |
             target/debug/cargo-prebuilt.exe
-            
+
+  build-macos-arm64:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-aarch64-apple-darwin-${{ hashFiles('**/Cargo.lock') }}
+      - name: Update Rust
+        run: rustup update
+      - name: Rust Version
+        run: rustc --version
+      - name: Add Rust target
+        run: rustup target add aarch64-apple-darwin
+      - name: MacOS SDK
+        run: |
+          export SDKROOT=$(xcrun -sdk macosx --show-sdk-path)
+          export MACOSX_DEPLOYMENT_TARGET=$(xcrun -sdk macosx --show-sdk-platform-version)
+      - name: Build
+        run: cargo build --verbose --workspace --target=aarch64-apple-darwin
+      - name: Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: artifacts-macos-aarch64
+          path: |
+            target/aarch64-apple-darwin/debug/cargo-prebuilt
 
   cross-builds:
     strategy:
@@ -97,9 +126,9 @@ jobs:
           - aarch64-unknown-linux-gnu
           - aarch64-unknown-linux-musl
           - riscv64gc-unknown-linux-gnu
-          - i686-unknown-linux-gnu
           - powerpc64-unknown-linux-gnu
           - powerpc64le-unknown-linux-gnu
+          - s390x-unknown-linux-gnu
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
