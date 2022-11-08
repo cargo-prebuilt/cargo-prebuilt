@@ -137,5 +137,7 @@ fn main() -> Result<(), String> {
         }
     }
 
+    println!("Done!");
+
     Ok(())
 }
