@@ -10,6 +10,9 @@ static DOWNLOAD_URL: &str = "https://github.com/crow-rest/cargo-prebuilt-index/r
 fn main() -> Result<(), String> {
     let mut args: Vec<String> = env::args().collect();
     args.remove(0);
+    if args.len() > 1 {
+        args.remove(0);
+    }
 
     // Check if CARGO_HOME is set
     let cargo_home = env::var("CARGO_HOME").map_err(|_e| "$CARGO_HOME is not set.".to_string())?;

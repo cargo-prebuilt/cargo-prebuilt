@@ -110,7 +110,7 @@ jobs:
           export SDKROOT=$(xcrun -sdk macosx --show-sdk-path)
           export MACOSX_DEPLOYMENT_TARGET=$(xcrun -sdk macosx --show-sdk-platform-version)
       - name: Build
-        run: cargo build --verbose --workspace --target=aarch64-apple-darwin
+        run: cargo build --verbose --workspace --target aarch64-apple-darwin
       - name: Artifact
         uses: actions/upload-artifact@v3
         with:
@@ -125,10 +125,18 @@ jobs:
           - x86_64-unknown-linux-musl
           - aarch64-unknown-linux-gnu
           - aarch64-unknown-linux-musl
+          - x86_64-unknown-freebsd
+          - x86_64-unknown-netbsd
+          - x86_64-unknown-illumos
+          - x86_64-sun-solaris
           - riscv64gc-unknown-linux-gnu
           - powerpc64-unknown-linux-gnu
           - powerpc64le-unknown-linux-gnu
           - s390x-unknown-linux-gnu
+          - mips64-unknown-linux-gnuabi64
+          - mips64-unknown-linux-muslabi64
+          - mips64el-unknown-linux-gnuabi64
+          - mips64el-unknown-linux-muslabi64
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -146,8 +154,6 @@ jobs:
       - uses: taiki-e/install-action@v1
         with:
           tool: cross
-      - name: Run tests
-        run: cross test --verbose --workspace --all-features --target ${{ matrix.target }}
       - name: Build
         run: cross build --verbose --workspace --target ${{ matrix.target }}
       - name: Artifact
