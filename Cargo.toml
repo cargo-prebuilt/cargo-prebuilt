@@ -1,6 +1,6 @@
 [package]
 name = "cargo-prebuilt"
-version = "0.2.1"
+version = "0.2.2"
 edition = "2021"
 authors = ["harmless-tech"]
 description = "Download prebuilt crate binaries for many different platforms"
@@ -20,7 +20,7 @@ exclude = [
 ]
 
 [dependencies]
-flate2 = "1.0.24"
+flate2 = "1.0.25"
 hex = "0.4.3"
 native-tls = { version = "0.2.11", features = ["vendored"] }
 sha2 = "0.10.6"

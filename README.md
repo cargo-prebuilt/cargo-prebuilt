@@ -2,7 +2,7 @@
 
 [![Rust Build and Test](https://github.com/crow-rest/cargo-prebuilt/actions/workflows/build.yml/badge.svg?event=push)](https://github.com/crow-rest/cargo-prebuilt/actions/workflows/build.yml)
 [![Rust Checks](https://github.com/crow-rest/cargo-prebuilt/actions/workflows/checks.yml/badge.svg?event=push)](https://github.com/crow-rest/cargo-prebuilt/actions/workflows/checks.yml)
-![Crates.io](https://img.shields.io/crates/v/cargo-prebuilt)
+[![Crates.io](https://img.shields.io/crates/v/cargo-prebuilt)](https://crates.io/crates/cargo-prebuilt)
 
 Download prebuilt binaries of some crate.io crates.
 
@@ -30,7 +30,7 @@ Crates will always be installed into the $CARGO_HOME/bin directory.
 
 ## Download
 
-You can download prebuilt binaries of cargo-prebuilt [here](https://github.com/crow-rest/cargo-prebuilt-index/releases/tag/cargo-prebuilt-0.2.1).
+You can download prebuilt binaries of cargo-prebuilt [here](https://github.com/crow-rest/cargo-prebuilt-index/releases/tag/cargo-prebuilt-0.2.2).
 
 ## Current Limitations
 
