@@ -1,5 +1,0 @@
-[target.x86_64-unknown-freebsd]
-pre-build = "./scripts/install-freebsd.sh"
-
-[target.i686-unknown-freebsd]
-pre-build = "./scripts/install-freebsd.sh"
