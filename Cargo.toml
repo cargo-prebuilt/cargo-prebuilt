@@ -25,7 +25,7 @@ hex = "0.4.3"
 native-tls = { version = "0.2.11", features = ["vendored"] }
 sha2 = "0.10.6"
 tar = "0.4.38"
-ureq = { version = "2.5.0", default-features = false, features = ["gzip", "native-tls", "native-certs"] }
+ureq = { version = "2.6.1", default-features = false, features = ["gzip", "native-tls", "native-certs"] }
 
 [profile.release]
 opt-level = 3
