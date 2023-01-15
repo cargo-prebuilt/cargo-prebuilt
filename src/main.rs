@@ -10,13 +10,58 @@ static DOWNLOAD_URL: &str = "https://github.com/crow-rest/cargo-prebuilt-index/r
 fn main() -> Result<(), String> {
     let mut args: Vec<String> = env::args().collect();
     args.remove(0);
-    if args.len() > 1 {
-        args.remove(0);
+
+    // Remove prebuilt if running by "cargo prebuilt"
+    match args.get(0) {
+        None => {
+            println!("Error not enough args. Try --help.");
+        }
+        Some(a) => {
+            if a.eq("prebuilt") {
+                args.remove(0);
+            }
+            else {
+                println!("Detected that cargo-prebuilt was called directly!");
+            }
+        }
     }
+
+    // Process args
+    let mut pkgs = None;
+    let mut target = TARGET.to_string();
+    let mut no_bin = false;
+    for mut arg in args {
+        if arg.starts_with("--target=") {
+            arg.replace_range(0..9, "");
+            target = arg;
+        }
+        else if arg.eq("--no-bin") {
+            no_bin = true;
+        }
+        else if arg.eq("--nightly") {
+            println!("--nightly is not implemented yet.");
+            std::process::exit(-1);
+        }
+        else if arg.eq("--help") {
+            println!("See https://github.com/crow-rest/cargo-prebuilt#how-to-use");
+            std::process::exit(0);
+        }
+        else {
+            pkgs = Some(arg);
+        }
+    }
+    let pkgs = pkgs;
+    let target = target.as_str();
+    let no_bin = no_bin;
 
     // Check if CARGO_HOME is set
     let cargo_home = env::var("CARGO_HOME").map_err(|_e| "$CARGO_HOME is not set.".to_string())?;
-    let cargo_bin = format!("{}/bin", cargo_home);
+    let cargo_bin = if no_bin {
+        cargo_home
+    }
+    else {
+        format!("{}/bin", cargo_home)
+    };
 
     let agent = ureq::AgentBuilder::new()
         .tls_connector(Arc::new(
@@ -25,9 +70,12 @@ fn main() -> Result<(), String> {
         .build();
 
     // Get pkgs
-    let pkgs = match args.get(0) {
-        Some(args) => args.split(','),
-        None => return Err("Missing pkgs in args.".to_string()),
+    let pkgs: Vec<String> = match pkgs {
+        Some(args) => args.split(',').map(|s| s.to_string()).collect(),
+        None => {
+            println!("Missing pkgs in args.");
+            std::process::exit(-2);
+        }
     };
 
     for pkg in pkgs {
@@ -35,8 +83,8 @@ fn main() -> Result<(), String> {
         let mut version: Option<String> = None; // None will pull the latest version
 
         // If there is a version string get it
-        if let Some((i, j)) = id.split_once('@') {
-            id = i;
+        if let Some((i, j)) = id.clone().split_once('@') {
+            id = i.to_string();
             version = Some(j.to_string())
         }
 
@@ -52,13 +100,18 @@ fn main() -> Result<(), String> {
                 }
                 Err(Error::Status(code, _)) => {
                     if code == 404 {
-                        panic!("Crate {} not found in index!", id);
+                        println!("Crate {} not found in index!", id);
+                        std::process::exit(-3);
                     }
                     else {
-                        panic!("Error {} for crate {}. (1)", code, id);
+                        println!("Error {} for crate {}.", code, id);
+                        std::process::exit(-4);
                     }
                 }
-                Err(_) => panic!("Connection error."),
+                Err(_) => {
+                    println!("Connection error.");
+                    std::process::exit(-5);
+                }
             };
 
             version = Some(res);
@@ -67,9 +120,10 @@ fn main() -> Result<(), String> {
         let version = version.unwrap();
 
         // Download package
-        let pre_url = format!("{}/{}-{}/{}", DOWNLOAD_URL, id, version, TARGET);
+        let pre_url = format!("{}/{}-{}/{}", DOWNLOAD_URL, id, version, target);
 
         let mut tar_bytes: Vec<u8> = Vec::new();
+        println!("Downloading {} from {}.tar.gz", id, pre_url);
         match agent.get(&format!("{}.tar.gz", pre_url)).call() {
             Ok(response) => {
                 response
@@ -79,16 +133,21 @@ fn main() -> Result<(), String> {
             }
             Err(Error::Status(code, _)) => {
                 if code == 404 {
-                    panic!(
+                    println!(
                         "Crate {}, version {}, and target {} was not found!",
-                        id, version, TARGET
+                        id, version, target
                     );
+                    std::process::exit(-6);
                 }
                 else {
-                    panic!("Error {} for crate {}. (2)", code, id);
+                    println!("Error {} for crate {}.", code, id);
+                    std::process::exit(-7);
                 }
             }
-            Err(_) => panic!("Connection error."),
+            Err(_) => {
+                println!("Connection error.");
+                std::process::exit(-8);
+            }
         }
 
         let sha_hash = match agent.get(&format!("{}.sha256", pre_url)).call() {
@@ -98,16 +157,21 @@ fn main() -> Result<(), String> {
             }
             Err(Error::Status(code, _)) => {
                 if code == 404 {
-                    panic!(
+                    println!(
                         "Crate {}, version {}, and target {} was not found! (Hash)",
-                        id, version, TARGET
+                        id, version, target
                     );
+                    std::process::exit(-9);
                 }
                 else {
-                    panic!("Error {} for crate {}. (3)", code, id);
+                    println!("Error {} for crate {}.", code, id);
+                    std::process::exit(-10);
                 }
             }
-            Err(_) => panic!("Connection error."),
+            Err(_) => {
+                println!("Connection error.");
+                std::process::exit(-11);
+            }
         };
 
         // Check hash
@@ -118,7 +182,7 @@ fn main() -> Result<(), String> {
 
         if !(hash.eq(&sha_hash)) {
             println!("Hashes do not match.");
-            std::process::exit(256);
+            std::process::exit(-256);
         }
 
         // Untar Tar
@@ -126,6 +190,8 @@ fn main() -> Result<(), String> {
         let mut archive = Archive::new(GzDecoder::new(reader));
         match archive.entries() {
             Ok(es) => {
+                println!("Extracting {} {}...", id, version);
+
                 for e in es {
                     let mut e = e.expect("Malformed entry.");
                     let path = PathBuf::from(format!(
@@ -135,8 +201,13 @@ fn main() -> Result<(), String> {
                     ));
                     e.unpack(path).expect("Could not extract bins from tar");
                 }
+
+                println!("Installed {} {}.", id, version);
             }
-            Err(_) => panic!("Downloaded tar failed to be read."),
+            Err(_) => {
+                println!("Connection error.");
+                std::process::exit(-13);
+            }
         }
     }
 

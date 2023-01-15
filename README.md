@@ -26,7 +26,14 @@ To download a version of a crate:
 To download multiple crates with versions:
 ```cargo prebuilt CRATE_1@V1,CRATE_2,CRATE_3@V3,...```
 
-Crates will always be installed into the $CARGO_HOME/bin directory.
+Crates will always be installed into the $CARGO_HOME/bin directory, unless you do:
+```CARGO_HOME=DIR cargo prebuilt --no-bin CRATES```
+
+To install crates that are different from the host target do:
+```cargo prebuilt --target=TARGET```
+
+Need help? Try:
+```cargo prebuilt --help```
 
 ## Download
 
