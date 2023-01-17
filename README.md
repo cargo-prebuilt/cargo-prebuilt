@@ -43,4 +43,3 @@ You can download prebuilt binaries of cargo-prebuilt [here](https://github.com/c
 
 - When using a crate version it must be the exact semver version.
 - Does not use *cargo install* as a backup.
-- Error messages may be confusing or missing.
