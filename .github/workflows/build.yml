@@ -206,7 +206,7 @@ jobs:
       - name: Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: x86_64-pc-windows-msvc
+          name: i686-pc-windows-msvc
           path: |
             target/i686-pc-windows-msvc/debug/${{ env.bin-name }}.exe
 
