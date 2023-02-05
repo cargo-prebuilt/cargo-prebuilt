@@ -16,13 +16,8 @@ fn main() -> Result<(), String> {
         None => {
             println!("Error not enough args. Try --help.");
         }
-        Some(a) => {
-            if a.eq("prebuilt") {
-                args.remove(0);
-            }
-            else {
-                println!("Detected that cargo-prebuilt was called directly!");
-            }
+        Some(a) => if a.eq("prebuilt") {
+            args.remove(0);
         }
     }
 
@@ -31,20 +26,22 @@ fn main() -> Result<(), String> {
     let mut target = TARGET.to_string();
     let mut no_bin = false;
     for mut arg in args {
-        if arg.starts_with("--target=") {
-            arg.replace_range(0..9, "");
-            target = arg;
-        }
-        else if arg.eq("--no-bin") {
-            no_bin = true;
-        }
-        else if arg.eq("--nightly") {
-            println!("--nightly is not implemented yet.");
-            std::process::exit(-1);
-        }
-        else if arg.eq("--help") {
-            println!("See https://github.com/crow-rest/cargo-prebuilt#how-to-use");
-            std::process::exit(0);
+        if arg.starts_with("--") {
+            if arg.starts_with("--target=") {
+                arg.replace_range(0..9, "");
+                target = arg;
+            }
+            else if arg.eq("--no-bin") {
+                no_bin = true;
+            }
+            else if arg.eq("--nightly") {
+                println!("--nightly is not implemented yet.");
+                std::process::exit(-1);
+            }
+            else if arg.eq("--help") {
+                println!("See https://github.com/crow-rest/cargo-prebuilt#how-to-use");
+                std::process::exit(0);
+            }
         }
         else {
             pkgs = Some(arg);
@@ -67,6 +64,7 @@ fn main() -> Result<(), String> {
         .tls_connector(Arc::new(
             native_tls::TlsConnector::new().expect("Could not create TlsConnector"),
         ))
+        .https_only(true)
         .build();
 
     // Get pkgs
@@ -95,7 +93,7 @@ fn main() -> Result<(), String> {
                 .call()
             {
                 Ok(response) => {
-                    let s = response.into_string().expect("Malformed latest string.");
+                    let s = response.into_string().expect("Malformed latest version string.");
                     s.trim().to_string()
                 }
                 Err(Error::Status(code, _)) => {
@@ -123,7 +121,7 @@ fn main() -> Result<(), String> {
         let pre_url = format!("{}/{}-{}/{}", DOWNLOAD_URL, id, version, target);
 
         let mut tar_bytes: Vec<u8> = Vec::new();
-        println!("Downloading {} from {}.tar.gz", id, pre_url);
+        println!("Downloading {} {} from {}.tar.gz", id, version, pre_url);
         match agent.get(&format!("{}.tar.gz", pre_url)).call() {
             Ok(response) => {
                 response
@@ -197,9 +195,11 @@ fn main() -> Result<(), String> {
                     let path = PathBuf::from(format!(
                         "{}/{}",
                         cargo_bin,
-                        e.path().unwrap().to_str().unwrap()
+                        e.path().expect("Path is not valid unicode.").to_str().expect("Path cannot convert to valid unicode.")
                     ));
-                    e.unpack(path).expect("Could not extract bins from tar");
+                    e.unpack(&path).expect("Could not extract binaries from downloaded tar archive");
+
+                    println!("Added {:?}.", path);
                 }
 
                 println!("Installed {} {}.", id, version);
