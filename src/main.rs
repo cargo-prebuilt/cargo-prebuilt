@@ -16,8 +16,10 @@ fn main() -> Result<(), String> {
         None => {
             println!("Error not enough args. Try --help.");
         }
-        Some(a) => if a.eq("prebuilt") {
-            args.remove(0);
+        Some(a) => {
+            if a.eq("prebuilt") {
+                args.remove(0);
+            }
         }
     }
 
@@ -57,7 +59,7 @@ fn main() -> Result<(), String> {
         cargo_home
     }
     else {
-        format!("{}/bin", cargo_home)
+        format!("{cargo_home}/bin")
     };
 
     let agent = ureq::AgentBuilder::new()
@@ -89,20 +91,22 @@ fn main() -> Result<(), String> {
         // Get latest version
         if version.is_none() {
             let res = match agent
-                .get(&format!("{}/stable-index/{}", DOWNLOAD_URL, id))
+                .get(&format!("{DOWNLOAD_URL}/stable-index/{id}"))
                 .call()
             {
                 Ok(response) => {
-                    let s = response.into_string().expect("Malformed latest version string.");
+                    let s = response
+                        .into_string()
+                        .expect("Malformed latest version string.");
                     s.trim().to_string()
                 }
                 Err(Error::Status(code, _)) => {
                     if code == 404 {
-                        println!("Crate {} not found in index!", id);
+                        println!("Crate {id} not found in index!");
                         std::process::exit(-3);
                     }
                     else {
-                        println!("Error {} for crate {}.", code, id);
+                        println!("Error {code} for crate {id}.");
                         std::process::exit(-4);
                     }
                 }
@@ -118,11 +122,11 @@ fn main() -> Result<(), String> {
         let version = version.unwrap();
 
         // Download package
-        let pre_url = format!("{}/{}-{}/{}", DOWNLOAD_URL, id, version, target);
+        let pre_url = format!("{DOWNLOAD_URL}/{id}-{version}/{target}");
 
         let mut tar_bytes: Vec<u8> = Vec::new();
-        println!("Downloading {} {} from {}.tar.gz", id, version, pre_url);
-        match agent.get(&format!("{}.tar.gz", pre_url)).call() {
+        println!("Downloading {id} {version} from {pre_url}.tar.gz");
+        match agent.get(&format!("{pre_url}.tar.gz")).call() {
             Ok(response) => {
                 response
                     .into_reader()
@@ -131,14 +135,11 @@ fn main() -> Result<(), String> {
             }
             Err(Error::Status(code, _)) => {
                 if code == 404 {
-                    println!(
-                        "Crate {}, version {}, and target {} was not found!",
-                        id, version, target
-                    );
+                    println!("Crate {id}, version {version}, and target {target} was not found!");
                     std::process::exit(-6);
                 }
                 else {
-                    println!("Error {} for crate {}.", code, id);
+                    println!("Error {code} for crate {id}.");
                     std::process::exit(-7);
                 }
             }
@@ -148,7 +149,7 @@ fn main() -> Result<(), String> {
             }
         }
 
-        let sha_hash = match agent.get(&format!("{}.sha256", pre_url)).call() {
+        let sha_hash = match agent.get(&format!("{pre_url}.sha256")).call() {
             Ok(response) => {
                 let s = response.into_string().expect("Malformed hash string.");
                 s.trim().to_string()
@@ -156,13 +157,12 @@ fn main() -> Result<(), String> {
             Err(Error::Status(code, _)) => {
                 if code == 404 {
                     println!(
-                        "Crate {}, version {}, and target {} was not found! (Hash)",
-                        id, version, target
+                        "Crate {id}, version {version}, and target {target} was not found! (Hash)",
                     );
                     std::process::exit(-9);
                 }
                 else {
-                    println!("Error {} for crate {}.", code, id);
+                    println!("Error {code} for crate {id}.");
                     std::process::exit(-10);
                 }
             }
@@ -188,21 +188,25 @@ fn main() -> Result<(), String> {
         let mut archive = Archive::new(GzDecoder::new(reader));
         match archive.entries() {
             Ok(es) => {
-                println!("Extracting {} {}...", id, version);
+                println!("Extracting {id} {version}...");
 
                 for e in es {
                     let mut e = e.expect("Malformed entry.");
                     let path = PathBuf::from(format!(
                         "{}/{}",
                         cargo_bin,
-                        e.path().expect("Path is not valid unicode.").to_str().expect("Path cannot convert to valid unicode.")
+                        e.path()
+                            .expect("Path is not valid unicode.")
+                            .to_str()
+                            .expect("Path cannot convert to valid unicode.")
                     ));
-                    e.unpack(&path).expect("Could not extract binaries from downloaded tar archive");
+                    e.unpack(&path)
+                        .expect("Could not extract binaries from downloaded tar archive");
 
-                    println!("Added {:?}.", path);
+                    println!("Added {path:?}.");
                 }
 
-                println!("Installed {} {}.", id, version);
+                println!("Installed {id} {version}.");
             }
             Err(_) => {
                 println!("Connection error.");
