@@ -44,6 +44,10 @@ fn main() -> Result<(), String> {
                 println!("See https://github.com/crow-rest/cargo-prebuilt#how-to-use");
                 std::process::exit(0);
             }
+            else if arg.eq("--version") {
+                println!(env!("CARGO_PKG_VERSION"));
+                std::process::exit(0);
+            }
         }
         else {
             pkgs = Some(arg);

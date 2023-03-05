@@ -1,4 +1,8 @@
 name: Rust Checks
+## Name: Rust Checks
+## Author: harmless-tech
+## Version: cache-based-1.0.0
+## Git Repo: https://github.com/harmless-tech/rust-github-actions
 
 on:
   push:
@@ -15,11 +19,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          toolchain: nightly
-          components: |
-            rustfmt
+      - name: Install nightly
+        run: rustup toolchain install nightly --allow-downgrade -c rustfmt
       - name: Rustfmt Check
         run: cargo +nightly fmt --check
 
@@ -40,4 +41,4 @@ jobs:
       - name: Rust Version
         run: rustc --version
       - name: Clippy Check
-        run: cargo clippy --all-targets --all-features --verbose --workspace -- -D warnings
+        run: cargo clippy --all-targets --all-features --verbose --workspace --locked -- -D warnings
