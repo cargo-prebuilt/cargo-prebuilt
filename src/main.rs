@@ -1,7 +1,6 @@
 use flate2::read::GzDecoder;
 use sha2::{Digest, Sha256};
-use std::{env, io::Read, path::PathBuf, str, sync::Arc};
-use std::fs::File;
+use std::{env, fs::File, io::Read, path::PathBuf, str, sync::Arc};
 use tar::Archive;
 use ureq::Error;
 
@@ -58,32 +57,35 @@ fn main() -> Result<(), String> {
     let target = target.as_str();
     let no_bin = no_bin;
 
-    // Check if CARGO_HOME is set
-    let cargo_home = env::var("CARGO_HOME").unwrap_or_else(|_| {
-        let ext = if TARGET.contains("windows") { ".exe" } else { "" };
+    // Get location to install binaries to
+    let mut cargo_home = PathBuf::from(env::var_os("CARGO_HOME").unwrap_or_else(|| {
+        let ext = if TARGET.contains("windows") {
+            ".exe"
+        }
+        else {
+            ""
+        };
         match File::open(format!("~/.cargo/bin/cargo{ext}")) {
             Ok(_) => {
                 println!("Detected cargo in ~/.cargo/bin/. Will install here.");
-                "~/.cargo".to_string()
+                "~/.cargo".into()
             }
             Err(_) => match File::open(format!("/usr/local/cargo/bin/cargo{ext}")) {
                 Ok(_) => {
                     println!("Detected cargo in /usr/local/cargo/bin/. Will install here.");
-                    "/usr/local/cargo".to_string()
+                    "/usr/local/cargo".into()
                 }
                 Err(_) => {
                     println!("Could not detect cargo, please set the CARGO_HOME env variable.");
                     std::process::exit(-22);
                 }
-            }
+            },
         }
-    });
-    let cargo_bin = if no_bin {
-        cargo_home
+    }));
+    if !no_bin {
+        cargo_home.push("bin");
     }
-    else {
-        format!("{cargo_home}/bin")
-    };
+    let cargo_bin = cargo_home;
 
     let agent = ureq::AgentBuilder::new()
         .tls_connector(Arc::new(
@@ -215,17 +217,12 @@ fn main() -> Result<(), String> {
 
                 for e in es {
                     let mut e = e.expect("Malformed entry.");
-                    let path = PathBuf::from(format!(
-                        "{}/{}",
-                        cargo_bin,
-                        e.path()
-                            .expect("Path is not valid unicode.")
-                            .to_str()
-                            .expect("Path cannot convert to valid unicode.")
-                    ));
+
+                    let mut path = cargo_bin.clone();
+                    path.push(e.path().expect("Could not extract path from tar."));
+
                     e.unpack(&path)
                         .expect("Could not extract binaries from downloaded tar archive");
-
                     println!("Added {path:?}.");
                 }
 
