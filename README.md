@@ -30,7 +30,24 @@ Crates will always be installed into the $CARGO_HOME/bin directory, unless you d
 ```CARGO_HOME=DIR cargo prebuilt --no-bin CRATES```
 
 To install crates that are different from the host target do:
-```cargo prebuilt --target=TARGET```
+```cargo prebuilt --target=TARGET CRATES```
+
+For CI systems (This disables all reports):
+```cargo prebuilt --ci CRATES```
+
+To select reports:
+```cargo prebuilt --reports=CSV CRATES```
+
+Report types:
+- license-out: Print license to stdout.
+- license-dl: Download license and put it under the prebuilt folder in the installation dir. (Default on)
+- deps-out: Print deps tree to stdout.
+- deps-dl: Download deps tree and put it under the prebuilt folder in the installation dir.
+- audit-out: Print audit to stdout.
+- audit-dl: Download audit and put it under the prebuilt folder in the installation dir.
+
+Get version:
+```cargo prebuilt --version```
 
 Need help? Try:
 ```cargo prebuilt --help```

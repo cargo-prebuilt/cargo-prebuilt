@@ -6,6 +6,7 @@ use ureq::Error;
 
 static TARGET: &str = env!("TARGET");
 static DOWNLOAD_URL: &str = "https://github.com/crow-rest/cargo-prebuilt-index/releases/download";
+static REPORT_FLAGS: [&str; 6] = ["license-out", "license-dl", "deps-out", "deps-dl", "audit-out", "audit-dl"];
 
 fn main() -> Result<(), String> {
     let mut args: Vec<String> = env::args().collect();
@@ -27,6 +28,8 @@ fn main() -> Result<(), String> {
     let mut pkgs = None;
     let mut target = TARGET.to_string();
     let mut no_bin = false;
+    let mut ci = false;
+    let mut reports = vec!["license-dl"];
     for mut arg in args {
         if arg.starts_with("--") {
             if arg.starts_with("--target=") {
@@ -36,16 +39,29 @@ fn main() -> Result<(), String> {
             else if arg.eq("--no-bin") {
                 no_bin = true;
             }
+            else if arg.eq("--ci") {
+                ci = true;
+            }
+            else if arg.starts_with("--reports=") {
+                arg.replace_range(0..10, "");
+                reports = arg.split(",").map(|i| {
+                    if !REPORT_FLAGS.contains(&i) {
+                        println!("Not a valid report flag: {i}");
+                        std::process::exit(-33);
+                    }
+                    i
+                }).collect()
+            }
             else if arg.eq("--nightly") {
                 println!("--nightly is not implemented yet.");
                 std::process::exit(-1);
             }
-            else if arg.eq("--help") {
-                println!("See https://github.com/crow-rest/cargo-prebuilt#how-to-use");
-                std::process::exit(0);
-            }
             else if arg.eq("--version") {
                 println!(env!("CARGO_PKG_VERSION"));
+                std::process::exit(0);
+            }
+            else if arg.eq("--help") {
+                println!("See https://github.com/crow-rest/cargo-prebuilt#how-to-use");
                 std::process::exit(0);
             }
         }
