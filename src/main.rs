@@ -1,11 +1,28 @@
 use flate2::read::GzDecoder;
 use sha2::{Digest, Sha256};
-use std::{env, io::Read, path::PathBuf, str, sync::Arc};
+use std::{
+    convert::Into,
+    env,
+    fs::{create_dir_all, File},
+    io::{Read, Write},
+    path::{Path, PathBuf},
+    str,
+    string::ToString,
+    sync::Arc,
+};
 use tar::Archive;
-use ureq::Error;
+use ureq::{Agent, Error};
 
 static TARGET: &str = env!("TARGET");
 static DOWNLOAD_URL: &str = "https://github.com/crow-rest/cargo-prebuilt-index/releases/download";
+static REPORT_FLAGS: [&str; 6] = [
+    "license-out",
+    "license-dl",
+    "deps-out",
+    "deps-dl",
+    "audit-out",
+    "audit-dl",
+];
 
 fn main() -> Result<(), String> {
     let mut args: Vec<String> = env::args().collect();
@@ -27,6 +44,8 @@ fn main() -> Result<(), String> {
     let mut pkgs = None;
     let mut target = TARGET.to_string();
     let mut no_bin = false;
+    let mut ci = false;
+    let mut reports = vec!["license-dl".to_string()];
     for mut arg in args {
         if arg.starts_with("--") {
             if arg.starts_with("--target=") {
@@ -36,16 +55,32 @@ fn main() -> Result<(), String> {
             else if arg.eq("--no-bin") {
                 no_bin = true;
             }
+            else if arg.eq("--ci") {
+                ci = true;
+            }
+            else if arg.starts_with("--reports=") {
+                arg.replace_range(0..10, "");
+                reports = arg
+                    .split(',')
+                    .map(|i| {
+                        if !REPORT_FLAGS.contains(&i) {
+                            println!("Not a valid report flag: {i}");
+                            std::process::exit(-33);
+                        }
+                        i.to_string()
+                    })
+                    .collect()
+            }
             else if arg.eq("--nightly") {
                 println!("--nightly is not implemented yet.");
                 std::process::exit(-1);
             }
-            else if arg.eq("--help") {
-                println!("See https://github.com/crow-rest/cargo-prebuilt#how-to-use");
-                std::process::exit(0);
-            }
             else if arg.eq("--version") {
                 println!(env!("CARGO_PKG_VERSION"));
+                std::process::exit(0);
+            }
+            else if arg.eq("--help") {
+                println!("See https://github.com/crow-rest/cargo-prebuilt#how-to-use");
                 std::process::exit(0);
             }
         }
@@ -57,14 +92,31 @@ fn main() -> Result<(), String> {
     let target = target.as_str();
     let no_bin = no_bin;
 
-    // Check if CARGO_HOME is set
-    let cargo_home = env::var("CARGO_HOME").map_err(|_e| "$CARGO_HOME is not set.".to_string())?;
-    let cargo_bin = if no_bin {
-        cargo_home
+    // Get location to install binaries to
+    let mut cargo_home = PathBuf::from(env::var_os("CARGO_HOME").unwrap_or_else(|| {
+        #[rustfmt::skip]
+        let ext = if TARGET.contains("windows") { ".exe" } else { "" };
+        match File::open(format!("~/.cargo/bin/cargo{ext}")) {
+            Ok(_) => {
+                println!("Detected cargo in ~/.cargo/bin/. Will install here.");
+                "~/.cargo".into()
+            }
+            Err(_) => match File::open(format!("/usr/local/cargo/bin/cargo{ext}")) {
+                Ok(_) => {
+                    println!("Detected cargo in /usr/local/cargo/bin/. Will install here.");
+                    "/usr/local/cargo".into()
+                }
+                Err(_) => {
+                    println!("Could not detect cargo, please set the CARGO_HOME env variable.");
+                    std::process::exit(-22);
+                }
+            },
+        }
+    }));
+    if !no_bin {
+        cargo_home.push("bin");
     }
-    else {
-        format!("{cargo_home}/bin")
-    };
+    let cargo_bin = cargo_home;
 
     let agent = ureq::AgentBuilder::new()
         .tls_connector(Arc::new(
@@ -126,7 +178,8 @@ fn main() -> Result<(), String> {
         let version = version.unwrap();
 
         // Download package
-        let pre_url = format!("{DOWNLOAD_URL}/{id}-{version}/{target}");
+        let base_url = format!("{DOWNLOAD_URL}/{id}-{version}/");
+        let pre_url = format!("{base_url}{target}");
 
         let mut tar_bytes: Vec<u8> = Vec::new();
         println!("Downloading {id} {version} from {pre_url}.tar.gz");
@@ -196,30 +249,117 @@ fn main() -> Result<(), String> {
 
                 for e in es {
                     let mut e = e.expect("Malformed entry.");
-                    let path = PathBuf::from(format!(
-                        "{}/{}",
-                        cargo_bin,
-                        e.path()
-                            .expect("Path is not valid unicode.")
-                            .to_str()
-                            .expect("Path cannot convert to valid unicode.")
-                    ));
+
+                    let mut path = cargo_bin.clone();
+                    path.push(e.path().expect("Could not extract path from tar."));
+
                     e.unpack(&path)
                         .expect("Could not extract binaries from downloaded tar archive");
-
                     println!("Added {path:?}.");
                 }
-
-                println!("Installed {id} {version}.");
             }
             Err(_) => {
                 println!("Connection error.");
                 std::process::exit(-13);
             }
         }
+
+        // Reports
+        if !ci {
+            println!("Getting reports... ");
+
+            let license_out = reports.contains(&REPORT_FLAGS[0].to_string());
+            let license_dl = true; // On by default.
+            let deps_out = reports.contains(&REPORT_FLAGS[2].to_string());
+            let deps_dl = reports.contains(&REPORT_FLAGS[3].to_string());
+            let audit_out = reports.contains(&REPORT_FLAGS[4].to_string());
+            let audit_dl = reports.contains(&REPORT_FLAGS[5].to_string());
+
+            let mut report_path = cargo_bin.clone();
+            report_path.push(format!("prebuilt/reports/{id}/{version}"));
+            let report_path = report_path;
+
+            // license.report
+            handle_report(
+                &agent,
+                "license",
+                &base_url,
+                &report_path,
+                license_out,
+                license_dl,
+            );
+            // deps.report
+            handle_report(&agent, "deps", &base_url, &report_path, deps_out, deps_dl);
+            // audit.report
+            handle_report(
+                &agent,
+                "audit",
+                &base_url,
+                &report_path,
+                audit_out,
+                audit_dl,
+            );
+
+            println!("Done getting reports.");
+        }
+
+        println!("Installed {id} {version}.");
     }
 
     println!("Done!");
 
     Ok(())
+}
+
+fn handle_report(
+    agent: &Agent,
+    name: &str,
+    base_url: &String,
+    report_path: &Path,
+    out: bool,
+    dl: bool,
+) {
+    if out || dl {
+        let url = format!("{base_url}{name}.report");
+        match agent.get(&url).call() {
+            Ok(response) => {
+                let mut bytes: Vec<u8> = Vec::new();
+                if response.into_reader().read_to_end(&mut bytes).is_ok() {
+                    if let Ok(s) = String::from_utf8(bytes) {
+                        if out {
+                            println!("{name}.report:\n{s}");
+                        }
+                        if dl {
+                            let mut dir = report_path.to_path_buf();
+                            match create_dir_all(&dir) {
+                                Ok(_) => {
+                                    dir.push(format!("{name}.report"));
+                                    match File::create(&dir) {
+                                        Ok(mut file) => match file.write(s.as_bytes()) {
+                                            Ok(_) => {}
+                                            Err(_) => {
+                                                println!("Could not write to {name}.report file.")
+                                            }
+                                        },
+                                        Err(_) => println!("Could not create {name}.report file."),
+                                    }
+                                }
+                                Err(_) => {
+                                    println!("Could not create directories for {name}.report.")
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            Err(Error::Status(code, _)) => {
+                if code == 404 {
+                    println!("Did not find a {name} report in the index.");
+                }
+            }
+            Err(_) => {
+                println!("Connection error.");
+            }
+        }
+    }
 }
