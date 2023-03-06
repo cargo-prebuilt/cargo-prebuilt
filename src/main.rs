@@ -64,12 +64,12 @@ fn main() -> Result<(), String> {
         match File::open(format!("~/.cargo/bin/cargo{ext}")) {
             Ok(_) => {
                 println!("Detected cargo in ~/.cargo/bin/. Will install here.");
-                "~/.cargo/bin".to_string()
+                "~/.cargo".to_string()
             }
             Err(_) => match File::open(format!("/usr/local/cargo/bin/cargo{ext}")) {
                 Ok(_) => {
                     println!("Detected cargo in /usr/local/cargo/bin/. Will install here.");
-                    "/usr/local/cargo/bin".to_string()
+                    "/usr/local/cargo".to_string()
                 }
                 Err(_) => {
                     println!("Could not detect cargo, please set the CARGO_HOME env variable.");
