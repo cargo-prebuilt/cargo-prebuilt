@@ -17,7 +17,8 @@ check:
 docker:
     docker run -it --rm --pull=always \
     -e CARGO_TARGET_DIR=/ptarget \
-    -v {{pwd}}:/prebuilt \
+    --mount type=bind,source={{pwd}},target=/prebuilt \
+    --mount type=bind,source=$HOME/.cargo/registry,target=/usr/local/cargo/registry \
     rust:latest \
     bash
 
