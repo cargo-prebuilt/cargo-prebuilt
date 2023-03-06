@@ -3,6 +3,10 @@ default:
 
 pwd := `pwd`
 
+run:
+    cargo build
+    target/debug/cargo-prebuilt
+
 check:
     cargo +nightly fmt --check
     cargo clippy --all-targets --all-features --workspace -- -D warnings

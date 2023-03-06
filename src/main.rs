@@ -1,6 +1,7 @@
 use flate2::read::GzDecoder;
 use sha2::{Digest, Sha256};
 use std::{env, io::Read, path::PathBuf, str, sync::Arc};
+use std::fs::File;
 use tar::Archive;
 use ureq::Error;
 
@@ -58,7 +59,25 @@ fn main() -> Result<(), String> {
     let no_bin = no_bin;
 
     // Check if CARGO_HOME is set
-    let cargo_home = env::var("CARGO_HOME").map_err(|_e| "$CARGO_HOME is not set.".to_string())?;
+    let cargo_home = env::var("CARGO_HOME").unwrap_or_else(|_| {
+        let ext = if TARGET.contains("windows") { ".exe" } else { "" };
+        match File::open(format!("~/.cargo/bin/cargo{ext}")) {
+            Ok(_) => {
+                println!("Detected cargo in ~/.cargo/bin/. Will install here.");
+                "~/.cargo/bin".to_string()
+            }
+            Err(_) => match File::open(format!("/usr/local/cargo/bin/cargo{ext}")) {
+                Ok(_) => {
+                    println!("Detected cargo in /usr/local/cargo/bin/. Will install here.");
+                    "/usr/local/cargo/bin".to_string()
+                }
+                Err(_) => {
+                    println!("Could not detect cargo, please set the CARGO_HOME env variable.");
+                    std::process::exit(-22);
+                }
+            }
+        }
+    });
     let cargo_bin = if no_bin {
         cargo_home
     }
