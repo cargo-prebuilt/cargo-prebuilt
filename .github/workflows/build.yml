@@ -1,7 +1,7 @@
 name: Rust Build and Test
 ## Name: Rust Build and Test
 ## Author: harmless-tech
-## Version: cache-based-1.0.0
+## Version: cache-based-1.1.0
 ## Git Repo: https://github.com/harmless-tech/rust-github-actions
 
 on:
@@ -42,8 +42,8 @@ jobs:
       - name: Rust Version
         run: rustc --version
       - uses: crow-rest/cargo-prebuilt-action@v1
-      - name: Install tools
-        run: cargo prebuilt cargo-audit
+        with:
+          tools: cargo-audit
       - name: Download Deps
         if: ${{ !steps.cache.outputs.cache-hit }}
         run: cargo fetch --verbose --locked
@@ -95,8 +95,8 @@ jobs:
       - name: Rust Version
         run: rustc --version
       - uses: crow-rest/cargo-prebuilt-action@v1
-      - name: Install tools
-        run: cargo prebuilt cargo-auditable
+        with:
+          tools: cargo-auditable
       - name: Run tests
         run: cargo test --verbose --workspace --all-features --locked
       - name: Build
@@ -108,7 +108,15 @@ jobs:
           path: |
             target/debug/${{ env.bin-name }}
 
-  x86_64-apple-darwin:
+  apple-darwin:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-apple-darwin
+            can-test: true
+          - target: aarch64-apple-darwin
+            can-test: false
     runs-on: macos-latest
     needs: [ deps ]
     steps:
@@ -127,64 +135,39 @@ jobs:
         with:
           path: |
             target
-          key: ${{ runner.os }}-x86_64-apple-darwin-${{ hashFiles('**/Cargo.lock') }}
-      - name: Update Rust
-        run: rustup update
-      - name: Rust Version
-        run: rustc --version
-      - uses: crow-rest/cargo-prebuilt-action@v1
-      - name: Install tools
-        run: cargo prebuilt cargo-auditable
-      - name: Run tests
-        run: cargo test --verbose --workspace --all-features --locked
-      - name: Build
-        run: cargo auditable build --verbose --workspace --locked
-      - name: Artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: x86_64-apple-darwin
-          path: |
-            target/debug/${{ env.bin-name }}
-
-  aarch64-apple-darwin:
-    runs-on: macos-latest
-    needs: [ deps ]
-    steps:
-      - uses: actions/checkout@v3
-      - name: Get deps from cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            .cargo-store
-          key: deps-cache-${{ hashFiles('**/Cargo.lock') }}
-          enableCrossOsArchive: true
-          fail-on-cache-miss: true
-      - name: Move deps
-        run: mv ./.cargo-store/* ~/.cargo
-      - uses: actions/cache@v3
-        with:
-          path: |
-            target
-          key: ${{ runner.os }}-aarch64-apple-darwin-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}
       - name: Update Rust
         run: rustup update
       - name: Rust Version
         run: rustc --version
       - name: Add Rust target
-        run: rustup target add aarch64-apple-darwin
+        run: rustup target add ${{ matrix.target }}
       - uses: crow-rest/cargo-prebuilt-action@v1
-      - name: Install tools
-        run: cargo prebuilt cargo-auditable
+        with:
+          tools: cargo-auditable
+      - name: Run tests
+        if: ${{ matrix.can-test }}
+        run: cargo test --verbose --workspace --all-features --locked --target ${{ matrix.target }}
       - name: Build
-        run: cargo auditable build --verbose --workspace --locked --target aarch64-apple-darwin
+        run: cargo auditable build --verbose --workspace --locked --target ${{ matrix.target }}
       - name: Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: aarch64-apple-darwin
+          name: ${{ matrix.target }}
           path: |
-            target/aarch64-apple-darwin/debug/${{ env.bin-name }}
+            target/${{ matrix.target }}/debug/${{ env.bin-name }}
 
-  x86_64-pc-windows-msvc:
+  pc-windows-msvc:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-pc-windows-msvc
+            can-test: true
+          - target: aarch64-pc-windows-msvc
+            can-test: false
+          - target: i686-pc-windows-msvc
+            can-test: true
     runs-on: windows-latest
     needs: [ deps ]
     steps:
@@ -206,139 +189,83 @@ jobs:
         with:
           path: |
             target
-          key: ${{ runner.os }}-x86_64-pc-windows-msvc-${{ hashFiles('**/Cargo.lock') }}
-      - name: Update Rust
-        run: rustup update
-      - name: Rust Version
-        run: rustc --version
-      - uses: crow-rest/cargo-prebuilt-action@v1
-      - name: Install tools
-        run: cargo prebuilt cargo-auditable
-      - name: Run tests
-        run: cargo test --verbose --workspace --all-features --locked
-      - name: Build
-        run: cargo auditable build --verbose --workspace --locked
-      - name: Artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: x86_64-pc-windows-msvc
-          path: |
-            target/debug/${{ env.bin-name }}.exe
-
-  aarch64-pc-windows-msvc:
-    runs-on: windows-latest
-    needs: [ deps ]
-    steps:
-      - uses: actions/checkout@v3
-      - name: Change file endings in Cargo.lock
-        shell: pwsh
-        run: (Get-Content -Raw Cargo.lock) -replace "`r`n","`n" | Set-Content Cargo.lock -NoNewline
-      - name: Get deps from cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            .cargo-store
-          key: deps-cache-${{ hashFiles('**/Cargo.lock') }}
-          enableCrossOsArchive: true
-          fail-on-cache-miss: true
-      - name: Move deps
-        run: mv ./.cargo-store/* ~/.cargo
-      - uses: actions/cache@v3
-        with:
-          path: |
-            target
-          key: ${{ runner.os }}-aarch64-pc-windows-msvc-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}
       - name: Update Rust
         run: rustup update
       - name: Rust Version
         run: rustc --version
       - name: Add Rust target
-        run: rustup target add aarch64-pc-windows-msvc
+        run: rustup target add ${{ matrix.target }}
       - uses: crow-rest/cargo-prebuilt-action@v1
-      - name: Install tools
-        run: cargo prebuilt cargo-auditable
-      - name: Build
-        run: cargo auditable build --verbose --workspace --locked --target aarch64-pc-windows-msvc
-      - name: Artifact
-        uses: actions/upload-artifact@v3
         with:
-          name: aarch64-pc-windows-msvc
-          path: |
-            target/aarch64-pc-windows-msvc/debug/${{ env.bin-name }}.exe
-
-  i686-pc-windows-msvc:
-    runs-on: windows-latest
-    needs: [ deps ]
-    steps:
-      - uses: actions/checkout@v3
-      - name: Change file endings in Cargo.lock
-        shell: pwsh
-        run: (Get-Content -Raw Cargo.lock) -replace "`r`n","`n" | Set-Content Cargo.lock -NoNewline
-      - name: Get deps from cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            .cargo-store
-          key: deps-cache-${{ hashFiles('**/Cargo.lock') }}
-          enableCrossOsArchive: true
-          fail-on-cache-miss: true
-      - name: Move deps
-        run: mv ./.cargo-store/* ~/.cargo
-      - uses: actions/cache@v3
-        with:
-          path: |
-            target
-          key: ${{ runner.os }}-i686-pc-windows-msvc-${{ hashFiles('**/Cargo.lock') }}
-      - name: Update Rust
-        run: rustup update
-      - name: Rust Version
-        run: rustc --version
-      - name: Add Rust target
-        run: rustup target add i686-pc-windows-msvc
-      - uses: crow-rest/cargo-prebuilt-action@v1
-      - name: Install tools
-        run: cargo prebuilt cargo-auditable
+          tools: cargo-auditable
       - name: Run tests
-        run: cargo test --verbose --workspace --all-features --locked --target i686-pc-windows-msvc
+        if: ${{ matrix.can-test }}
+        run: cargo test --verbose --workspace --all-features --locked --target ${{ matrix.target }}
       - name: Build
-        run: cargo auditable build --verbose --workspace --locked --target i686-pc-windows-msvc
+        run: cargo auditable build --verbose --workspace --locked --target ${{ matrix.target }}
       - name: Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: i686-pc-windows-msvc
+          name: ${{ matrix.target }}
           path: |
-            target/i686-pc-windows-msvc/debug/${{ env.bin-name }}.exe
+            target/${{ matrix.target }}/debug/${{ env.bin-name }}.exe
 
   cross:
     strategy:
       fail-fast: false
       matrix:
-        target:
-          - x86_64-unknown-linux-musl
-          - aarch64-unknown-linux-gnu
-          - aarch64-unknown-linux-musl
-          - x86_64-unknown-freebsd
-          - x86_64-unknown-netbsd
-          - x86_64-unknown-illumos
-          - x86_64-sun-solaris
-          - riscv64gc-unknown-linux-gnu
-          - powerpc64-unknown-linux-gnu
-          - powerpc64le-unknown-linux-gnu
-          - s390x-unknown-linux-gnu
-          - mips64-unknown-linux-gnuabi64
-          - mips64-unknown-linux-muslabi64
-          - mips64el-unknown-linux-gnuabi64
-          - mips64el-unknown-linux-muslabi64
-          - i686-unknown-linux-gnu
-          - i686-unknown-linux-musl
-          - i686-unknown-freebsd
-          - armv7-unknown-linux-gnueabihf
-          - armv7-unknown-linux-musleabihf
-          - powerpc-unknown-linux-gnu
-          - mips-unknown-linux-gnu
-          - mips-unknown-linux-musl
-          - mipsel-unknown-linux-gnu
-          - mipsel-unknown-linux-musl
+        include:
+          - target: x86_64-unknown-linux-musl
+            can-test: true
+          - target: aarch64-unknown-linux-gnu
+            can-test: true
+          - target: aarch64-unknown-linux-musl
+            can-test: true
+          - target: x86_64-unknown-freebsd
+            can-test: false
+          - target: x86_64-unknown-netbsd
+            can-test: false
+          - target: x86_64-unknown-illumos
+            can-test: false
+          - target: x86_64-sun-solaris
+            can-test: false
+          - target: riscv64gc-unknown-linux-gnu
+            can-test: true
+          - target: powerpc64-unknown-linux-gnu
+            can-test: true
+          - target: powerpc64le-unknown-linux-gnu
+            can-test: true
+          - target: s390x-unknown-linux-gnu
+            can-test: true
+          - target: mips64-unknown-linux-gnuabi64
+            can-test: true
+          - target: mips64-unknown-linux-muslabi64
+            can-test: true
+          - target: mips64el-unknown-linux-gnuabi64
+            can-test: true
+          - target: mips64el-unknown-linux-muslabi64
+            can-test: true
+          - target: i686-unknown-linux-gnu
+            can-test: false
+          - target: i686-unknown-linux-musl
+            can-test: false
+          - target: i686-unknown-freebsd
+            can-test: false
+          - target: armv7-unknown-linux-gnueabihf
+            can-test: true
+          - target: armv7-unknown-linux-musleabihf
+            can-test: true
+          - target: powerpc-unknown-linux-gnu
+            can-test: true
+          - target: mips-unknown-linux-gnu
+            can-test: true
+          - target: mips-unknown-linux-musl
+            can-test: true
+          - target: mipsel-unknown-linux-gnu
+            can-test: true
+          - target: mipsel-unknown-linux-musl
+            can-test: true
     runs-on: ubuntu-latest
     needs: [ deps ]
     steps:
@@ -363,10 +290,11 @@ jobs:
       - name: Rust Version
         run: rustc --version
       - uses: crow-rest/cargo-prebuilt-action@v1
-      - name: Install tools
-        run: |
-          cargo prebuilt cross
-          cross --version
+        with:
+          tools: cross
+      - name: Run tests
+        if: ${{ matrix.can-test }}
+        run: cross test --verbose --workspace --all-features --locked --target ${{ matrix.target }}
       - name: Build
         run: cross build --verbose --workspace --locked --target ${{ matrix.target }}
       - name: Artifact
