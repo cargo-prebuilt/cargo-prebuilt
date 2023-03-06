@@ -94,12 +94,8 @@ fn main() -> Result<(), String> {
 
     // Get location to install binaries to
     let mut cargo_home = PathBuf::from(env::var_os("CARGO_HOME").unwrap_or_else(|| {
-        let ext = if TARGET.contains("windows") {
-            ".exe"
-        }
-        else {
-            ""
-        };
+        #[rustfmt::skip]
+        let ext = if TARGET.contains("windows") { ".exe" } else { "" };
         match File::open(format!("~/.cargo/bin/cargo{ext}")) {
             Ok(_) => {
                 println!("Detected cargo in ~/.cargo/bin/. Will install here.");
