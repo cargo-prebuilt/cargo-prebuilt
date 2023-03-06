@@ -3,7 +3,7 @@ default:
 
 pwd := `pwd`
 
-run ARGS:
+run +ARGS:
     cargo build
     target/debug/cargo-prebuilt {{ARGS}}
 
@@ -21,6 +21,6 @@ docker:
     rust:latest \
     bash
 
-rund ARGS:
+rund +ARGS:
     cargo build
     /ptarget/debug/cargo-prebuilt {{ARGS}}

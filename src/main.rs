@@ -1,12 +1,28 @@
 use flate2::read::GzDecoder;
 use sha2::{Digest, Sha256};
-use std::{env, fs::File, io::Read, path::PathBuf, str, sync::Arc};
+use std::{
+    convert::Into,
+    env,
+    fs::{create_dir_all, File},
+    io::{Read, Write},
+    path::PathBuf,
+    str,
+    string::ToString,
+    sync::Arc,
+};
 use tar::Archive;
 use ureq::Error;
 
 static TARGET: &str = env!("TARGET");
 static DOWNLOAD_URL: &str = "https://github.com/crow-rest/cargo-prebuilt-index/releases/download";
-static REPORT_FLAGS: [&str; 6] = ["license-out", "license-dl", "deps-out", "deps-dl", "audit-out", "audit-dl"];
+static REPORT_FLAGS: [&str; 6] = [
+    "license-out",
+    "license-dl",
+    "deps-out",
+    "deps-dl",
+    "audit-out",
+    "audit-dl",
+];
 
 fn main() -> Result<(), String> {
     let mut args: Vec<String> = env::args().collect();
@@ -29,7 +45,7 @@ fn main() -> Result<(), String> {
     let mut target = TARGET.to_string();
     let mut no_bin = false;
     let mut ci = false;
-    let mut reports = vec!["license-dl"];
+    let mut reports = vec!["license-dl".to_string()];
     for mut arg in args {
         if arg.starts_with("--") {
             if arg.starts_with("--target=") {
@@ -44,13 +60,16 @@ fn main() -> Result<(), String> {
             }
             else if arg.starts_with("--reports=") {
                 arg.replace_range(0..10, "");
-                reports = arg.split(",").map(|i| {
-                    if !REPORT_FLAGS.contains(&i) {
-                        println!("Not a valid report flag: {i}");
-                        std::process::exit(-33);
-                    }
-                    i
-                }).collect()
+                reports = arg
+                    .split(',')
+                    .map(|i| {
+                        if !REPORT_FLAGS.contains(&i) {
+                            println!("Not a valid report flag: {i}");
+                            std::process::exit(-33);
+                        }
+                        i.to_string()
+                    })
+                    .collect()
             }
             else if arg.eq("--nightly") {
                 println!("--nightly is not implemented yet.");
@@ -163,7 +182,8 @@ fn main() -> Result<(), String> {
         let version = version.unwrap();
 
         // Download package
-        let pre_url = format!("{DOWNLOAD_URL}/{id}-{version}/{target}");
+        let base_url = format!("{DOWNLOAD_URL}/{id}-{version}/");
+        let pre_url = format!("{base_url}{target}");
 
         let mut tar_bytes: Vec<u8> = Vec::new();
         println!("Downloading {id} {version} from {pre_url}.tar.gz");
@@ -241,14 +261,173 @@ fn main() -> Result<(), String> {
                         .expect("Could not extract binaries from downloaded tar archive");
                     println!("Added {path:?}.");
                 }
-
-                println!("Installed {id} {version}.");
             }
             Err(_) => {
                 println!("Connection error.");
                 std::process::exit(-13);
             }
         }
+
+        // Reports
+        if !ci {
+            println!("Getting reports... ");
+
+            let license_out = reports.contains(&REPORT_FLAGS[0].to_string());
+            let license_dl = true; // On by default.
+            let deps_out = reports.contains(&REPORT_FLAGS[2].to_string());
+            let deps_dl = reports.contains(&REPORT_FLAGS[3].to_string());
+            let audit_out = reports.contains(&REPORT_FLAGS[4].to_string());
+            let audit_dl = reports.contains(&REPORT_FLAGS[5].to_string());
+
+            let mut report_path = cargo_bin.clone();
+            report_path.push(format!("prebuilt/reports/{id}/{version}"));
+            let report_path = report_path;
+
+            // license.report
+            if license_out || license_dl {
+                let url = format!("{base_url}license.report");
+                match agent.get(&url).call() {
+                    Ok(response) => {
+                        let mut bytes: Vec<u8> = Vec::new();
+                        if response.into_reader().read_to_end(&mut bytes).is_ok() {
+                            if let Ok(s) = String::from_utf8(bytes) {
+                                if license_out {
+                                    println!("license.report:\n{s}");
+                                }
+                                if license_dl {
+                                    let mut dir = report_path.clone();
+                                    match create_dir_all(&dir) {
+                                        Ok(_) => {
+                                            dir.push("license.report");
+                                            match File::create(&dir) {
+                                                Ok(mut file) => match file.write(s.as_bytes()) {
+                                                    Ok(_) => {}
+                                                    Err(_) => println!(
+                                                        "Could not write to license.report file."
+                                                    ),
+                                                },
+                                                Err(_) => println!(
+                                                    "Could not create license.report file."
+                                                ),
+                                            }
+                                        }
+                                        Err(_) => println!(
+                                            "Could not create directories for license.report."
+                                        ),
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    Err(Error::Status(code, _)) => {
+                        if code == 404 {
+                            println!("Did not find a license report in the index.");
+                        }
+                    }
+                    Err(_) => {
+                        println!("Connection error.");
+                    }
+                }
+            }
+
+            // deps.report
+            if deps_out || deps_dl {
+                let url = format!("{base_url}deps.report");
+                match agent.get(&url).call() {
+                    Ok(response) => {
+                        let mut bytes: Vec<u8> = Vec::new();
+                        if response.into_reader().read_to_end(&mut bytes).is_ok() {
+                            if let Ok(s) = String::from_utf8(bytes) {
+                                if deps_out {
+                                    println!("deps.report:\n{s}");
+                                }
+                                if deps_dl {
+                                    let mut dir = report_path.clone();
+                                    match create_dir_all(&dir) {
+                                        Ok(_) => {
+                                            dir.push("deps.report");
+                                            match File::create(&dir) {
+                                                Ok(mut file) => match file.write(s.as_bytes()) {
+                                                    Ok(_) => {}
+                                                    Err(_) => println!(
+                                                        "Could not write to deps.report file."
+                                                    ),
+                                                },
+                                                Err(_) => {
+                                                    println!("Could not create deps.report file.")
+                                                }
+                                            }
+                                        }
+                                        Err(_) => println!(
+                                            "Could not create directories for deps.report."
+                                        ),
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    Err(Error::Status(code, _)) => {
+                        if code == 404 {
+                            println!("Did not find a deps report in the index.");
+                        }
+                    }
+                    Err(_) => {
+                        println!("Connection error.");
+                    }
+                }
+            }
+
+            // audit.report
+            if audit_out || audit_dl {
+                let url = format!("{base_url}audit.report");
+                match agent.get(&url).call() {
+                    Ok(response) => {
+                        let mut bytes: Vec<u8> = Vec::new();
+                        if response.into_reader().read_to_end(&mut bytes).is_ok() {
+                            if let Ok(s) = String::from_utf8(bytes) {
+                                if audit_out {
+                                    println!("audit.report:\n{s}");
+                                }
+                                if audit_dl {
+                                    let mut dir = report_path.clone();
+                                    match create_dir_all(&dir) {
+                                        Ok(_) => {
+                                            dir.push("audit.report");
+                                            match File::create(&dir) {
+                                                Ok(mut file) => match file.write(s.as_bytes()) {
+                                                    Ok(_) => {}
+                                                    Err(_) => println!(
+                                                        "Could not write to audit.report file."
+                                                    ),
+                                                },
+                                                Err(_) => {
+                                                    println!("Could not create audit.report file.")
+                                                }
+                                            }
+                                        }
+                                        Err(_) => println!(
+                                            "Could not create directories for audit.report."
+                                        ),
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    Err(Error::Status(code, _)) => {
+                        if code == 404 {
+                            println!("Did not find a audit report in the index.");
+                        }
+                    }
+                    Err(_) => {
+                        println!("Connection error.");
+                    }
+                }
+            }
+
+            println!("Done getting reports.");
+        }
+
+        println!("Installed {id} {version}.");
     }
 
     println!("Done!");
