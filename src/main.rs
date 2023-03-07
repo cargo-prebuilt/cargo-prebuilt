@@ -362,7 +362,7 @@ fn detect_cargo() -> PathBuf {
             .output()
             .expect("Could not use where.exe to detect where cargo is.");
         if out.status.success() {
-            let mut p_vec: Vec<u16> = out.stdout.iter().map(|a| *a as u16).collect();
+            let p_vec: Vec<u16> = out.stdout.iter().map(|a| *a as u16).collect();
             let mut path = PathBuf::from(OsString::from_wide(&p_vec));
             path.pop(); // Remove cargo executable.
             if path.ends_with("bin") {
@@ -394,6 +394,7 @@ fn handle_report(
                         if out {
                             println!("{name}.report:\n{s}");
                         }
+
                         if dl {
                             let mut dir = report_path.to_path_buf();
                             match create_dir_all(&dir) {

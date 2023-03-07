@@ -259,6 +259,8 @@ jobs:
         run: cargo test --verbose --workspace --all-features --release --locked
       - name: Build
         run: cargo auditable build --verbose --workspace --release --locked
+      - name: Run cargo-prebuilt
+        run: target/release/cargo-prebuilt just
       - name: Artifact
         uses: actions/upload-artifact@v3
         with:
@@ -323,6 +325,9 @@ jobs:
         run: cargo test --verbose --workspace --all-features --release --locked --target ${{ matrix.target }}
       - name: Build
         run: cargo auditable build --verbose --workspace --release --locked --target ${{ matrix.target }}
+      - name: Run cargo-prebuilt
+        if: ${{ matrix.can-test }}
+        run: target/${{ matrix.target }}/release/${{ env.bin-name }} just
       - name: Artifact
         uses: actions/upload-artifact@v3
         with:
@@ -392,6 +397,9 @@ jobs:
         run: cargo test --verbose --workspace --all-features --release --locked --target ${{ matrix.target }}
       - name: Build
         run: cargo auditable build --verbose --workspace --release --locked --target ${{ matrix.target }}
+      - name: Run cargo-prebuilt
+        if: ${{ matrix.can-test }}
+        run: target/${{ matrix.target }}/release/${{ env.bin-name }} just
       - name: Artifact
         uses: actions/upload-artifact@v3
         with:
