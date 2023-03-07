@@ -1,7 +1,7 @@
 name: Rust Build and Test
 ## Name: Rust Build and Test
 ## Author: harmless-tech
-## Version: cache-based-1.1.0
+## Version: cache-based-1.2.0
 ## Git Repo: https://github.com/harmless-tech/rust-github-actions
 
 on:
@@ -12,11 +12,11 @@ on:
   workflow_dispatch:
 
 env:
-  CARGO_TERM_COLOR: always
   bin-name: cargo-prebuilt
+  CARGO_TERM_COLOR: always
 
 jobs:
-  deps:
+  setup:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -72,7 +72,7 @@ jobs:
 
   x86_64-unknown-linux-gnu:
     runs-on: ubuntu-latest
-    needs: [ deps ]
+    needs: [ setup ]
     steps:
       - uses: actions/checkout@v3
       - name: Get deps from cache
@@ -118,7 +118,7 @@ jobs:
           - target: aarch64-apple-darwin
             can-test: false
     runs-on: macos-latest
-    needs: [ deps ]
+    needs: [ setup ]
     steps:
       - uses: actions/checkout@v3
       - name: Get deps from cache
@@ -169,7 +169,7 @@ jobs:
           - target: i686-pc-windows-msvc
             can-test: true
     runs-on: windows-latest
-    needs: [ deps ]
+    needs: [ setup ]
     steps:
       - uses: actions/checkout@v3
       - name: Change file endings in Cargo.lock
@@ -267,7 +267,7 @@ jobs:
           - target: mipsel-unknown-linux-musl
             can-test: true
     runs-on: ubuntu-latest
-    needs: [ deps ]
+    needs: [ setup ]
     steps:
       - uses: actions/checkout@v3
       - name: Get deps from cache

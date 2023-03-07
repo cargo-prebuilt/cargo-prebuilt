@@ -1,7 +1,7 @@
 name: Rust Build, Test, and Release
 ## Name: Rust Build, Test, and Release
 ## Author: harmless-tech
-## Version: cache-based-1.1.0
+## Version: cache-based-1.2.0
 ## Git Repo: https://github.com/harmless-tech/rust-github-actions
 
 on:
@@ -11,8 +11,8 @@ on:
   workflow_dispatch:
 
 env:
-  CARGO_TERM_COLOR: always
   bin-name: cargo-prebuilt
+  CARGO_TERM_COLOR: never
 
 jobs:
   check-fmt:
@@ -22,11 +22,23 @@ jobs:
       - name: Install nightly
         run: rustup toolchain install nightly --allow-downgrade -c rustfmt
       - name: Rustfmt Check
-        run: cargo +nightly fmt --check
+        run: |
+          set -o pipefail
+          cargo +nightly fmt --check 2>&1 | tee .step-data.txt
+      - name: Put into summary (success)
+        if: success()
+        run: echo "Success" >> $GITHUB_STEP_SUMMARY
+      - name: Put into summary (failure)
+        if: failure()
+        run: |
+          echo "Failed!" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`shell" >> $GITHUB_STEP_SUMMARY
+          cat .step-data.txt >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
 
-  check-clippy:
+  clippy-x86_64-unknown-linux-gnu:
     runs-on: ubuntu-latest
-    needs: [ deps ]
+    needs: [ setup ]
     steps:
       - uses: actions/checkout@v3
       - name: Get deps from cache
@@ -44,9 +56,90 @@ jobs:
       - name: Rust Version
         run: rustc --version
       - name: Clippy Check
-        run: cargo clippy --all-targets --all-features --verbose --workspace --release --locked -- -D warnings
+        run: |
+          set -o pipefail
+          cargo clippy --all-targets --all-features --verbose --workspace --release --locked -- -D warnings 2>&1 | tee .step-data.txt
+      - name: Put into summary (success)
+        if: success()
+        run: echo "Success" >> $GITHUB_STEP_SUMMARY
+      - name: Put into summary (failure)
+        if: failure()
+        run: |
+          echo "Failed!" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`shell" >> $GITHUB_STEP_SUMMARY
+          cat .step-data.txt >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          
+  clippy-x86_64-apple-darwin:
+    runs-on: macos-latest
+    needs: [ setup ]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Get deps from cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            .cargo-store
+          key: deps-cache-${{ hashFiles('**/Cargo.lock') }}
+          enableCrossOsArchive: true
+          fail-on-cache-miss: true
+      - name: Move deps
+        run: mv ./.cargo-store/* ~/.cargo
+      - name: Update Rust
+        run: rustup update
+      - name: Rust Version
+        run: rustc --version
+      - name: Clippy Check
+        run: |
+          set -o pipefail
+          cargo clippy --all-targets --all-features --verbose --workspace --release --locked -- -D warnings 2>&1 | tee .step-data.txt
+      - name: Put into summary (success)
+        if: success()
+        run: echo "Success" >> $GITHUB_STEP_SUMMARY
+      - name: Put into summary (failure)
+        if: failure()
+        run: |
+          echo "Failed!" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`shell" >> $GITHUB_STEP_SUMMARY
+          cat .step-data.txt >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
 
-  deps:
+  clippy-x86_64-pc-windows-msvc:
+    runs-on: windows-latest
+    needs: [ setup ]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Change file endings in Cargo.lock
+        shell: pwsh
+        run: (Get-Content -Raw Cargo.lock) -replace "`r`n","`n" | Set-Content Cargo.lock -NoNewline
+      - name: Get deps from cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            .cargo-store
+          key: deps-cache-${{ hashFiles('**/Cargo.lock') }}
+          enableCrossOsArchive: true
+          fail-on-cache-miss: true
+      - name: Move deps
+        run: mv ./.cargo-store/* ~/.cargo
+      - name: Update Rust
+        run: rustup update
+      - name: Rust Version
+        run: rustc --version
+      - name: Clippy Check
+        run: cargo clippy --all-targets --all-features --verbose --workspace --release --locked -- -D warnings 2>&1 | tee .step-data.txt
+      - name: Put into summary (success)
+        if: success()
+        run: echo "Success" >> $env:GITHUB_STEP_SUMMARY
+      - name: Put into summary (failure)
+        if: failure()
+        run: |
+          echo "Failed!" >> $env:GITHUB_STEP_SUMMARY
+          "``````powershell" >> $env:GITHUB_STEP_SUMMARY
+          cat .step-data.txt >> $env:GITHUB_STEP_SUMMARY
+          "``````" >> $env:GITHUB_STEP_SUMMARY
+
+  setup:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -107,7 +200,7 @@ jobs:
       name: ${{ github.ref_name }}
       prerelease: ${{ steps.regex-tag.outputs.match == '' }}
     runs-on: ubuntu-latest
-    needs: [ check-fmt, check-clippy ]
+    needs: [ check-fmt, clippy-x86_64-unknown-linux-gnu, clippy-x86_64-apple-darwin, clippy-x86_64-pc-windows-msvc ]
     steps:
       - uses: actions/checkout@v3
       - uses: KyoriPowered/action-regex-match@v3
@@ -118,7 +211,7 @@ jobs:
 
   publish:
     runs-on: ubuntu-latest
-    needs: [ release, check-fmt, check-clippy, x86_64-unknown-linux-gnu, apple-darwin, pc-windows-msvc, cross ]
+    needs: [ release, check-fmt, clippy-x86_64-unknown-linux-gnu, clippy-x86_64-apple-darwin, clippy-x86_64-pc-windows-msvc, x86_64-unknown-linux-gnu, apple-darwin, pc-windows-msvc, cross ]
     steps:
       - uses: actions/checkout@v3
       - name: Get deps from cache
@@ -142,7 +235,7 @@ jobs:
 
   x86_64-unknown-linux-gnu:
     runs-on: ubuntu-latest
-    needs: [ deps, release ]
+    needs: [ setup, release ]
     steps:
       - uses: actions/checkout@v3
       - name: Get deps from cache
@@ -203,7 +296,7 @@ jobs:
           - target: aarch64-apple-darwin
             can-test: false
     runs-on: macos-latest
-    needs: [ deps, release ]
+    needs: [ setup, release ]
     steps:
       - uses: actions/checkout@v3
       - name: Get deps from cache
@@ -269,7 +362,7 @@ jobs:
           - target: i686-pc-windows-msvc
             can-test: true
     runs-on: windows-latest
-    needs: [ deps, release ]
+    needs: [ setup, release ]
     steps:
       - uses: actions/checkout@v3
       - name: Change file endings in Cargo.lock
@@ -385,7 +478,7 @@ jobs:
           - target: mipsel-unknown-linux-musl
             can-test: true
     runs-on: ubuntu-latest
-    needs: [ deps, release ]
+    needs: [ setup, release ]
     steps:
       - uses: actions/checkout@v3
       - name: Get deps from cache
