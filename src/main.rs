@@ -1,11 +1,17 @@
+#[cfg(test)]
+mod test;
+
 use flate2::read::GzDecoder;
 use sha2::{Digest, Sha256};
 use std::{
     convert::Into,
     env,
+    ffi::OsString,
+    fs,
     fs::{create_dir_all, File},
     io::{Read, Write},
     path::{Path, PathBuf},
+    process::Command,
     str,
     string::ToString,
     sync::Arc,
@@ -45,6 +51,7 @@ fn main() -> Result<(), String> {
     let mut target = TARGET.to_string();
     let mut no_bin = false;
     let mut ci = false;
+    let mut create_ch = false;
     let mut reports = vec!["license-dl".to_string()];
     for mut arg in args {
         if arg.starts_with("--") {
@@ -57,6 +64,9 @@ fn main() -> Result<(), String> {
             }
             else if arg.eq("--ci") {
                 ci = true;
+            }
+            else if arg.eq("--create") {
+                create_ch = true;
             }
             else if arg.starts_with("--reports=") {
                 arg.replace_range(0..10, "");
@@ -93,30 +103,15 @@ fn main() -> Result<(), String> {
     let no_bin = no_bin;
 
     // Get location to install binaries to
-    let mut cargo_home = PathBuf::from(env::var_os("CARGO_HOME").unwrap_or_else(|| {
-        #[rustfmt::skip]
-        let ext = if TARGET.contains("windows") { ".exe" } else { "" };
-        match File::open(format!("~/.cargo/bin/cargo{ext}")) {
-            Ok(_) => {
-                println!("Detected cargo in ~/.cargo/bin/. Will install here.");
-                "~/.cargo".into()
-            }
-            Err(_) => match File::open(format!("/usr/local/cargo/bin/cargo{ext}")) {
-                Ok(_) => {
-                    println!("Detected cargo in /usr/local/cargo/bin/. Will install here.");
-                    "/usr/local/cargo".into()
-                }
-                Err(_) => {
-                    println!("Could not detect cargo, please set the CARGO_HOME env variable.");
-                    std::process::exit(-22);
-                }
-            },
-        }
-    }));
-    if !no_bin {
+    let mut cargo_home = PathBuf::from(env::var_os("CARGO_HOME").unwrap_or_else(detect_cargo));
+    if !no_bin && !cargo_home.ends_with("bin") {
         cargo_home.push("bin");
     }
     let cargo_bin = cargo_home;
+    if create_ch && create_dir_all(&cargo_bin).is_err() {
+        println!("Could not create the dirs {cargo_bin:?}.");
+        std::process::exit(-44);
+    }
 
     let agent = ureq::AgentBuilder::new()
         .tls_connector(Arc::new(
@@ -255,7 +250,9 @@ fn main() -> Result<(), String> {
 
                     e.unpack(&path)
                         .expect("Could not extract binaries from downloaded tar archive");
-                    println!("Added {path:?}.");
+
+                    let abs = fs::canonicalize(path).expect("Could not canonicalize path");
+                    println!("Added {abs:?}.");
                 }
             }
             Err(_) => {
@@ -361,5 +358,61 @@ fn handle_report(
                 println!("Connection error.");
             }
         }
+    }
+}
+
+fn detect_cargo() -> OsString {
+    #[rustfmt::skip]
+    let ext = if TARGET.contains("windows") { ".exe" } else { "" };
+    match File::open(format!("~/.cargo/bin/cargo{ext}")) {
+        Ok(_) => {
+            println!("Detected cargo in ~/.cargo/bin/. Will install here.");
+            "~/.cargo".into()
+        }
+        Err(_) => match File::open(format!("/usr/local/cargo/bin/cargo{ext}")) {
+            Ok(_) => {
+                println!("Detected cargo in /usr/local/cargo/bin/. Will install here.");
+                "/usr/local/cargo".into()
+            }
+            Err(_) => {
+                println!("Using which/where.exe to find cargo.");
+                #[cfg(target_family = "unix")]
+                {
+                    use std::os::unix::ffi::OsStringExt;
+
+                    let mut out = Command::new("sh")
+                        .args(["-c", "which cargo"])
+                        .output()
+                        .expect("Could not use which to detect where cargo is.");
+
+                    if out.status.success() {
+                        out.stdout.drain((out.stdout.len() - 7)..out.stdout.len());
+                        return OsString::from_vec(out.stdout);
+                    }
+                }
+                #[cfg(target_family = "windows")]
+                {
+                    use std::os::windows::ffi::OsStringExt;
+
+                    let mut out = Command::new("cmd")
+                        .args(["/C", "where.exe cargo.exe"])
+                        .output()
+                        .expect("Could not use where.exe to detect where cargo is.");
+                    if out.status.success() {
+                        let mut slice: Vec<u16> = out.stdout.iter().map(|a| *a as u16).collect();
+                        slice.drain((slice.len() - 12)..slice.len());
+                        return OsString::from_wide(&slice);
+                    }
+                }
+                #[cfg(not(any(unix, windows)))]
+                {
+                    println!("Platform does not support which/where.exe detection of cargo.");
+                    std::process::exit(-122);
+                }
+
+                println!("Could not detect cargo, please set the CARGO_HOME env variable.");
+                std::process::exit(-22);
+            }
+        },
     }
 }
