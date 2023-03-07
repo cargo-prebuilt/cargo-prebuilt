@@ -315,8 +315,9 @@ fn detect_cargo() -> PathBuf {
 
     // Try to find CARGO_HOME by searching for cargo executable in common paths.
     let ext = if TARGET.contains("windows") { ".exe" } else { "" };
-    for t in ["~/.cargo/bin/cargo", "/usr/local/cargo/bin/cargo"] {
-        let mut path = PathBuf::from(format!("{t}{ext}"));
+    let mut home_cargo_dir = home::home_dir().unwrap_or_else(|| PathBuf::from("~"));
+    home_cargo_dir.push(".cargo/bin/cargo");
+    for path in [home_cargo_dir, PathBuf::from(format!("/usr/local/cargo/bin/cargo{ext}"))].iter_mut() {
         if File::open(&path).is_ok() {
             let abs = fs::canonicalize(&path).expect("Could not canonicalize cargo path");
             println!("Detected cargo at {abs:?}. Will install into this folder.");
@@ -326,7 +327,7 @@ fn detect_cargo() -> PathBuf {
                 // Remove bin if the folder is appended.
                 path.pop();
             }
-            return path;
+            return path.clone();
         }
     }
 

@@ -22,6 +22,7 @@ exclude = [
 [dependencies]
 flate2 = "1.0.25"
 hex = "0.4.3"
+home = "0.5.4"
 native-tls = { version = "0.2.11", features = ["vendored"] }
 sha2 = "0.10.6"
 tar = "0.4.38"
