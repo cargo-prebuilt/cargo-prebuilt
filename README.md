@@ -35,8 +35,8 @@ To install crates that are different from the host target do:
 For CI systems (This disables all reports):
 ```cargo prebuilt --ci CRATES```
 
-To allow the creation of missing CARGO_HOME(/bin) dirs:
-```cargo prebuilt --create CRATES```
+To disallow the creation of missing dirs (except for reports):
+```cargo prebuilt --no-create CRATES```
 
 To select reports:
 ```cargo prebuilt --reports=CSV CRATES```
