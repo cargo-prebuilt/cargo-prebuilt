@@ -26,7 +26,7 @@ To download a version of a crate:
 To download multiple crates with versions:
 ```cargo prebuilt CRATE_1@V1,CRATE_2,CRATE_3@V3,...```
 
-Crates will always be installed into the $CARGO_HOME/bin directory, unless you do:
+Crates will always be installed into the $CARGO_HOME/bin directory, unless you do then it will be installed to $CARGO_HOME:
 ```CARGO_HOME=DIR cargo prebuilt --no-bin CRATES```
 
 To install crates that are different from the host target do:
@@ -34,6 +34,9 @@ To install crates that are different from the host target do:
 
 For CI systems (This disables all reports):
 ```cargo prebuilt --ci CRATES```
+
+To disallow the creation of missing dirs (except for reports):
+```cargo prebuilt --no-create CRATES```
 
 To select reports:
 ```cargo prebuilt --reports=CSV CRATES```
@@ -58,5 +61,6 @@ You can download prebuilt binaries of cargo-prebuilt [here](https://github.com/c
 
 ## Current Limitations
 
+- Cargo detection has not been tested on windows.
 - When using a crate version it must be the exact semver version.
 - Does not use *cargo install* as a backup.
