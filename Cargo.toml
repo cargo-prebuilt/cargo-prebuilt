@@ -12,11 +12,13 @@ keywords = ["cargo", "cargo-subcommand", "binary"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-exclude = [
-    ".github/",
-    "justfile",
-    ".gitignore",
-    "rustfmt.toml"
+include = [
+    "src/",
+    "build.rs",
+    "Cargo.lock",
+    "Cargo.toml",
+    "LICENSE",
+    "README.md"
 ]
 
 [dependencies]
