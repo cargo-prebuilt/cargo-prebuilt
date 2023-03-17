@@ -1,8 +1,8 @@
 name: Rust Build and Test
-## Name: Rust Build and Test
-## Author: harmless-tech
-## Version: cache-based-1.2.0
-## Git Repo: https://github.com/harmless-tech/rust-github-actions
+### Name: Rust Build and Test
+### Author: harmless-tech
+### Version: audit-1.0.0
+### Git Repo: https://github.com/harmless-tech/rust-github-actions
 
 on:
   push:
@@ -14,6 +14,7 @@ on:
 env:
   bin-name: cargo-prebuilt
   CARGO_TERM_COLOR: always
+  CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse
 
 jobs:
   setup:
@@ -27,9 +28,6 @@ jobs:
             .cargo-store
           key: deps-cache-${{ hashFiles('**/Cargo.lock') }}
           enableCrossOsArchive: true
-      - name: Move deps
-        if: ${{ steps.cache.outputs.cache-hit }}
-        run: mv ./.cargo-store/* ~/.cargo
       - name: Create Folders
         if: ${{ !steps.cache.outputs.cache-hit }}
         run: |
@@ -38,15 +36,51 @@ jobs:
           mkdir -p ~/.cargo/git/db
           mkdir -p ./.cargo-store
       - name: Update Rust
+        if: ${{ !steps.cache.outputs.cache-hit }}
+        run: rustup update
+      - name: Rust Version
+        if: ${{ !steps.cache.outputs.cache-hit }}
+        run: rustc --version
+      - name: Download Deps
+        if: ${{ !steps.cache.outputs.cache-hit }}
+        run: cargo fetch --verbose --locked
+      - name: Store Deps
+        if: ${{ !steps.cache.outputs.cache-hit }}
+        run: |
+          mkdir -p ./.cargo-store/registry
+          mkdir -p ./.cargo-store/git
+          cp -r ~/.cargo/registry/index ./.cargo-store/registry
+          cp -r ~/.cargo/registry/cache ./.cargo-store/registry
+          cp -r ~/.cargo/git/db ./.cargo-store/git
+
+  reports:
+    runs-on: ubuntu-latest
+    needs: [ setup ]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Get deps from cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            .cargo-store
+          key: deps-cache-${{ hashFiles('**/Cargo.lock') }}
+          enableCrossOsArchive: true
+          fail-on-cache-miss: true
+      - name: Move deps
+        run: mv ./.cargo-store/* ~/.cargo
+      - name: Cache Advisory DB
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/advisory-db
+          key: cache-advisory-db
+      - name: Update Rust
         run: rustup update
       - name: Rust Version
         run: rustc --version
       - uses: crow-rest/cargo-prebuilt-action@v1
         with:
           tools: cargo-audit
-      - name: Download Deps
-        if: ${{ !steps.cache.outputs.cache-hit }}
-        run: cargo fetch --verbose --locked
       - name: Deps Report
         run: |
           echo "### Deps:" >> $GITHUB_STEP_SUMMARY
@@ -61,175 +95,14 @@ jobs:
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           cargo audit >> $GITHUB_STEP_SUMMARY || true
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-      - name: Store Deps
-        if: ${{ !steps.cache.outputs.cache-hit }}
-        run: |
-          mkdir -p ./.cargo-store/registry
-          mkdir -p ./.cargo-store/git
-          cp -r ~/.cargo/registry/index ./.cargo-store/registry
-          cp -r ~/.cargo/registry/cache ./.cargo-store/registry
-          cp -r ~/.cargo/git/db ./.cargo-store/git
-
-  x86_64-unknown-linux-gnu:
-    runs-on: ubuntu-latest
-    needs: [ setup ]
-    steps:
-      - uses: actions/checkout@v3
-      - name: Get deps from cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            .cargo-store
-          key: deps-cache-${{ hashFiles('**/Cargo.lock') }}
-          enableCrossOsArchive: true
-          fail-on-cache-miss: true
-      - name: Move deps
-        run: mv ./.cargo-store/* ~/.cargo
-      - uses: actions/cache@v3
-        with:
-          path: |
-            target
-          key: ${{ runner.os }}-x86_64-unknown-linux-gnu-${{ hashFiles('**/Cargo.lock') }}
-      - name: Update Rust
-        run: rustup update
-      - name: Rust Version
-        run: rustc --version
-      - uses: crow-rest/cargo-prebuilt-action@v1
-        with:
-          tools: cargo-auditable
-      - name: Run tests
-        run: cargo test --verbose --workspace --all-features --locked
-      - name: Build
-        run: cargo auditable build --verbose --workspace --locked
-      - name: Run cargo-prebuilt
-        run: |
-          target/debug/cargo-prebuilt just
-          just --version
-      - name: Artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: x86_64-unknown-linux-gnu
-          path: |
-            target/debug/${{ env.bin-name }}
-
-  apple-darwin:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - target: x86_64-apple-darwin
-            can-test: true
-          - target: aarch64-apple-darwin
-            can-test: false
-    runs-on: macos-latest
-    needs: [ setup ]
-    steps:
-      - uses: actions/checkout@v3
-      - name: Get deps from cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            .cargo-store
-          key: deps-cache-${{ hashFiles('**/Cargo.lock') }}
-          enableCrossOsArchive: true
-          fail-on-cache-miss: true
-      - name: Move deps
-        run: mv ./.cargo-store/* ~/.cargo
-      - uses: actions/cache@v3
-        with:
-          path: |
-            target
-          key: ${{ runner.os }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}
-      - name: Update Rust
-        run: rustup update
-      - name: Rust Version
-        run: rustc --version
-      - name: Add Rust target
-        run: rustup target add ${{ matrix.target }}
-      - uses: crow-rest/cargo-prebuilt-action@v1
-        with:
-          tools: cargo-auditable
-      - name: Run tests
-        if: ${{ matrix.can-test }}
-        run: cargo test --verbose --workspace --all-features --locked --target ${{ matrix.target }}
-      - name: Build
-        run: cargo auditable build --verbose --workspace --locked --target ${{ matrix.target }}
-      - name: Run cargo-prebuilt
-        if: ${{ matrix.can-test }}
-        run: |
-          target/${{ matrix.target }}/debug/${{ env.bin-name }} just
-          just --version
-      - name: Artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: ${{ matrix.target }}
-          path: |
-            target/${{ matrix.target }}/debug/${{ env.bin-name }}
-
-  pc-windows-msvc:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - target: x86_64-pc-windows-msvc
-            can-test: true
-          - target: aarch64-pc-windows-msvc
-            can-test: false
-          - target: i686-pc-windows-msvc
-            can-test: true
-    runs-on: windows-latest
-    needs: [ setup ]
-    steps:
-      - uses: actions/checkout@v3
-      - name: Change file endings in Cargo.lock
-        shell: pwsh
-        run: (Get-Content -Raw Cargo.lock) -replace "`r`n","`n" | Set-Content Cargo.lock -NoNewline
-      - name: Get deps from cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            .cargo-store
-          key: deps-cache-${{ hashFiles('**/Cargo.lock') }}
-          enableCrossOsArchive: true
-          fail-on-cache-miss: true
-      - name: Move deps
-        run: mv ./.cargo-store/* ~/.cargo
-      - uses: actions/cache@v3
-        with:
-          path: |
-            target
-          key: ${{ runner.os }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}
-      - name: Update Rust
-        run: rustup update
-      - name: Rust Version
-        run: rustc --version
-      - name: Add Rust target
-        run: rustup target add ${{ matrix.target }}
-      - uses: crow-rest/cargo-prebuilt-action@v1
-        with:
-          tools: cargo-auditable
-      - name: Run tests
-        if: ${{ matrix.can-test }}
-        run: cargo test --verbose --workspace --all-features --locked --target ${{ matrix.target }}
-      - name: Build
-        run: cargo auditable build --verbose --workspace --locked --target ${{ matrix.target }}
-      - name: Run cargo-prebuilt
-        if: ${{ matrix.can-test }}
-        run: |
-          target/${{ matrix.target }}/debug/${{ env.bin-name }} just
-          just --version
-      - name: Artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: ${{ matrix.target }}
-          path: |
-            target/${{ matrix.target }}/debug/${{ env.bin-name }}.exe
 
   cross:
     strategy:
       fail-fast: false
       matrix:
         include:
+          - target: x86_64-unknown-linux-gnu
+            can-test: true
           - target: x86_64-unknown-linux-musl
             can-test: true
           - target: aarch64-unknown-linux-gnu
@@ -280,6 +153,12 @@ jobs:
             can-test: true
           - target: mipsel-unknown-linux-musl
             can-test: true
+          - target: x86_64-pc-windows-gnu
+            can-test: true
+            ending: .exe
+          - target: i686-pc-windows-gnu
+            can-test: true
+            ending: .exe
     runs-on: ubuntu-latest
     needs: [ setup ]
     steps:
@@ -316,4 +195,105 @@ jobs:
         with:
           name: ${{ matrix.target }}
           path: |
+            target/${{ matrix.target }}/debug/${{ env.bin-name }}${{ matrix.ending }}
+
+  apple-darwin:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-apple-darwin
+            can-test: true
+          - target: aarch64-apple-darwin
+            can-test: false
+    runs-on: macos-latest
+    needs: [ setup ]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Get deps from cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            .cargo-store
+          key: deps-cache-${{ hashFiles('**/Cargo.lock') }}
+          enableCrossOsArchive: true
+          fail-on-cache-miss: true
+      - name: Move deps
+        run: mv ./.cargo-store/* ~/.cargo
+      - uses: actions/cache@v3
+        with:
+          path: |
+            target
+          key: ${{ runner.os }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}
+      - name: Update Rust
+        run: rustup update
+      - name: Rust Version
+        run: rustc --version
+      - name: Add Rust target
+        run: rustup target add ${{ matrix.target }}
+      - name: Run tests
+        if: ${{ matrix.can-test }}
+        run: cargo test --verbose --workspace --all-features --locked --target ${{ matrix.target }}
+      - name: Build
+        run: cargo build --verbose --workspace --locked --target ${{ matrix.target }}
+      - name: Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.target }}
+          path: |
             target/${{ matrix.target }}/debug/${{ env.bin-name }}
+
+  pc-windows-msvc:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-pc-windows-msvc
+            can-test: true
+          - target: aarch64-pc-windows-msvc
+            can-test: false
+          - target: i686-pc-windows-msvc
+            can-test: true
+    runs-on: windows-latest
+    needs: [ setup ]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Change file endings in Cargo.lock
+        shell: bash
+        run: |
+          ex Cargo.lock <<EOF
+          :set fileformat=unix
+          :wq
+          EOF
+      - name: Get deps from cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            .cargo-store
+          key: deps-cache-${{ hashFiles('**/Cargo.lock') }}
+          enableCrossOsArchive: true
+          fail-on-cache-miss: true
+      - name: Move deps
+        run: mv ./.cargo-store/* ~/.cargo
+      - uses: actions/cache@v3
+        with:
+          path: |
+            target
+          key: ${{ runner.os }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}
+      - name: Update Rust
+        run: rustup update
+      - name: Rust Version
+        run: rustc --version
+      - name: Add Rust target
+        run: rustup target add ${{ matrix.target }}
+      - name: Run tests
+        if: ${{ matrix.can-test }}
+        run: cargo test --verbose --workspace --all-features --locked --target ${{ matrix.target }}
+      - name: Build
+        run: cargo build --verbose --workspace --locked --target ${{ matrix.target }}
+      - name: Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.target }}
+          path: |
+            target/${{ matrix.target }}/debug/${{ env.bin-name }}.exe

@@ -1,8 +1,8 @@
 name: Rust Checks
-## Name: Rust Checks
-## Author: harmless-tech
-## Version: cache-based-1.2.0
-## Git Repo: https://github.com/harmless-tech/rust-github-actions
+### Name: Rust Checks
+### Author: harmless-tech
+### Version: audit-1.0.0
+### Git Repo: https://github.com/harmless-tech/rust-github-actions
 
 on:
   push:
@@ -13,6 +13,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: never
+  CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse
 
 jobs:
   fmt-check:
@@ -36,8 +37,18 @@ jobs:
           cat .step-data.txt >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
 
-  clippy-x86_64-unknown-linux-gnu:
-    runs-on: ubuntu-latest
+  clippy:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+          - target: x86_64-apple-darwin
+            os: macos-latest
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v3
@@ -47,82 +58,25 @@ jobs:
             ~/.cargo/registry/cache
             ~/.cargo/git/db
             target
-          key: ${{ runner.os }}-clippy-x86_64-unknown-linux-gnu-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-clippy-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}
       - name: Update Rust
         run: rustup update
       - name: Rust Version
         run: rustc --version
       - name: Clippy Check
+        shell: bash
         run: |
           set -o pipefail
           cargo clippy --all-targets --all-features --verbose --workspace --locked -- -D warnings 2>&1 | tee .step-data.txt
       - name: Put into summary (success)
         if: success()
+        shell: bash
         run: echo "Success" >> $GITHUB_STEP_SUMMARY
       - name: Put into summary (failure)
         if: failure()
+        shell: bash
         run: |
           echo "Failed!" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`shell" >> $GITHUB_STEP_SUMMARY
           cat .step-data.txt >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-
-  clippy-x86_64-apple-darwin:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/registry/index
-            ~/.cargo/registry/cache
-            ~/.cargo/git/db
-            target
-          key: ${{ runner.os }}-clippy-x86_64-apple-darwin-${{ hashFiles('**/Cargo.lock') }}
-      - name: Update Rust
-        run: rustup update
-      - name: Rust Version
-        run: rustc --version
-      - name: Clippy Check
-        run: |
-          set -o pipefail
-          cargo clippy --all-targets --all-features --verbose --workspace --locked -- -D warnings 2>&1 | tee .step-data.txt
-      - name: Put into summary (success)
-        if: success()
-        run: echo "Success" >> $GITHUB_STEP_SUMMARY
-      - name: Put into summary (failure)
-        if: failure()
-        run: |
-          echo "Failed!" >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`shell" >> $GITHUB_STEP_SUMMARY
-          cat .step-data.txt >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-
-  clippy-x86_64-pc-windows-msvc:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/registry/index
-            ~/.cargo/registry/cache
-            ~/.cargo/git/db
-            target
-          key: ${{ runner.os }}-clippy-x86_64-pc-windows-msvc-${{ hashFiles('**/Cargo.lock') }}
-      - name: Update Rust
-        run: rustup update
-      - name: Rust Version
-        run: rustc --version
-      - name: Clippy Check
-        run: cargo clippy --all-targets --all-features --verbose --workspace --locked -- -D warnings 2>&1 | tee .step-data.txt
-      - name: Put into summary (success)
-        if: success()
-        run: echo "Success" >> $env:GITHUB_STEP_SUMMARY
-      - name: Put into summary (failure)
-        if: failure()
-        run: |
-          echo "Failed!" >> $env:GITHUB_STEP_SUMMARY
-          "``````powershell" >> $env:GITHUB_STEP_SUMMARY
-          cat .step-data.txt >> $env:GITHUB_STEP_SUMMARY
-          "``````" >> $env:GITHUB_STEP_SUMMARY
