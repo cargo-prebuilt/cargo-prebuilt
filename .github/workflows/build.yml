@@ -236,6 +236,11 @@ jobs:
         run: cargo test --verbose --workspace --all-features --locked --target ${{ matrix.target }}
       - name: Build
         run: cargo build --verbose --workspace --locked --target ${{ matrix.target }}
+      - name: Run cargo-prebuilt
+        if: ${{ matrix.can-test }}
+        run: |
+          target/${{ matrix.target }}/debug/${{ env.bin-name }} just
+          just --version
       - name: Artifact
         uses: actions/upload-artifact@v3
         with:
@@ -291,6 +296,11 @@ jobs:
         run: cargo test --verbose --workspace --all-features --locked --target ${{ matrix.target }}
       - name: Build
         run: cargo build --verbose --workspace --locked --target ${{ matrix.target }}
+      - name: Run cargo-prebuilt
+        if: ${{ matrix.can-test }}
+        run: |
+          target/${{ matrix.target }}/debug/${{ env.bin-name }}.exe just
+          just --version
       - name: Artifact
         uses: actions/upload-artifact@v3
         with:

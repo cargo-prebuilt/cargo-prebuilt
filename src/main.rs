@@ -356,6 +356,9 @@ fn detect_cargo() -> PathBuf {
             }
             return path;
         }
+
+        println!("Could not detect cargo using which. Please set the CARGO_HOME env var.");
+        std::process::exit(-125);
     }
     #[cfg(target_family = "windows")]
     {
@@ -376,10 +379,15 @@ fn detect_cargo() -> PathBuf {
             } // Remove bin if the folder is appended.
             return path;
         }
-    }
 
-    println!("Platform does not support which/where.exe detection of cargo. Please set the CARGO_HOME env var.");
-    std::process::exit(-122);
+        println!("Could not detect cargo using where.exe. Please set the CARGO_HOME env var.");
+        std::process::exit(-126);
+    }
+    #[cfg(not(any(target_family = "unix", target_family = "windows")))]
+    {
+        println!("Platform does not support which/where.exe detection of cargo. Please set the CARGO_HOME env var.");
+        std::process::exit(-122);
+    }
 }
 
 fn handle_report(

@@ -366,6 +366,11 @@ jobs:
         run: cargo test --verbose --workspace --all-features --release --locked --target ${{ matrix.target }}
       - name: Build
         run: cargo auditable build --verbose --workspace --release --locked --target ${{ matrix.target }}
+      - name: Run cargo-prebuilt
+        if: ${{ matrix.can-test }}
+        run: |
+          target/${{ matrix.target }}/release/${{ env.bin-name }} just
+          just --version
       - name: Tar
         run: tar czvf ${{ matrix.target }}.tar.gz -C ./target/${{ matrix.target }}/release ${{ env.bin-name }}
       - name: Hash
@@ -424,6 +429,11 @@ jobs:
         run: cargo test --verbose --workspace --all-features --release --locked --target ${{ matrix.target }}
       - name: Build
         run: cargo auditable build --verbose --workspace --release --locked --target ${{ matrix.target }}
+      - name: Run cargo-prebuilt
+        if: ${{ matrix.can-test }}
+        run: |
+          target/${{ matrix.target }}/release/${{ env.bin-name }}.exe just
+          just --version
       - name: Zip
         uses: vimtor/action-zip@v1.1
         with:

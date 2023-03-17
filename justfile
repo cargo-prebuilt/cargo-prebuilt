@@ -19,6 +19,7 @@ docker:
     -e CARGO_TARGET_DIR=/ptarget \
     --mount type=bind,source={{pwd}},target=/prebuilt \
     --mount type=bind,source=$HOME/.cargo/registry,target=/usr/local/cargo/registry \
+    -w /prebuilt \
     rust:latest \
     bash
 
