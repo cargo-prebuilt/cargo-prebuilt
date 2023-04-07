@@ -26,8 +26,8 @@ To download a version of a crate:
 To download multiple crates with versions:
 ```cargo prebuilt CRATE_1@V1,CRATE_2,CRATE_3@V3,...```
 
-Crates will always be installed into the $CARGO_HOME/bin directory, unless you do then it will be installed to $CARGO_HOME:
-```CARGO_HOME=DIR cargo prebuilt --no-bin CRATES```
+Crates will always be installed into the $CARGO_HOME/bin directory, unless you set the PREBUILT_HOME env var, then it will install to $PREBUILT_HOME/bin:
+```PREBUILT_HOME=$DIR cargo prebuilt CRATES```
 
 To install crates that are different from the host target do:
 ```cargo prebuilt --target=TARGET CRATES```
@@ -40,6 +40,9 @@ To disallow the creation of missing dirs (except for reports):
 
 To select reports:
 ```cargo prebuilt --reports=CSV CRATES```
+
+To install directly in the $PREBUILT_HOME or $CARGO_HOME folder:
+```cargo prebuilt --no-bin CRATES```
 
 Report types:
 - license-out: Print license to stdout.

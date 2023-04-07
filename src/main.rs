@@ -102,11 +102,11 @@ fn main() -> Result<(), String> {
     let no_bin = no_bin;
 
     // Get location to install binaries to
-    let mut cargo_home = detect_cargo();
-    if !no_bin && !cargo_home.ends_with("bin") {
-        cargo_home.push("bin");
+    let mut prebuilt_home = detect_cargo();
+    if !no_bin && !prebuilt_home.ends_with("bin") {
+        prebuilt_home.push("bin");
     }
-    let cargo_bin = cargo_home;
+    let cargo_bin = prebuilt_home;
     if !no_create_ch && create_dir_all(&cargo_bin).is_err() {
         println!("Could not create the dirs {cargo_bin:?}.");
         std::process::exit(-44);
@@ -308,6 +308,10 @@ fn main() -> Result<(), String> {
 }
 
 fn detect_cargo() -> PathBuf {
+    // Use PREBUILT_HOME env var.
+    if let Some(home) = env::var_os("PREBUILT_HOME") {
+        return PathBuf::from(home);
+    }
     // Use CARGO_HOME env var.
     if let Some(home) = env::var_os("CARGO_HOME") {
         return PathBuf::from(home);
