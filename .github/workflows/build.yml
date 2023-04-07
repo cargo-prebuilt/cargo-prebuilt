@@ -185,6 +185,13 @@ jobs:
       - uses: crow-rest/cargo-prebuilt-action@v1
         with:
           tools: cross
+      - name: Cross add openssl
+        run: |
+          echo '[build]' > Cross.toml
+          echo 'pre-build = [' >> Cross.toml
+          echo '"dpkg --add-architecture $CROSS_DEB_ARCH",' >> Cross.toml
+          echo '"apt-get update && apt-get install --assume-yes libssl-dev:$CROSS_DEB_ARCH"' >> Cross.toml
+          echo ']' >> Cross.toml
       - name: Run tests
         if: ${{ matrix.can-test }}
         run: cross test --verbose --workspace --all-features --locked --target ${{ matrix.target }}
