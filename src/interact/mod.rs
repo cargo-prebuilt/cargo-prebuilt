@@ -16,10 +16,11 @@ pub enum InteractError {
 }
 
 pub fn create_interact(
-    input: Option<&str>,
-    _auth: Option<&str>,
+    input: &Option<String>,
+    _auth: &Option<String>,
     agent: Agent,
 ) -> Box<dyn Interact> {
+    // Default
     if input.is_none() {
         #[cfg(feature = "github-public")]
         {
@@ -35,7 +36,27 @@ pub fn create_interact(
         }
     }
 
-    todo!()
+    let input = input.clone().unwrap();
+
+    // Github public
+    if input.starts_with("gh-pub:") {
+        #[cfg(feature = "github-public")]
+        {
+            let url = input
+                .get(7..input.len())
+                .expect("Missing url after gh-pub:");
+            println!("Using index https://{url}.");
+            return Box::new(github_public::GithubPublic::new(agent, url));
+        }
+        #[cfg(not(feature = "github-public"))]
+        {
+            println!("Using this index ({input}) requires the github-public feature!");
+            std::process::exit(-220);
+        }
+    }
+
+    println!("This index ({input}) is not supported.");
+    std::process::exit(-221);
 }
 
 pub trait Interact {

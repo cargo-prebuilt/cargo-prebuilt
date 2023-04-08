@@ -32,6 +32,9 @@ fn main() -> Result<(), String> {
 
     let args = args::parse_args();
 
+    #[cfg(debug_assertions)]
+    dbg!(&args);
+
     if args.colors {
         owo_colors::set_override(true);
     }
@@ -61,7 +64,7 @@ fn main() -> Result<(), String> {
         .user_agent(format!("cargo-prebuilt {}", env!("CARGO_PKG_VERSION")).as_str())
         .build();
 
-    let interact = interact::create_interact(None, None, agent);
+    let interact = interact::create_interact(&args.index, &args.auth, agent);
     let interact = interact.as_ref();
 
     // Get pkgs
