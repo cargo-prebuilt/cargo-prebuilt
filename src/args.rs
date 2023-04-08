@@ -2,10 +2,20 @@ use crate::TARGET;
 use bpaf::*;
 use std::path::PathBuf;
 
+pub static REPORT_FLAGS: [&str; 6] = [
+    "license-out",
+    "license-dl",
+    "deps-out",
+    "deps-dl",
+    "audit-out",
+    "audit-dl",
+];
+
 #[derive(Clone, Debug)]
 pub struct Arguments {
     pub target: String,
-    pub index: String,
+    pub index: Option<String>,
+    pub auth: Option<String>,
     pub path: Option<PathBuf>,
     pub no_bin: bool,
     pub ci: bool,
@@ -28,9 +38,15 @@ pub fn parse_args() -> Arguments {
 
     let index = long("index")
         .env("PREBUILT_INDEX")
-        .help("(TODO) Github index to use. (Default: crow-rest/cargo-prebuilt-index)")
-        .argument::<String>("REGISTRY")
-        .fallback("crow-rest/cargo-prebuilt-index".to_string());
+        .help("Index to use. (Default: github.com/crow-rest/cargo-prebuilt-index)")
+        .argument::<String>("INDEX")
+        .optional();
+
+    let auth = long("auth")
+        .env("PREBUILT_AUTH")
+        .help("Auth token to use for private indexes")
+        .argument::<String>("TOKEN")
+        .optional();
 
     let path = long("path")
         .env("PREBUILT_HOME")
@@ -71,6 +87,7 @@ pub fn parse_args() -> Arguments {
     let parser = construct!(Arguments {
         target,
         index,
+        auth,
         path,
         no_bin,
         ci,

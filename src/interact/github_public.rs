@@ -1,50 +1,40 @@
 use crate::interact::{Interact, InteractError};
-use ureq::{Agent, Error, Request};
+use ureq::{Agent, Error};
 
 pub struct GithubPublic {
+    agent: Agent,
     slug: String,
 }
 impl GithubPublic {
-    pub fn new(slug: &str) -> Self {
+    pub fn new(agent: Agent, slug: &str) -> Self {
         Self {
+            agent,
             slug: slug.to_string(),
         }
     }
 }
 impl Interact for GithubPublic {
-    fn pre_url(&self, id: &String, version: &String, target: &String) -> String {
+    fn pre_url(&self, id: &str, version: &str, target: &str) -> String {
         format!(
             "https://{}/releases/download/{id}-{version}/{target}",
             self.slug
         )
     }
 
-    fn get_latest(&self, agent: &Agent, id: &String) -> Result<String, InteractError> {
+    fn get_latest(&self, id: &str) -> Result<String, InteractError> {
         let url = format!("https://{}/releases/download/stable-index/{id}", self.slug);
-        call(agent, &url)
+        call(&self.agent, &url)
     }
 
-    fn get_hash(
-        &self,
-        agent: &Agent,
-        id: &String,
-        version: &String,
-        target: &String,
-    ) -> Result<String, InteractError> {
+    fn get_hash(&self, id: &str, version: &str, target: &str) -> Result<String, InteractError> {
         let url = format!("{}.sha256", self.pre_url(id, version, target));
-        call(agent, &url)
+        call(&self.agent, &url)
     }
 
-    fn get_tar(
-        &self,
-        agent: &Agent,
-        id: &String,
-        version: &String,
-        target: &String,
-    ) -> Result<Vec<u8>, InteractError> {
+    fn get_tar(&self, id: &str, version: &str, target: &str) -> Result<Vec<u8>, InteractError> {
         let url = format!("{}.tar.gz", self.pre_url(id, version, target));
         let mut bytes = Vec::new();
-        match agent.get(&url).call() {
+        match self.agent.get(&url).call() {
             Ok(response) => {
                 response
                     .into_reader()
@@ -55,25 +45,19 @@ impl Interact for GithubPublic {
             Err(_) => return Err(InteractError::ConnectionError),
         }
 
-        return Ok(bytes);
+        Ok(bytes)
     }
 
-    fn get_report(
-        &self,
-        agent: &Agent,
-        id: &String,
-        version: &String,
-        name: &String,
-    ) -> Result<String, InteractError> {
+    fn get_report(&self, id: &str, version: &str, name: &str) -> Result<String, InteractError> {
         let url = format!(
             "https://{}/releases/download/{id}-{version}/{name}.report",
             self.slug
         );
-        call(agent, &url)
+        call(&self.agent, &url)
     }
 }
 
-fn call(agent: &Agent, url: &String) -> Result<String, InteractError> {
+fn call(agent: &Agent, url: &str) -> Result<String, InteractError> {
     return match agent.get(url).call() {
         Ok(res) => {
             let s = res.into_string().map_err(|_| InteractError::Malformed)?;

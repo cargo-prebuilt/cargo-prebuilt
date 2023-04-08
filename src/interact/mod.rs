@@ -1,4 +1,4 @@
-use ureq::{Agent, Request};
+use ureq::Agent;
 
 #[cfg(feature = "github-public")]
 mod github_public;
@@ -11,15 +11,20 @@ pub enum InteractError {
     HttpCode(u16),
     #[error("Connection error")]
     ConnectionError,
-    #[error("Unknown error")]
-    Unknown,
+    // #[error("Unknown error")]
+    // Unknown,
 }
 
-pub fn create_interact(input: Option<&str>, auth: Option<&str>) -> Box<dyn Interact> {
+pub fn create_interact(
+    input: Option<&str>,
+    _auth: Option<&str>,
+    agent: Agent,
+) -> Box<dyn Interact> {
     if input.is_none() {
         #[cfg(feature = "github-public")]
         {
             return Box::new(github_public::GithubPublic::new(
+                agent,
                 "github.com/crow-rest/cargo-prebuilt-index",
             ));
         }
@@ -34,28 +39,10 @@ pub fn create_interact(input: Option<&str>, auth: Option<&str>) -> Box<dyn Inter
 }
 
 pub trait Interact {
-    fn pre_url(&self, id: &String, version: &String, target: &String) -> String;
+    fn pre_url(&self, id: &str, version: &str, target: &str) -> String;
 
-    fn get_latest(&self, agent: &Agent, id: &String) -> Result<String, InteractError>;
-    fn get_hash(
-        &self,
-        agent: &Agent,
-        id: &String,
-        version: &String,
-        target: &String,
-    ) -> Result<String, InteractError>;
-    fn get_tar(
-        &self,
-        agent: &Agent,
-        id: &String,
-        version: &String,
-        target: &String,
-    ) -> Result<Vec<u8>, InteractError>;
-    fn get_report(
-        &self,
-        agent: &Agent,
-        id: &String,
-        version: &String,
-        name: &String,
-    ) -> Result<String, InteractError>;
+    fn get_latest(&self, id: &str) -> Result<String, InteractError>;
+    fn get_hash(&self, id: &str, version: &str, target: &str) -> Result<String, InteractError>;
+    fn get_tar(&self, id: &str, version: &str, target: &str) -> Result<Vec<u8>, InteractError>;
+    fn get_report(&self, id: &str, version: &str, name: &str) -> Result<String, InteractError>;
 }
