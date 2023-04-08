@@ -1,6 +1,6 @@
 [package]
 name = "cargo-prebuilt"
-version = "0.4.2"
+version = "0.5.0"
 edition = "2021"
 authors = ["harmless-tech"]
 description = "Download prebuilt crate binaries for many different platforms"
@@ -22,13 +22,21 @@ include = [
 ]
 
 [dependencies]
+bpaf = { version = "0.7.10", features = ["autocomplete", "batteries"] }
 flate2 = "1.0.25"
 hex = "0.4.3"
 home = "0.5.4"
-native-tls = { version = "0.2.11", features = ["vendored"] }
+native-tls = "0.2.11"
+owo-colors = "3.5.0"
 sha2 = "0.10.6"
 tar = "0.4.38"
 ureq = { version = "2.6.2", default-features = false, features = ["gzip", "native-tls", "native-certs"] }
+
+[features]
+default = ["vendored-openssl", "bright-color"]
+vendored-openssl = ["native-tls/vendored"]
+bright-color = ["bpaf/bright-color"]
+dull-color = ["bpaf/dull-color"]
 
 [profile.release]
 opt-level = "z"

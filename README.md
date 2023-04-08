@@ -26,24 +26,6 @@ To download a version of a crate:
 To download multiple crates with versions:
 ```cargo prebuilt CRATE_1@V1,CRATE_2,CRATE_3@V3,...```
 
-Crates will always be installed into the $CARGO_HOME/bin directory, unless you set the PREBUILT_HOME env var, then it will install to $PREBUILT_HOME/bin:
-```PREBUILT_HOME=$DIR cargo prebuilt CRATES```
-
-To install crates that are different from the host target do:
-```cargo prebuilt --target=TARGET CRATES```
-
-For CI systems (This disables all reports):
-```cargo prebuilt --ci CRATES```
-
-To disallow the creation of missing dirs (except for reports):
-```cargo prebuilt --no-create CRATES```
-
-To select reports:
-```cargo prebuilt --reports=CSV CRATES```
-
-To install directly in the $PREBUILT_HOME or $CARGO_HOME folder:
-```cargo prebuilt --no-bin CRATES```
-
 Report types:
 - license-out: Print license to stdout.
 - license-dl: Download license and put it under the prebuilt folder in the installation dir. (Default on)
@@ -52,18 +34,15 @@ Report types:
 - audit-out: Print audit to stdout.
 - audit-dl: Download audit and put it under the prebuilt folder in the installation dir.
 
-Get version:
-```cargo prebuilt --version```
-
 Need help? Try:
 ```cargo prebuilt --help```
 
 ## Download
 
-You can download prebuilt binaries of cargo-prebuilt [here](https://github.com/crow-rest/cargo-prebuilt/releases/latest).
+You can download the latest prebuilt binaries of cargo-prebuilt [here](https://github.com/crow-rest/cargo-prebuilt/releases/latest).
 
 ## Current Limitations
 
 - Cargo detection has not been tested on windows.
 - When using a crate version it must be the exact semver version.
-- Does not use *cargo install* as a backup.
+- Does not use *cargo install* or *cargo-binstall* as a backup.

@@ -1,7 +1,9 @@
+mod args;
 #[cfg(test)]
 mod test;
 
 use flate2::read::GzDecoder;
+use owo_colors::{OwoColorize, Stream::Stdout};
 use sha2::{Digest, Sha256};
 use std::{
     env,
@@ -30,88 +32,29 @@ static REPORT_FLAGS: [&str; 6] = [
 ];
 
 fn main() -> Result<(), String> {
-    let mut args: Vec<String> = env::args().collect();
-    args.remove(0);
-
-    // Remove prebuilt if running by "cargo prebuilt"
-    match args.get(0) {
-        None => {
-            println!("Error not enough args. Try --help.");
-        }
-        Some(a) => {
-            if a.eq("prebuilt") {
-                args.remove(0);
-            }
-        }
+    // Bypass bpaf, print version, then exit.
+    let args: Vec<String> = env::args().collect();
+    if args.contains(&"--version".to_string()) || args.contains(&"-v".to_string()) {
+        println!(env!("CARGO_PKG_VERSION"));
+        std::process::exit(0);
     }
 
-    // Process args
-    let mut pkgs = None;
-    let mut target = TARGET.to_string();
-    let mut no_bin = false;
-    let mut ci = false;
-    let mut no_create_ch = false;
-    let mut reports = vec!["license-dl".to_string()];
-    for mut arg in args {
-        if arg.starts_with("--") {
-            if arg.starts_with("--target=") {
-                arg.replace_range(0..9, "");
-                target = arg;
-            }
-            else if arg.eq("--no-bin") {
-                no_bin = true;
-            }
-            else if arg.eq("--ci") {
-                ci = true;
-            }
-            else if arg.eq("--no-create") {
-                no_create_ch = true;
-            }
-            else if arg.starts_with("--reports=") {
-                arg.replace_range(0..10, "");
-                reports = arg
-                    .split(',')
-                    .map(|i| {
-                        if !REPORT_FLAGS.contains(&i) {
-                            println!("Not a valid report flag: {i}");
-                            std::process::exit(-33);
-                        }
-                        i.to_string()
-                    })
-                    .collect()
-            }
-            else if arg.eq("--nightly") {
-                println!("--nightly is not implemented yet.");
-                std::process::exit(-1);
-            }
-            else if arg.eq("--version") {
-                println!(env!("CARGO_PKG_VERSION"));
-                std::process::exit(0);
-            }
-            else if arg.eq("--help") {
-                println!("See https://github.com/crow-rest/cargo-prebuilt#how-to-use");
-                std::process::exit(0);
-            }
-        }
-        else {
-            pkgs = Some(arg);
-        }
-    }
-    let pkgs = pkgs;
-    let target = target.as_str();
-    let no_bin = no_bin;
+    let args = args::parse_args();
 
-    // Get location to install binaries to
-    let mut prebuilt_home = detect_cargo();
-    if !no_bin && !prebuilt_home.ends_with("bin") {
+    let target = args.target.as_str();
+
+    let mut prebuilt_home = args.path.unwrap_or_else(detect_cargo);
+    if !args.no_bin && !prebuilt_home.ends_with("bin") {
         prebuilt_home.push("bin");
     }
     let cargo_bin = prebuilt_home;
-    if !no_create_ch && create_dir_all(&cargo_bin).is_err() {
+
+    if !args.no_create_home && create_dir_all(&cargo_bin).is_err() {
         println!("Could not create the dirs {cargo_bin:?}.");
         std::process::exit(-44);
     }
 
+    // Build ureq agent
     let agent = ureq::AgentBuilder::new()
         .tls_connector(Arc::new(
             native_tls::TlsConnector::new().expect("Could not create TlsConnector"),
@@ -120,13 +63,7 @@ fn main() -> Result<(), String> {
         .build();
 
     // Get pkgs
-    let pkgs: Vec<String> = match pkgs {
-        Some(args) => args.split(',').map(|s| s.to_string()).collect(),
-        None => {
-            println!("Missing pkgs in args.");
-            std::process::exit(-2);
-        }
-    };
+    let pkgs: Vec<String> = args.pkgs.split(',').map(|s| s.to_string()).collect();
 
     for pkg in pkgs {
         let mut id = pkg;
@@ -152,7 +89,10 @@ fn main() -> Result<(), String> {
                 }
                 Err(Error::Status(code, _)) => {
                     if code == 404 {
-                        println!("Crate {id} not found in index!");
+                        println!(
+                            "Crate {id} {} in index!",
+                            "not found".if_supports_color(Stdout, |text| text.bright_red())
+                        );
                         std::process::exit(-3);
                     }
                     else {
@@ -183,7 +123,8 @@ fn main() -> Result<(), String> {
             Err(Error::Status(code, _)) => {
                 if code == 404 {
                     println!(
-                        "Crate {id}, version {version}, and target {target} was not found! (Hash)",
+                        "Crate {id}, version {version}, and target {target} was {}! (Hash)",
+                        "not found".if_supports_color(Stdout, |text| text.bright_red())
                     );
                     std::process::exit(-9);
                 }
@@ -199,7 +140,10 @@ fn main() -> Result<(), String> {
         };
 
         let mut tar_bytes: Vec<u8> = Vec::new();
-        println!("Downloading {id} {version} from {pre_url}.tar.gz");
+        println!(
+            "{} {id} {version} from {pre_url}.tar.gz",
+            "Downloading".if_supports_color(Stdout, |text| text.bright_blue())
+        );
         match agent.get(&format!("{pre_url}.tar.gz")).call() {
             Ok(response) => {
                 response
@@ -209,7 +153,10 @@ fn main() -> Result<(), String> {
             }
             Err(Error::Status(code, _)) => {
                 if code == 404 {
-                    println!("Crate {id}, version {version}, and target {target} was not found!");
+                    println!(
+                        "Crate {id}, version {version}, and target {target} was {}! (Tar)",
+                        "not found".if_supports_color(Stdout, |text| text.bright_red())
+                    );
                     std::process::exit(-6);
                 }
                 else {
@@ -234,12 +181,15 @@ fn main() -> Result<(), String> {
             std::process::exit(-256);
         }
 
-        // Untar Tar
+        // Extract Tar
         let reader = std::io::Cursor::new(tar_bytes);
         let mut archive = Archive::new(GzDecoder::new(reader));
         match archive.entries() {
             Ok(es) => {
-                println!("Extracting {id} {version}...");
+                println!(
+                    "{} {id} {version}...",
+                    "Extracting".if_supports_color(Stdout, |text| text.bright_blue())
+                );
 
                 for e in es {
                     let mut e = e.expect("Malformed entry.");
@@ -251,7 +201,10 @@ fn main() -> Result<(), String> {
                         .expect("Could not extract binaries from downloaded tar archive");
 
                     let abs = fs::canonicalize(path).expect("Could not canonicalize install path");
-                    println!("Added {abs:?}.");
+                    println!(
+                        "{} {abs:?}.",
+                        "Added".if_supports_color(Stdout, |text| text.bright_purple())
+                    );
                 }
             }
             Err(_) => {
@@ -261,15 +214,18 @@ fn main() -> Result<(), String> {
         }
 
         // Reports
-        if !ci {
-            println!("Getting reports... ");
+        if !args.ci {
+            println!(
+                "{} reports... ",
+                "Getting".if_supports_color(Stdout, |text| text.bright_blue())
+            );
 
-            let license_out = reports.contains(&REPORT_FLAGS[0].to_string());
-            let license_dl = true; // On by default.
-            let deps_out = reports.contains(&REPORT_FLAGS[2].to_string());
-            let deps_dl = reports.contains(&REPORT_FLAGS[3].to_string());
-            let audit_out = reports.contains(&REPORT_FLAGS[4].to_string());
-            let audit_dl = reports.contains(&REPORT_FLAGS[5].to_string());
+            let license_out = args.reports.contains(&REPORT_FLAGS[0].to_string());
+            let license_dl = args.reports.contains(&REPORT_FLAGS[1].to_string());
+            let deps_out = args.reports.contains(&REPORT_FLAGS[2].to_string());
+            let deps_dl = args.reports.contains(&REPORT_FLAGS[3].to_string());
+            let audit_out = args.reports.contains(&REPORT_FLAGS[4].to_string());
+            let audit_dl = args.reports.contains(&REPORT_FLAGS[5].to_string());
 
             let mut report_path = cargo_bin.clone();
             report_path.push(format!(".prebuilt/reports/{id}/{version}"));
@@ -295,28 +251,20 @@ fn main() -> Result<(), String> {
                 audit_out,
                 audit_dl,
             );
-
-            println!("Done getting reports.");
         }
 
-        println!("Installed {id} {version}.");
+        println!(
+            "{} {id} {version}.",
+            "Installed".if_supports_color(Stdout, |text| text.bright_green())
+        );
     }
 
-    println!("Done!");
+    println!("{}", "Done!".if_supports_color(Stdout, |text| text.green()));
 
     Ok(())
 }
 
 fn detect_cargo() -> PathBuf {
-    // Use PREBUILT_HOME env var.
-    if let Some(home) = env::var_os("PREBUILT_HOME") {
-        return PathBuf::from(home);
-    }
-    // Use CARGO_HOME env var.
-    if let Some(home) = env::var_os("CARGO_HOME") {
-        return PathBuf::from(home);
-    }
-
     // Try to find CARGO_HOME by searching for cargo executable in common paths.
     let ext = if TARGET.contains("windows") { ".exe" } else { "" };
     let mut home_cargo_dir = home::home_dir().unwrap_or_else(|| PathBuf::from("~"));
