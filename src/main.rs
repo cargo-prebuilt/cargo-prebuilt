@@ -1,7 +1,9 @@
 mod args;
+mod interact;
 #[cfg(test)]
 mod test;
 
+use crate::interact::{Interact, InteractError};
 use flate2::read::GzDecoder;
 use owo_colors::{OwoColorize, Stream::Stdout};
 use sha2::{Digest, Sha256};
@@ -21,7 +23,6 @@ use tar::Archive;
 use ureq::{Agent, Error};
 
 static TARGET: &str = env!("TARGET");
-static DOWNLOAD_URL: &str = "https://github.com/crow-rest/cargo-prebuilt-index/releases/download";
 static REPORT_FLAGS: [&str; 6] = [
     "license-out",
     "license-dl",
@@ -48,7 +49,10 @@ fn main() -> Result<(), String> {
         owo_colors::set_override(false);
     }
 
-    let target = args.target.as_str();
+    //TODO: Allow for custom indexes
+    let interact = interact::create_interact(None, None);
+
+    let target = args.target;
 
     let mut prebuilt_home = args.path.unwrap_or_else(detect_cargo);
     if !args.no_bin && !prebuilt_home.ends_with("bin") {
@@ -67,6 +71,7 @@ fn main() -> Result<(), String> {
             native_tls::TlsConnector::new().expect("Could not create TlsConnector"),
         ))
         .https_only(true)
+        .user_agent(format!("cargo-prebuilt {}", env!("CARGO_PKG_VERSION")).as_str())
         .build();
 
     // Get pkgs
@@ -84,28 +89,22 @@ fn main() -> Result<(), String> {
 
         // Get latest version
         if version.is_none() {
-            let res = match agent
-                .get(&format!("{DOWNLOAD_URL}/stable-index/{id}"))
-                .call()
-            {
-                Ok(response) => {
-                    let s = response
-                        .into_string()
-                        .expect("Malformed latest version string.");
-                    s.trim().to_string()
+            let res = match interact.get_latest(&agent, &id) {
+                Ok(s) => s,
+                Err(InteractError::Malformed) => {
+                    println!("The version string for {id} is malformed.");
+                    std::process::exit(-342);
                 }
-                Err(Error::Status(code, _)) => {
-                    if code == 404 {
-                        println!(
-                            "Crate {id} {} in index!",
-                            "not found".if_supports_color(Stdout, |text| text.bright_red())
-                        );
-                        std::process::exit(-3);
-                    }
-                    else {
-                        println!("Error {code} for crate {id}.");
-                        std::process::exit(-4);
-                    }
+                Err(InteractError::HttpCode(404)) => {
+                    println!(
+                        "Crate {id} {} in index!",
+                        "not found".if_supports_color(Stdout, |text| text.bright_red())
+                    );
+                    std::process::exit(-3);
+                }
+                Err(InteractError::HttpCode(code)) => {
+                    println!("Http error {code} for crate {id}.");
+                    std::process::exit(-4);
                 }
                 Err(_) => {
                     println!("Connection error.");
@@ -115,30 +114,25 @@ fn main() -> Result<(), String> {
 
             version = Some(res);
         }
-
         let version = version.unwrap();
 
-        // Download package
-        let base_url = format!("{DOWNLOAD_URL}/{id}-{version}/");
-        let pre_url = format!("{base_url}{target}");
-
-        let sha_hash = match agent.get(&format!("{pre_url}.sha256")).call() {
-            Ok(response) => {
-                let s = response.into_string().expect("Malformed hash string.");
-                s.trim().to_string()
+        // Download hash
+        let sha_hash = match interact.get_hash(&agent, &id, &version, &target) {
+            Ok(s) => s,
+            Err(InteractError::Malformed) => {
+                println!("The hash string for {id} is malformed.");
+                std::process::exit(-343);
             }
-            Err(Error::Status(code, _)) => {
-                if code == 404 {
-                    println!(
-                        "Crate {id}, version {version}, and target {target} was {}! (Hash)",
-                        "not found".if_supports_color(Stdout, |text| text.bright_red())
-                    );
-                    std::process::exit(-9);
-                }
-                else {
-                    println!("Error {code} for crate {id}.");
-                    std::process::exit(-10);
-                }
+            Err(InteractError::HttpCode(404)) => {
+                println!(
+                    "Crate {id}, version {version}, and target {target} was {}! (Hash)",
+                    "not found".if_supports_color(Stdout, |text| text.bright_red())
+                );
+                std::process::exit(-9);
+            }
+            Err(InteractError::HttpCode(code)) => {
+                println!("Http error {code} for crate {id}.");
+                std::process::exit(-10);
             }
             Err(_) => {
                 println!("Connection error.");
@@ -146,36 +140,34 @@ fn main() -> Result<(), String> {
             }
         };
 
-        let mut tar_bytes: Vec<u8> = Vec::new();
+        // Download tarball
         println!(
-            "{} {id} {version} from {pre_url}.tar.gz",
-            "Downloading".if_supports_color(Stdout, |text| text.bright_blue())
+            "{} {id} {version} from {}.tar.gz",
+            "Downloading".if_supports_color(Stdout, |text| text.bright_blue()),
+            interact.pre_url(&id, &version, &target)
         );
-        match agent.get(&format!("{pre_url}.tar.gz")).call() {
-            Ok(response) => {
-                response
-                    .into_reader()
-                    .read_to_end(&mut tar_bytes)
-                    .expect("Failed when reading in tar.gz bytes.");
+        let tar_bytes = match interact.get_tar(&agent, &id, &version, &target) {
+            Ok(b) => b,
+            Err(InteractError::Malformed) => {
+                println!("The tar bytes for {id} are malformed.");
+                std::process::exit(-344);
             }
-            Err(Error::Status(code, _)) => {
-                if code == 404 {
-                    println!(
-                        "Crate {id}, version {version}, and target {target} was {}! (Tar)",
-                        "not found".if_supports_color(Stdout, |text| text.bright_red())
-                    );
-                    std::process::exit(-6);
-                }
-                else {
-                    println!("Error {code} for crate {id}.");
-                    std::process::exit(-7);
-                }
+            Err(InteractError::HttpCode(404)) => {
+                println!(
+                    "Crate {id}, version {version}, and target {target} was {}! (Tar)",
+                    "not found".if_supports_color(Stdout, |text| text.bright_red())
+                );
+                std::process::exit(-6);
+            }
+            Err(InteractError::HttpCode(code)) => {
+                println!("Http error {code} for crate {id}.");
+                std::process::exit(-7);
             }
             Err(_) => {
                 println!("Connection error.");
                 std::process::exit(-8);
             }
-        }
+        };
 
         // Check hash
         let mut hasher = Sha256::new();
@@ -215,7 +207,7 @@ fn main() -> Result<(), String> {
                 }
             }
             Err(_) => {
-                println!("Connection error.");
+                println!("Cannot get entries from downloaded tar.");
                 std::process::exit(-13);
             }
         }
@@ -240,20 +232,33 @@ fn main() -> Result<(), String> {
 
             // license.report
             handle_report(
+                &interact,
                 &agent,
-                "license",
-                &base_url,
+                &id,
+                &version,
+                &"license".to_string(),
                 &report_path,
                 license_out,
                 license_dl,
             );
             // deps.report
-            handle_report(&agent, "deps", &base_url, &report_path, deps_out, deps_dl);
+            handle_report(
+                &interact,
+                &agent,
+                &id,
+                &version,
+                &"deps".to_string(),
+                &report_path,
+                deps_out,
+                deps_dl,
+            );
             // audit.report
             handle_report(
+                &interact,
                 &agent,
-                "audit",
-                &base_url,
+                &id,
+                &version,
+                &"audit".to_string(),
                 &report_path,
                 audit_out,
                 audit_dl,
@@ -350,54 +355,50 @@ fn detect_cargo() -> PathBuf {
 }
 
 fn handle_report(
+    interact: &Box<dyn Interact>,
     agent: &Agent,
-    name: &str,
-    base_url: &String,
+    id: &String,
+    version: &String,
+    name: &String,
     report_path: &Path,
     out: bool,
     dl: bool,
 ) {
     if out || dl {
-        let url = format!("{base_url}{name}.report");
-        match agent.get(&url).call() {
-            Ok(response) => {
-                let mut bytes: Vec<u8> = Vec::new();
-                if response.into_reader().read_to_end(&mut bytes).is_ok() {
-                    if let Ok(s) = String::from_utf8(bytes) {
-                        if out {
-                            println!("{name}.report:\n{s}");
-                        }
-
-                        if dl {
-                            let mut dir = report_path.to_path_buf();
-                            match create_dir_all(&dir) {
-                                Ok(_) => {
-                                    dir.push(format!("{name}.report"));
-                                    match File::create(&dir) {
-                                        Ok(mut file) => match file.write(s.as_bytes()) {
-                                            Ok(_) => {}
-                                            Err(_) => {
-                                                println!("Could not write to {name}.report file.")
-                                            }
-                                        },
-                                        Err(_) => println!("Could not create {name}.report file."),
-                                    }
-                                }
-                                Err(_) => {
-                                    println!("Could not create directories for {name}.report.")
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            Err(Error::Status(code, _)) => {
-                if code == 404 {
-                    println!("Did not find a {name} report in the index.");
-                }
+        let report = match interact.get_report(agent, id, version, name) {
+            Ok(r) => r,
+            Err(InteractError::HttpCode(404)) => {
+                println!("Could not find a {name} report in the index.");
+                return;
             }
             Err(_) => {
-                println!("Connection error.");
+                println!("Unknown error when trying to get {name} report.");
+                return;
+            }
+        };
+
+        if out {
+            println!("{name}.report:\n{report}");
+        }
+
+        if dl {
+            let mut dir = report_path.to_path_buf();
+            match create_dir_all(&dir) {
+                Ok(_) => {
+                    dir.push(format!("{name}.report"));
+                    match File::create(&dir) {
+                        Ok(mut file) => match file.write(report.as_bytes()) {
+                            Ok(_) => {}
+                            Err(_) => {
+                                println!("Could not write to {name}.report file.")
+                            }
+                        },
+                        Err(_) => println!("Could not create {name}.report file."),
+                    }
+                }
+                Err(_) => {
+                    println!("Could not create directories for {name}.report.")
+                }
             }
         }
     }
