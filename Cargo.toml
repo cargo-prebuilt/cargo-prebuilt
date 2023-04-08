@@ -27,7 +27,7 @@ flate2 = "1.0.25"
 hex = "0.4.3"
 home = "0.5.4"
 native-tls = "0.2.11"
-owo-colors = "3.5.0"
+owo-colors = { version = "3.5.0", features = ["supports-colors"] }
 sha2 = "0.10.6"
 tar = "0.4.38"
 ureq = { version = "2.6.2", default-features = false, features = ["gzip", "native-tls", "native-certs"] }
