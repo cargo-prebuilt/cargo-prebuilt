@@ -62,9 +62,7 @@ pub fn parse_args() -> Arguments {
         .help("Prints out program version")
         .switch();
 
-    let colors = long("colors")
-        .help("Force colors to be turned on")
-        .switch();
+    let colors = long("colors").help("Force colors to be turned on").switch();
 
     let no_colors = long("no-colors")
         .help("Force colors to be turned off")
