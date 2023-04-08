@@ -41,6 +41,13 @@ fn main() -> Result<(), String> {
 
     let args = args::parse_args();
 
+    if args.colors {
+        owo_colors::set_override(true);
+    }
+    if args.no_colors {
+        owo_colors::set_override(false);
+    }
+
     let target = args.target.as_str();
 
     let mut prebuilt_home = args.path.unwrap_or_else(detect_cargo);

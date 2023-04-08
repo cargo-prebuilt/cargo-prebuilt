@@ -12,6 +12,8 @@ pub struct Arguments {
     pub no_create_home: bool,
     pub reports: String,
     pub version: bool,
+    pub colors: bool,
+    pub no_colors: bool,
     pub pkgs: String,
 }
 
@@ -60,6 +62,14 @@ pub fn parse_args() -> Arguments {
         .help("Prints out program version")
         .switch();
 
+    let colors = long("colors")
+        .help("Force colors to be turned on")
+        .switch();
+
+    let no_colors = long("no-colors")
+        .help("Force colors to be turned off")
+        .switch();
+
     let parser = construct!(Arguments {
         target,
         index,
@@ -69,6 +79,8 @@ pub fn parse_args() -> Arguments {
         no_create_home,
         reports,
         version,
+        colors,
+        no_colors,
         pkgs,
     });
 
