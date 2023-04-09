@@ -206,9 +206,8 @@ jobs:
         run: rustup update
       - name: Rust Version
         run: rustc --version
-      - uses: cargo-prebuilt/cargo-prebuilt-action@v1
-        with:
-          tools: cargo-audit
+      - name: Temp bypass
+        run: cargo install cargo-audit
       - name: Deps Report
         run: |
           test -f Cargo.lock || cargo generate-lockfile --verbose
@@ -306,9 +305,8 @@ jobs:
         run: rustup update
       - name: Rust Version
         run: rustc --version
-      - uses: cargo-prebuilt/cargo-prebuilt-action@v1
-        with:
-          tools: cross,coreutils
+      - name: Temp bypass
+        run: cargo install cross coreutils
       - name: Run tests
         if: ${{ matrix.can-test }}
         run: cross test --verbose --workspace --all-features --release --locked --target ${{ matrix.target }}
@@ -358,9 +356,8 @@ jobs:
         run: rustc --version
       - name: Add Rust target
         run: rustup target add ${{ matrix.target }}
-      - uses: cargo-prebuilt/cargo-prebuilt-action@v1
-        with:
-          tools: cargo-auditable,coreutils
+      - name: Temp bypass
+        run: cargo install cargo-auditable coreutils
       - name: Run tests
         if: ${{ matrix.can-test }}
         run: cargo test --verbose --workspace --all-features --release --locked --target ${{ matrix.target }}
@@ -421,9 +418,8 @@ jobs:
         run: rustc --version
       - name: Add Rust target
         run: rustup target add ${{ matrix.target }}
-      - uses: cargo-prebuilt/cargo-prebuilt-action@v1
-        with:
-          tools: cargo-auditable,coreutils
+      - name: Temp bypass
+        run: cargo install cargo-auditable coreutils
       - name: Run tests
         if: ${{ matrix.can-test }}
         run: cargo test --verbose --workspace --all-features --release --locked --target ${{ matrix.target }}
