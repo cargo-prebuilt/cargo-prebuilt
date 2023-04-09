@@ -50,10 +50,10 @@ jobs:
         run: rustup update
       - name: Rust Version
         run: rustc --version
-      - name: Publish
-        run: cargo publish --verbose --locked --token ${CRATES_TOKEN}
-        env:
-          CRATES_TOKEN: ${{ secrets.CRATES_TOKEN }}
+#      - name: Publish
+#        run: cargo publish --verbose --locked --token ${CRATES_TOKEN}
+#        env:
+#          CRATES_TOKEN: ${{ secrets.CRATES_TOKEN }}
 
   publish-github-releases:
     runs-on: ubuntu-latest
@@ -108,6 +108,7 @@ jobs:
     env:
       CARGO_TERM_COLOR: never
     runs-on: ${{ matrix.os }}
+    needs: [ setup ]
     steps:
       - uses: actions/checkout@v3
       - name: Change file endings in Cargo.lock
