@@ -17,6 +17,8 @@ impl GithubPrivate {
 }
 impl Interact for GithubPrivate {
     fn pre_url(&self, id: &str, version: &str, target: &str) -> String {
+        let _ = self.auth_token;
+
         format!(
             "https://{}/releases/download/{id}-{version}/{target}",
             self.slug

@@ -147,6 +147,111 @@ jobs:
           cat .step-data.txt >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
 
+  cargo-hack:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+          - target: x86_64-apple-darwin
+            os: macos-latest
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+    env:
+      CARGO_TERM_COLOR: never
+    runs-on: ${{ matrix.os }}
+    needs: [ setup ]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Change file endings in Cargo.lock
+        if: ${{ contains( matrix.os, 'windows' ) }}
+        shell: pwsh
+        run: (Get-Content -Raw Cargo.lock) -replace "`r`n","`n" | Set-Content Cargo.lock -NoNewline
+      - name: Get deps from cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            .cargo-store
+          key: deps-cache-${{ hashFiles('**/Cargo.lock') }}
+          enableCrossOsArchive: true
+          fail-on-cache-miss: true
+      - name: Move deps
+        run: mv ./.cargo-store/* ~/.cargo
+      - name: Update Rust
+        run: rustup update
+      - name: Rust Version
+        run: rustc --version
+      - uses: cargo-prebuilt/cargo-prebuilt-action@v1
+        with:
+          tools: cargo-hack
+      - name: Hack Check (each-feature)
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo hack check --each-feature --no-dev-deps --verbose --workspace --release --locked 2>&1 | tee .step-data.txt
+      - name: Hack Check (feature-powerset)
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo hack check --feature-powerset --no-dev-deps --verbose --workspace --release --locked 2>&1 | tee .step-data.txt
+      - name: Put into summary (success)
+        if: success()
+        shell: bash
+        run: echo "Success" >> $GITHUB_STEP_SUMMARY
+      - name: Put into summary (failure)
+        if: failure()
+        shell: bash
+        run: |
+          echo "Failed!" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`shell" >> $GITHUB_STEP_SUMMARY
+          cat .step-data.txt >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+  cargo-msrv:
+    env:
+      CARGO_TERM_COLOR: never
+    runs-on: ubuntu-latest
+    needs: [ setup ]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Get deps from cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            .cargo-store
+          key: deps-cache-${{ hashFiles('**/Cargo.lock') }}
+          enableCrossOsArchive: true
+          fail-on-cache-miss: true
+      - name: Move deps
+        run: mv ./.cargo-store/* ~/.cargo
+      - name: Update Rust
+        run: rustup update
+      - name: Rust Version
+        run: rustc --version
+      - uses: cargo-prebuilt/cargo-prebuilt-action@v1
+        with:
+          tools: cargo-binstall
+      - name: Install cargo-msrv
+        run: cargo binstall --version 0.16.0-beta.11 --no-confirm cargo-msrv
+      - name: MSRV Check
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo msrv verify -- cargo check --verbose --release --locked 2>&1 | tee .step-data.txt
+      - name: Put into summary (success)
+        if: success()
+        shell: bash
+        run: echo "Success" >> $GITHUB_STEP_SUMMARY
+      - name: Put into summary (failure)
+        if: failure()
+        shell: bash
+        run: |
+          echo "Failed!" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`shell" >> $GITHUB_STEP_SUMMARY
+          cat .step-data.txt >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
   setup:
     runs-on: ubuntu-latest
     steps:
@@ -290,7 +395,7 @@ jobs:
             can-test: true
             ending: .exe
     runs-on: ubuntu-latest
-    needs: [ setup, check-fmt, clippy ]
+    needs: [ setup, check-fmt, clippy, cargo-hack, cargo-msrv ]
     steps:
       - uses: actions/checkout@v3
       - name: Get deps from cache
@@ -340,7 +445,7 @@ jobs:
           - target: aarch64-apple-darwin
             can-test: false
     runs-on: macos-latest
-    needs: [ setup, check-fmt, clippy ]
+    needs: [ setup, check-fmt, clippy, cargo-hack, cargo-msrv ]
     steps:
       - uses: actions/checkout@v3
       - name: Get deps from cache
@@ -396,7 +501,7 @@ jobs:
           - target: i686-pc-windows-msvc
             can-test: true
     runs-on: windows-latest
-    needs: [ setup, check-fmt, clippy ]
+    needs: [ setup, check-fmt, clippy, cargo-hack, cargo-msrv ]
     steps:
       - uses: actions/checkout@v3
       - name: Change file endings in Cargo.lock
