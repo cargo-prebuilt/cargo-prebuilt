@@ -1,6 +1,6 @@
 [package]
 name = "cargo-prebuilt"
-version = "0.5.1"
+version = "0.5.2"
 edition = "2021"
 authors = ["harmless-tech"]
 description = "Download prebuilt crate binaries for many different platforms"
@@ -34,9 +34,9 @@ thiserror = "1.0.40"
 ureq = { version = "2.6.2", default-features = false, features = ["gzip", "brotli", "native-tls", "native-certs"] }
 
 [features]
-default = ["vendored-openssl", "bright-color", "github-public"]
+default = ["vendored-openssl", "bright-color", "github-public", "github-private"]
 github-public = []
-#github-private = [] #TODO: Under dev
+github-private = []
 #gitlab-public = [] #TODO: Under dev
 #gitlab-private = [] #TODO: Under dev
 #forgejo-public = [] #TODO: Under dev
