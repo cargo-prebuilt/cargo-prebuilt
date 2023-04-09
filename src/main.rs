@@ -5,19 +5,10 @@ mod interact;
 mod test;
 
 use flate2::read::GzDecoder;
+use home::cargo_home;
 use owo_colors::{OwoColorize, Stream::Stdout};
 use sha2::{Digest, Sha256};
-use std::{
-    env,
-    ffi::OsString,
-    fs,
-    fs::{create_dir_all, File},
-    path::PathBuf,
-    process::Command,
-    str,
-    string::ToString,
-    sync::Arc,
-};
+use std::{env, fs, fs::create_dir_all, path::Path, str, string::ToString, sync::Arc};
 use tar::Archive;
 
 static TARGET: &str = env!("TARGET");
@@ -44,15 +35,21 @@ fn main() -> Result<(), String> {
 
     let target = args.target.as_str();
 
-    let mut prebuilt_home = args.path.clone().unwrap_or_else(detect_cargo);
-    if !args.no_bin && !prebuilt_home.ends_with("bin") {
-        prebuilt_home.push("bin");
-    }
-    let cargo_bin = prebuilt_home;
+    let prebuilt_bin = args.path.clone().unwrap_or_else(|| {
+        let mut cargo_home = cargo_home().expect("Could not find cargo home directory, please set CARGO_HOME or PREBUILT_PATH, or use --path");
+        if !cargo_home.ends_with("bin") {
+            cargo_home.push("bin");
+        }
+        cargo_home
+    });
 
-    if !args.no_create_home && create_dir_all(&cargo_bin).is_err() {
-        println!("Could not create the dirs {cargo_bin:?}.");
+    if !args.no_create_path && create_dir_all(&prebuilt_bin).is_err() {
+        println!("Could not create the directories {prebuilt_bin:?}.");
         std::process::exit(-44);
+    }
+    else if !Path::new(&prebuilt_bin).exists() {
+        println!("Directories do not exist! {prebuilt_bin:?}.");
+        std::process::exit(-45);
     }
 
     // Build ureq agent
@@ -116,7 +113,7 @@ fn main() -> Result<(), String> {
                 for e in es {
                     let mut e = e.expect("Malformed entry.");
 
-                    let mut path = cargo_bin.clone();
+                    let mut path = prebuilt_bin.clone();
                     path.push(e.path().expect("Could not extract path from tar."));
 
                     e.unpack(&path)
@@ -136,7 +133,7 @@ fn main() -> Result<(), String> {
         }
 
         // Reports
-        get::reports(interact, &args, &cargo_bin, id, version);
+        get::reports(interact, &args, &prebuilt_bin, id, version);
 
         println!(
             "{} {id} {version}.",
@@ -147,82 +144,4 @@ fn main() -> Result<(), String> {
     println!("{}", "Done!".if_supports_color(Stdout, |text| text.green()));
 
     Ok(())
-}
-
-fn detect_cargo() -> PathBuf {
-    // Try to find CARGO_HOME by searching for cargo executable in common paths.
-    let ext = if TARGET.contains("windows") { ".exe" } else { "" };
-    let mut home_cargo_dir = home::home_dir().unwrap_or_else(|| PathBuf::from("~"));
-    home_cargo_dir.push(".cargo/bin/cargo");
-    for path in [
-        home_cargo_dir,
-        PathBuf::from(format!("/usr/local/cargo/bin/cargo{ext}")),
-    ]
-    .iter_mut()
-    {
-        if File::open(&path).is_ok() {
-            let abs = fs::canonicalize(&path).expect("Could not canonicalize cargo path");
-            println!("Detected cargo at {abs:?}. Will install into this folder.");
-
-            path.pop(); // Remove cargo executable.
-            if path.ends_with("bin") {
-                // Remove bin if the folder is appended.
-                path.pop();
-            }
-            return path.clone();
-        }
-    }
-
-    // Try to find CARGO_HOME by using which/where.exe to get where the cargo executable is.
-    #[cfg(target_family = "unix")]
-    {
-        use std::os::unix::ffi::OsStringExt;
-
-        println!("WARN: Using which to find cargo and then deduce CARGO_HOME.");
-
-        let out = Command::new("sh")
-            .args(["-c", "which cargo"])
-            .output()
-            .expect("Could not use which to detect where cargo is.");
-        if out.status.success() {
-            let mut path = PathBuf::from(OsString::from_vec(out.stdout));
-            path.pop(); // Remove cargo executable.
-            if path.ends_with("bin") {
-                // Remove bin if the folder is appended.
-                path.pop();
-            }
-            return path;
-        }
-
-        println!("Could not detect cargo using which. Please set the CARGO_HOME env var.");
-        std::process::exit(-125);
-    }
-    #[cfg(target_family = "windows")]
-    {
-        use std::os::windows::ffi::OsStringExt;
-
-        println!("WARN: Using where.exe to find cargo and then deduce CARGO_HOME.");
-
-        let out = Command::new("cmd")
-            .args(["/C", "where.exe cargo.exe"])
-            .output()
-            .expect("Could not use where.exe to detect where cargo is.");
-        if out.status.success() {
-            let p_vec: Vec<u16> = out.stdout.iter().map(|a| *a as u16).collect();
-            let mut path = PathBuf::from(OsString::from_wide(&p_vec));
-            path.pop(); // Remove cargo executable.
-            if path.ends_with("bin") {
-                path.pop();
-            } // Remove bin if the folder is appended.
-            return path;
-        }
-
-        println!("Could not detect cargo using where.exe. Please set the CARGO_HOME env var.");
-        std::process::exit(-126);
-    }
-    #[cfg(not(any(target_family = "unix", target_family = "windows")))]
-    {
-        println!("Platform does not support which/where.exe detection of cargo. Please set the CARGO_HOME env var.");
-        std::process::exit(-122);
-    }
 }

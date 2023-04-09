@@ -17,9 +17,8 @@ pub struct Arguments {
     pub index: Option<String>,
     pub auth: Option<String>,
     pub path: Option<PathBuf>,
-    pub no_bin: bool,
     pub ci: bool,
-    pub no_create_home: bool,
+    pub no_create_path: bool,
     pub reports: String,
     pub version: bool,
     pub colors: bool,
@@ -49,21 +48,16 @@ pub fn parse_args() -> Arguments {
         .optional();
 
     let path = long("path")
-        .env("PREBUILT_HOME")
-        .env("CARGO_HOME")
+        .env("PREBUILT_PATH")
         .help("Path to the home folder where downloaded binaries will be installed")
         .argument::<PathBuf>("PATH")
         .optional();
-
-    let no_bin = long("no-bin")
-        .help("Do not add /bin to the end of the path")
-        .switch();
 
     let ci = long("ci")
         .help("Do not download reports or create a .prebuilt directory")
         .switch();
 
-    let no_create_home = long("no-create-home")
+    let no_create_path = long("no-create-path")
         .help("Do not create the home an/or bin folder if it is missing")
         .switch();
 
@@ -89,9 +83,8 @@ pub fn parse_args() -> Arguments {
         index,
         auth,
         path,
-        no_bin,
         ci,
-        no_create_home,
+        no_create_path,
         reports,
         version,
         colors,
