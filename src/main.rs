@@ -58,7 +58,7 @@ fn main() -> Result<(), String> {
             native_tls::TlsConnector::new().expect("Could not create TlsConnector"),
         ))
         .https_only(true)
-        .user_agent(format!("cargo-prebuilt {}", env!("CARGO_PKG_VERSION")).as_str())
+        .user_agent(format!("cargo-prebuilt_cli {}", env!("CARGO_PKG_VERSION")).as_str())
         .build();
 
     let interact = interact::create_interact(&args.index, &args.auth, agent);

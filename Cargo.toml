@@ -55,8 +55,9 @@ strip = true
 
 [profile.quick-build]
 inherits = "release"
+opt-level = 0
 lto = false
-codegen-units = 256
+codegen-units = 16
 
 [package.metadata.binstall]
 pkg-url = "{ repo }/releases/download/v{ version }/{ target }.tar.gz"
