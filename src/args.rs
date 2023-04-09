@@ -38,7 +38,7 @@ pub fn parse_args() -> Arguments {
 
     let index = long("index")
         .env("PREBUILT_INDEX")
-        .help("Index to use. (Default: github.com/crow-rest/cargo-prebuilt-index)")
+        .help("Index to use. (Default: github.com/cargo-prebuilt/index)")
         .argument::<String>("INDEX")
         .optional();
 

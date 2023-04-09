@@ -7,7 +7,7 @@ description = "Download prebuilt crate binaries for many different platforms"
 readme = "README.md"
 license = "MIT"
 #homepage = ""
-repository = "https://github.com/crow-rest/cargo-prebuilt"
+repository = "https://github.com/cargo-prebuilt/cargo-prebuilt"
 keywords = ["cargo", "cargo-subcommand", "binary"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

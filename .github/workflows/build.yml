@@ -78,7 +78,7 @@ jobs:
         run: rustup update
       - name: Rust Version
         run: rustc --version
-      - uses: crow-rest/cargo-prebuilt-action@v1
+      - uses: cargo-prebuilt/cargo-prebuilt-action@v1
         with:
           tools: cargo-audit
       - name: Deps Report
@@ -182,7 +182,7 @@ jobs:
         run: rustup update
       - name: Rust Version
         run: rustc --version
-      - uses: crow-rest/cargo-prebuilt-action@v1
+      - uses: cargo-prebuilt/cargo-prebuilt-action@v1
         with:
           tools: cross
       - name: Run tests

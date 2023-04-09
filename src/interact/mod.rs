@@ -26,7 +26,7 @@ pub fn create_interact(
         {
             return Box::new(github_public::GithubPublic::new(
                 agent,
-                "github.com/crow-rest/cargo-prebuilt-index",
+                "github.com/cargo-prebuilt/index",
             ));
         }
         #[cfg(not(feature = "github-public"))]
