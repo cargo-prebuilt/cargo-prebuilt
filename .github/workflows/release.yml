@@ -68,7 +68,7 @@ jobs:
           name: ${{ needs.release.outputs.name }}
           allowUpdates: true
           prerelease: ${{ needs.release.outputs.prerelease }}
-          artifacts: "target-*/*.tar.gz,target-*/*.sha256"
+          artifacts: "target-*/*.tar.gz,target-*/*.zip,target-*/*.sha256"
           body: ""
 
   check-fmt:
