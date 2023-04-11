@@ -1,9 +1,9 @@
 use ureq::Agent;
 
-#[cfg(feature = "github-public")]
-mod github_public;
 #[cfg(feature = "github-private")]
 mod github_private;
+#[cfg(feature = "github-public")]
+mod github_public;
 
 #[derive(thiserror::Error, Debug)]
 pub enum InteractError {
@@ -65,7 +65,11 @@ pub fn create_interact(
                 .get(7..input.len())
                 .expect("Missing url after gh-pri:");
             println!("Using index https://{url}.");
-            return Box::new(github_private::GithubPrivate::new(agent, auth.clone().expect("Need auth token for private index."), url));
+            return Box::new(github_private::GithubPrivate::new(
+                agent,
+                auth.clone().expect("Need auth token for private index."),
+                url,
+            ));
         }
         #[cfg(not(feature = "github-private"))]
         {
