@@ -50,10 +50,10 @@ jobs:
         run: rustup update
       - name: Rust Version
         run: rustc --version
-#      - name: Publish
-#        run: cargo publish --verbose --locked --token ${CRATES_TOKEN}
-#        env:
-#          CRATES_TOKEN: ${{ secrets.CRATES_TOKEN }}
+      - name: Publish
+        run: cargo publish --verbose --locked --token ${CRATES_TOKEN}
+        env:
+          CRATES_TOKEN: ${{ secrets.CRATES_TOKEN }}
 
   publish-github-releases:
     runs-on: ubuntu-latest
@@ -61,15 +61,15 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: actions/download-artifact@v3
-#      - name: Create and push artifacts to release
-#        uses: ncipollo/release-action@v1
-#        with:
-#          tag: ${{ needs.release.outputs.tag }}
-#          name: ${{ needs.release.outputs.name }}
-#          allowUpdates: true
-#          prerelease: ${{ needs.release.outputs.prerelease }}
-#          artifacts: "target-*/*.tar.gz,target-*/*.zip,target-*/*.sha256"
-#          body: ""
+      - name: Create and push artifacts to release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ needs.release.outputs.tag }}
+          name: ${{ needs.release.outputs.name }}
+          allowUpdates: true
+          prerelease: ${{ needs.release.outputs.prerelease }}
+          artifacts: "target-*/*.tar.gz,target-*/*.zip,target-*/*.sha256"
+          body: ""
 
   check-fmt:
     env:
