@@ -1,4 +1,5 @@
 mod args;
+mod conf_file;
 mod get;
 mod interact;
 #[cfg(test)]
@@ -21,10 +22,16 @@ fn main() -> Result<(), String> {
         std::process::exit(0);
     }
 
-    let args = args::parse_args();
-
+    let mut args = args::parse_args();
     #[cfg(debug_assertions)]
     dbg!(&args);
+
+    // Try to get index from config file.
+    if !args.ci && args.index.is_none() {
+        args.index = conf_file::get_index();
+    }
+
+    let args = args;
 
     if args.colors {
         owo_colors::set_override(true);

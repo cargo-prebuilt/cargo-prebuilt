@@ -1,12 +1,16 @@
 # Changelog
 
-## [0.5.2](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.5.2)
+## Next release
 
 - Support for custom indexes. [Github private] (#24)
 
+## [0.5.2](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.5.2)
+
+- Support optional config file under $HOME/.config/cargo-prebuilt/config.toml.
+
 ## [0.5.1](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.5.1)
 
-- Same as 0.5.0
+- Same as 0.5.0.
 
 ## [0.5.0](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.5.0)
 
@@ -19,4 +23,4 @@
 
 ## [0.4.2](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.4.2)
 
-- Initial Changelog
+- Initial Changelog.

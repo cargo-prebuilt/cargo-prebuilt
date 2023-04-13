@@ -23,13 +23,14 @@ To download a version of a crate: ```cargo prebuilt CRATE_NAME@VERSION```
 
 To download multiple crates with versions: ```cargo prebuilt CRATE_1@V1,CRATE_2,CRATE_3@V3,...```
 
-Need help? Try: ```cargo prebuilt --help```
+Need help? Try: ```cargo prebuilt --help``` or see [Config Info](CONFIG.md)
 
 ## Installation
 
 - You can download the latest prebuilt binaries of cargo-prebuilt [here](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/latest).
 - Cargo install: ```cargo install cargo-prebuilt``` or ```cargo install cargo-prebuilt --profile=quick-build```
 - Cargo binstall ```cargo binstall cargo-prebuilt --no-confirm```
+- For github actions you can use [cargo-prebuilt/cargo-prebuilt-action](https://github.com/cargo-prebuilt/cargo-prebuilt-action)
 
 ## Reports
 
@@ -51,7 +52,7 @@ Report types (--reports):
 
 [Template](https://github.com/cargo-prebuilt/gh-pub-index)
 
-Your url should be formatted like ```github.com/cargo-prebuilt/index```. cargo-prebuilt can only use https indexes.
+Your url should be formatted like ```github.com/cargo-prebuilt/index```. cargo-prebuilt requires https.
 
 - ```export PREBUILT_INDEX=gh-pub:URL```
 - ```cargo prebuilt --index=gh-pub:URL CRATES```

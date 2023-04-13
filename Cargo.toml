@@ -27,6 +27,7 @@ bpaf = { version = "0.7.10", features = ["autocomplete", "batteries"] }
 flate2 = "1.0.25"
 hex = "0.4.3"
 home = "0.5.4"
+nanoserde = "0.1.32"
 native-tls = "0.2.11"
 owo-colors = { version = "3.5.0", features = ["supports-colors"] }
 sha2 = "0.10.6"
@@ -35,9 +36,9 @@ thiserror = "1.0.40"
 ureq = { version = "2.6.2", default-features = false, features = ["gzip", "brotli", "native-tls", "native-certs"] }
 
 [features]
-default = ["vendored-openssl", "bright-color", "github-public", "github-private"]
+default = ["vendored-openssl", "bright-color", "github-public"]
 github-public = []
-github-private = []
+github-private = [] # TODO: Under dev
 #gitlab-public = [] #TODO: Under dev
 #gitlab-private = [] #TODO: Under dev
 #forgejo-public = [] #TODO: Under dev

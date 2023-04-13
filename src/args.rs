@@ -54,7 +54,7 @@ pub fn parse_args() -> Arguments {
         .optional();
 
     let ci = long("ci")
-        .help("Do not download reports or create a .prebuilt directory")
+        .help("Do not download reports, create a .prebuilt directory, and do not check for a config file")
         .switch();
 
     let no_create_path = long("no-create-path")
