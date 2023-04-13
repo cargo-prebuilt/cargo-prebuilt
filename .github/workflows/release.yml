@@ -209,12 +209,26 @@ jobs:
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
 
   cargo-msrv:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+          - target: x86_64-apple-darwin
+            os: macos-latest
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
     env:
       CARGO_TERM_COLOR: never
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     needs: [ setup ]
     steps:
       - uses: actions/checkout@v3
+      - name: Change file endings in Cargo.lock
+        if: ${{ contains( matrix.os, 'windows' ) }}
+        shell: pwsh
+        run: (Get-Content -Raw Cargo.lock) -replace "`r`n","`n" | Set-Content Cargo.lock -NoNewline
       - name: Get deps from cache
         uses: actions/cache@v3
         with:
