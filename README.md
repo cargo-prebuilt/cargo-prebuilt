@@ -29,7 +29,8 @@ Need help? Try: ```cargo prebuilt --help``` or see [Config Info](CONFIG.md)
 
 - You can download the latest prebuilt binaries of cargo-prebuilt [here](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/latest).
 - Cargo install: ```cargo install cargo-prebuilt``` or ```cargo install cargo-prebuilt --profile=quick-build```
-- Cargo binstall ```cargo binstall cargo-prebuilt --no-confirm```
+- Cargo binstall: ```cargo binstall cargo-prebuilt --no-confirm```
+- Homebrew: ```brew install crow-rest/harmless/cargo-prebuilt```
 - For github actions you can use [cargo-prebuilt/cargo-prebuilt-action](https://github.com/cargo-prebuilt/cargo-prebuilt-action)
 
 ## Reports
