@@ -26,7 +26,7 @@ include = [
 bpaf = { version = "0.7.10", features = ["autocomplete", "batteries"] }
 flate2 = "1.0.25"
 hex = "0.4.3"
-home = "0.5.4"
+home = "0.5.5"
 nanoserde = "0.1.32"
 native-tls = "0.2.11"
 owo-colors = { version = "3.5.0", features = ["supports-colors"] }
