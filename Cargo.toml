@@ -24,7 +24,7 @@ include = [
 
 [dependencies]
 bpaf = { version = "0.7.10", features = ["autocomplete", "batteries"] }
-flate2 = "1.0.25"
+flate2 = "1.0.26"
 hex = "0.4.3"
 home = "0.5.4"
 nanoserde = "0.1.32"
