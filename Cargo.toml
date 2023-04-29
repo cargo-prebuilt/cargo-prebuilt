@@ -1,6 +1,6 @@
 [package]
 name = "cargo-prebuilt"
-version = "0.5.2"
+version = "0.5.3"
 edition = "2021"
 authors = ["harmless-tech"]
 description = "Download prebuilt crate binaries for many different platforms"
@@ -24,19 +24,20 @@ include = [
 
 [dependencies]
 bpaf = { version = "0.7.10", features = ["autocomplete", "batteries"] }
-flate2 = "1.0.25"
+flate2 = "1.0.26"
 hex = "0.4.3"
-home = "0.5.4"
+home = "0.5.5"
 nanoserde = "0.1.32"
-native-tls = "0.2.11"
+native-tls = { version = "0.2.11", optional = true }
 owo-colors = { version = "3.5.0", features = ["supports-colors"] }
 sha2 = "0.10.6"
 tar = "0.4.38"
 thiserror = "1.0.40"
-ureq = { version = "2.6.2", default-features = false, features = ["gzip", "brotli", "native-tls", "native-certs"] }
+ureq = { version = "2.6.2", default-features = false, features = ["gzip", "brotli"] }
 
 [features]
-default = ["vendored-openssl", "bright-color", "github-public"]
+default = ["native", "vendored-openssl", "bright-color", "indexes"]
+indexes = ["github-public"]
 github-public = []
 github-private = [] # TODO: Under dev
 #gitlab-public = [] #TODO: Under dev
@@ -45,7 +46,10 @@ github-private = [] # TODO: Under dev
 #forgejo-private = [] #TODO: Under dev
 #gitea-public = ["forgejo-public"] #TODO: Under dev
 #gitea-private = ["forgejo-private"] #TODO: Under dev
-vendored-openssl = ["native-tls/vendored"]
+rustls = ["ureq/tls"]
+rustls-native-certs = ["rustls", "ureq/native-certs"]
+native = ["native-tls", "ureq/native-tls"]
+vendored-openssl = ["native", "ureq/native-tls", "native-tls/vendored"]
 bright-color = ["bpaf/bright-color"]
 dull-color = ["bpaf/dull-color"]
 

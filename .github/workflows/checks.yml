@@ -80,3 +80,53 @@ jobs:
           echo "\`\`\`shell" >> $GITHUB_STEP_SUMMARY
           cat .step-data.txt >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+  cargo-hack:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+          - target: x86_64-apple-darwin
+            os: macos-latest
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+    env:
+      CARGO_TERM_COLOR: never
+    runs-on: ${{ matrix.os }}
+    needs: [ setup ]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/git/db
+            target
+          key: ${{ runner.os }}-cargo-hack-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}
+      - name: Update Rust
+        run: rustup update
+      - name: Rust Version
+        run: rustc --version
+      - uses: cargo-prebuilt/cargo-prebuilt-action@v1
+        with:
+          tools: just
+      - name: Check features
+        shell: bash
+        run: |
+          set -o pipefail
+          just check-features 2>&1 | tee .step-data.txt
+      - name: Put into summary (success)
+        if: success()
+        shell: bash
+        run: echo "Success" >> $GITHUB_STEP_SUMMARY
+      - name: Put into summary (failure)
+        if: failure()
+        shell: bash
+        run: |
+          echo "Failed!" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`shell" >> $GITHUB_STEP_SUMMARY
+          cat .step-data.txt >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY

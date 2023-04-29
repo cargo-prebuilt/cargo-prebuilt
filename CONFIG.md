@@ -1,6 +1,6 @@
 # Config Info
 
-Config info is process in the order of arguments -> environmental variables -> config file -> defaults.
+Config info is prioritized in the order of arguments -> environmental variables -> config file -> defaults.
 
 ## File
 

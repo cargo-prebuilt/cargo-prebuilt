@@ -9,8 +9,14 @@ use flate2::read::GzDecoder;
 use home::cargo_home;
 use owo_colors::{OwoColorize, Stream::Stdout};
 use sha2::{Digest, Sha256};
-use std::{env, fs, fs::create_dir_all, path::Path, str, string::ToString, sync::Arc};
+use std::{env, fs, fs::create_dir_all, path::Path, str, string::ToString};
 use tar::Archive;
+
+#[cfg(all(feature = "rustls", feature = "native"))]
+compile_error!("rustls and native features are mutually exclusive and cannot be enabled together.");
+
+#[cfg(not(any(feature = "github-public", feature = "github-private")))]
+compile_error!("You have not enabled any of the indexes. Try enabling the 'indexes' feature, or enabled one of the indexes.");
 
 static TARGET: &str = env!("TARGET");
 
@@ -60,14 +66,17 @@ fn main() -> Result<(), String> {
     }
 
     // Build ureq agent
-    let agent = ureq::AgentBuilder::new()
-        .tls_connector(Arc::new(
-            native_tls::TlsConnector::new().expect("Could not create TlsConnector"),
-        ))
+    #[cfg(feature = "native")]
+    let agent = ureq::AgentBuilder::new().tls_connector(std::sync::Arc::new(native_tls::TlsConnector::new().expect("Could not create TlsConnector")));
+    #[cfg(feature = "rustls")]
+    let agent = ureq::AgentBuilder::new();
+
+    let agent = agent
         .https_only(true)
         .user_agent(format!("cargo-prebuilt_cli {}", env!("CARGO_PKG_VERSION")).as_str())
         .build();
 
+    // Create interactor, which handles all of the interacts with indexes
     let interact = interact::create_interact(&args.index, &args.auth, agent);
     let interact = interact.as_ref();
 

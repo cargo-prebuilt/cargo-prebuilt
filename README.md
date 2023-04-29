@@ -3,7 +3,7 @@
 [![Rust Build and Test](https://github.com/cargo-prebuilt/cargo-prebuilt/actions/workflows/build.yml/badge.svg?event=push)](https://github.com/cargo-prebuilt/cargo-prebuilt/actions/workflows/build.yml)
 [![Rust Checks](https://github.com/cargo-prebuilt/cargo-prebuilt/actions/workflows/checks.yml/badge.svg?event=push)](https://github.com/cargo-prebuilt/cargo-prebuilt/actions/workflows/checks.yml)
 [![Crates.io](https://img.shields.io/crates/v/cargo-prebuilt)](https://crates.io/crates/cargo-prebuilt)
-[![rustc-msrv](https://img.shields.io/badge/rustc-1.60%2B-blue?logo=rust)](https://www.rust-lang.org/tools/install)
+[![rustc-msrv](https://img.shields.io/badge/rustc-1.63%2B-blue?logo=rust)](https://www.rust-lang.org/tools/install)
 
 Download prebuilt binaries of some crate.io crates.
 
@@ -32,6 +32,35 @@ Need help? Try: ```cargo prebuilt --help``` or see [Config Info](CONFIG.md)
 - Cargo binstall: ```cargo binstall cargo-prebuilt --no-confirm```
 - Homebrew: ```brew install crow-rest/harmless/cargo-prebuilt```
 - For github actions you can use [cargo-prebuilt/cargo-prebuilt-action](https://github.com/cargo-prebuilt/cargo-prebuilt-action)
+
+## Building
+
+#### vendored-openssl (default)
+```cargo install cargo-prebuilt --no-default-features --features indexes,vendored-openssl```
+
+#### native tls
+```cargo install cargo-prebuilt --no-default-features --features indexes,native```
+
+#### rustls
+```cargo install cargo-prebuilt --no-default-features --features indexes,rustls```
+
+#### rustls with native certs
+```cargo install cargo-prebuilt --no-default-features --features indexes,rustls-native-certs```
+
+#### limit indexes used
+Remove ```indexes``` feature included by default, then add the features you want below:
+- [github-public](#github-public)
+- [github-private](#github-private) (Not supported yet)
+- [gitlab-public](#gitlab-public) (Not supported yet)
+- [gitlab-private](#gitlab-private) (Not supported yet)
+- [forgejo-public](#forgejo-public) (Not supported yet)
+- [forgejo-private](#forgejo-private) (Not supported yet)
+- [gitea-public](#gitea-public) (Not supported yet)
+- [gitea-private](#gitea-private) (Not supported yet)
+
+#### colors
+```bright-color``` feature is used by default.
+Add feature ```bright-color``` or ```dull-color```.
 
 ## Reports
 

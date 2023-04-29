@@ -1,9 +1,14 @@
 # Changelog
 
-## Next release
+## Upcoming
 
 - Support for custom indexes. [Github private] (#24)
-- Boost MSRV to Rust 1.63+
+
+## [0.5.3](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.5.3)
+
+- Boost MSRV to Rust 1.63+ from Rust 1.60+.
+- Allow for rustls to be used instead of just openssl.
+- Errors on compile when there are no index features selected.
 
 ## [0.5.2](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.5.2)
 
