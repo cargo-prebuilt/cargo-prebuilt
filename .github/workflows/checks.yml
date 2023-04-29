@@ -92,10 +92,7 @@ jobs:
             os: macos-latest
           - target: x86_64-pc-windows-msvc
             os: windows-latest
-    env:
-      CARGO_TERM_COLOR: never
     runs-on: ${{ matrix.os }}
-    needs: [ setup ]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v3
