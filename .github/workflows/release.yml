@@ -434,7 +434,7 @@ jobs:
         run: cross test --verbose --workspace --all-features --release --locked --target ${{ matrix.target }}
       - name: Cross add auditable support
         if: ${{ env.allow-cross-auditable }}
-        run: curl -fsSL https://gist.githubusercontent.com/harmless-tech/1e8ba45c4e2762e6c013dd2687e3e5bf/raw/2e085e677fcaea6bcd823e23e9dd908b0b79397b/Cross.toml >> Cross.toml
+        run: curl -fsSL https://raw.githubusercontent.com/cargo-prebuilt/cross-images/main/cross-auditable/Cross.toml >> Cross.toml
       - name: Build
         run: cross build --verbose --workspace --release --locked --target ${{ matrix.target }}
       - name: Tar
