@@ -6,6 +6,8 @@ Config info is process in the order of arguments -> environmental variables -> c
 
 The config file is under ```$HOME/.config/cargo-prebuilt/config.toml```.
 
+The config file is ignored when using the --ci flag.
+
 ```toml
 [prebuilt]
 index = "$INDEX"

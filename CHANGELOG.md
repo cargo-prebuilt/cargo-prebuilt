@@ -3,6 +3,7 @@
 ## Next release
 
 - Support for custom indexes. [Github private] (#24)
+- Boost MSRV to Rust 1.63+
 
 ## [0.5.2](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.5.2)
 
