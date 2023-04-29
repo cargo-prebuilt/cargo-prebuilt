@@ -19,7 +19,7 @@ pub enum InteractError {
 
 pub fn create_interact(
     input: &Option<String>,
-    auth: &Option<String>,
+    _auth: &Option<String>,
     agent: Agent,
 ) -> Box<dyn Interact> {
     // Default

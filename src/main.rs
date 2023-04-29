@@ -67,7 +67,9 @@ fn main() -> Result<(), String> {
 
     // Build ureq agent
     #[cfg(feature = "native")]
-    let agent = ureq::AgentBuilder::new().tls_connector(std::sync::Arc::new(native_tls::TlsConnector::new().expect("Could not create TlsConnector")));
+    let agent = ureq::AgentBuilder::new().tls_connector(std::sync::Arc::new(
+        native_tls::TlsConnector::new().expect("Could not create TlsConnector"),
+    ));
     #[cfg(feature = "rustls")]
     let agent = ureq::AgentBuilder::new();
 

@@ -187,7 +187,7 @@ jobs:
           tools: cross
       - name: Run tests
         if: ${{ matrix.can-test }}
-        run: cross test --verbose --workspace --all-features --locked --target ${{ matrix.target }}
+        run: cross test --verbose --workspace --locked --target ${{ matrix.target }}
       - name: Build
         run: cross build --verbose --workspace --locked --target ${{ matrix.target }}
       - name: Artifact
@@ -233,7 +233,7 @@ jobs:
         run: rustup target add ${{ matrix.target }}
       - name: Run tests
         if: ${{ matrix.can-test }}
-        run: cargo test --verbose --workspace --all-features --locked --target ${{ matrix.target }}
+        run: cargo test --verbose --workspace --locked --target ${{ matrix.target }}
       - name: Build
         run: cargo build --verbose --workspace --locked --target ${{ matrix.target }}
       - name: Run cargo-prebuilt
@@ -294,7 +294,7 @@ jobs:
         run: rustup target add ${{ matrix.target }}
       - name: Run tests
         if: ${{ matrix.can-test }}
-        run: cargo test --verbose --workspace --all-features --locked --target ${{ matrix.target }}
+        run: cargo test --verbose --workspace --locked --target ${{ matrix.target }}
       - name: Build
         run: cargo build --verbose --workspace --locked --target ${{ matrix.target }}
       - name: Run cargo-prebuilt

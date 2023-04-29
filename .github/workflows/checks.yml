@@ -67,7 +67,8 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          cargo clippy --all-targets --all-features --verbose --workspace --locked -- -D warnings 2>&1 | tee .step-data.txt
+          cargo clippy --all-targets --verbose --workspace --locked -- -D warnings 2>&1 | tee .step-data.txt
+          cargo clippy --all-targets --verbose --workspace --locked --no-default-features --features indexes,rustls,dull-color -- -D warnings 2>&1 | tee .step-data.txt
       - name: Put into summary (success)
         if: success()
         shell: bash
