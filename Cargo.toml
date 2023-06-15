@@ -30,7 +30,7 @@ home = "0.5.5"
 nanoserde = "0.1.32"
 native-tls = { version = "0.2.11", optional = true }
 owo-colors = { version = "3.5.0", features = ["supports-colors"] }
-sha2 = "0.10.6"
+sha2 = "0.10.7"
 tar = "0.4.38"
 thiserror = "1.0.40"
 ureq = { version = "2.6.2", default-features = false, features = ["gzip", "brotli"] }
