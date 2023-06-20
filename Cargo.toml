@@ -33,7 +33,7 @@ owo-colors = { version = "3.5.0", features = ["supports-colors"] }
 sha2 = "0.10.6"
 tar = "0.4.38"
 thiserror = "1.0.40"
-ureq = { version = "2.6.2", default-features = false, features = ["gzip", "brotli"] }
+ureq = { version = "2.7.1", default-features = false, features = ["gzip", "brotli"] }
 
 [features]
 default = ["native", "vendored-openssl", "bright-color", "indexes"]
