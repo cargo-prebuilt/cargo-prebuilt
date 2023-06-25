@@ -1,5 +1,6 @@
 mod args;
 mod conf_file;
+mod data;
 mod get;
 mod interact;
 #[cfg(test)]

@@ -2,7 +2,13 @@
 
 ## Upcoming
 
-- Support for custom indexes. [Github private] (#24)
+- Switch to gen2 index style.  (~)
+- Remove nanoserde in favor of serde. (!)
+- Change how features work. (!)
+- .prebuilt folder is now by default put in the home directory, but can be overidden. (!)
+- Bump ureq, sha2, bpaf.
+
+<!-- - Expanded support for custom indexes. [Github private] (#24) -->
 
 ## [0.5.3](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.5.3)
 
