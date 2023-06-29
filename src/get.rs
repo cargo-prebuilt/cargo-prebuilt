@@ -13,23 +13,23 @@ pub fn latest_version(interact: &dyn Interact, id: &str) -> String {
     match interact.get_latest(id) {
         Ok(s) => s,
         Err(InteractError::Malformed) => {
-            println!("The version string for {id} is malformed.");
-            std::process::exit(-342);
+            eprintln!("The version string for {id} is malformed.");
+            std::process::exit(342);
         }
         Err(InteractError::HttpCode(404)) => {
-            println!(
+            eprintln!(
                 "Crate {id} {} in index!",
                 "not found".if_supports_color(Stdout, |text| text.bright_red())
             );
-            std::process::exit(-3);
+            std::process::exit(3);
         }
         Err(InteractError::HttpCode(code)) => {
-            println!("Http error {code} for crate {id}.");
-            std::process::exit(-4);
+            eprintln!("Http error {code} for crate {id}.");
+            std::process::exit(4);
         }
         Err(_) => {
-            println!("Connection error.");
-            std::process::exit(-5);
+            eprintln!("Connection error.");
+            std::process::exit(5);
         }
     }
 }
@@ -38,23 +38,23 @@ pub fn hash(interact: &dyn Interact, id: &str, version: &str, target: &str) -> S
     match interact.get_hash(id, version, target) {
         Ok(s) => s,
         Err(InteractError::Malformed) => {
-            println!("The hash string for {id} is malformed.");
-            std::process::exit(-343);
+            eprintln!("The hash string for {id} is malformed.");
+            std::process::exit(343);
         }
         Err(InteractError::HttpCode(404)) => {
-            println!(
+            eprintln!(
                 "Crate {id}, version {version}, and target {target} was {}! (Hash)",
                 "not found".if_supports_color(Stdout, |text| text.bright_red())
             );
-            std::process::exit(-9);
+            std::process::exit(9);
         }
         Err(InteractError::HttpCode(code)) => {
-            println!("Http error {code} for crate {id}.");
-            std::process::exit(-10);
+            eprintln!("Http error {code} for crate {id}.");
+            std::process::exit(10);
         }
         Err(_) => {
-            println!("Connection error.");
-            std::process::exit(-11);
+            eprintln!("Connection error.");
+            std::process::exit(11);
         }
     }
 }
@@ -69,23 +69,23 @@ pub fn tar(interact: &dyn Interact, id: &str, version: &str, target: &str) -> Ve
     match interact.get_tar(id, version, target) {
         Ok(b) => b,
         Err(InteractError::Malformed) => {
-            println!("The tar bytes for {id} are malformed.");
-            std::process::exit(-344);
+            eprintln!("The tar bytes for {id} are malformed.");
+            std::process::exit(344);
         }
         Err(InteractError::HttpCode(404)) => {
-            println!(
+            eprintln!(
                 "Crate {id}, version {version}, and target {target} was {}! (Tar)",
                 "not found".if_supports_color(Stdout, |text| text.bright_red())
             );
-            std::process::exit(-6);
+            std::process::exit(6);
         }
         Err(InteractError::HttpCode(code)) => {
-            println!("Http error {code} for crate {id}.");
-            std::process::exit(-7);
+            eprintln!("Http error {code} for crate {id}.");
+            std::process::exit(7);
         }
         Err(_) => {
-            println!("Connection error.");
-            std::process::exit(-8);
+            eprintln!("Connection error.");
+            std::process::exit(8);
         }
     }
 }
@@ -154,11 +154,11 @@ fn handle_report(
         let report = match interact.get_report(id, version, name) {
             Ok(r) => r,
             Err(InteractError::HttpCode(404)) => {
-                println!("Could not find a {name} report in the index.");
+                eprintln!("Could not find a {name} report in the index.");
                 return;
             }
             Err(_) => {
-                println!("Unknown error when trying to get {name} report.");
+                eprintln!("Unknown error when trying to get {name} report.");
                 return;
             }
         };
@@ -176,14 +176,14 @@ fn handle_report(
                         Ok(mut file) => match file.write(report.as_bytes()) {
                             Ok(_) => {}
                             Err(_) => {
-                                println!("Could not write to {name}.report file.")
+                                eprintln!("Could not write to {name}.report file.")
                             }
                         },
-                        Err(_) => println!("Could not create {name}.report file."),
+                        Err(_) => eprintln!("Could not create {name}.report file."),
                     }
                 }
                 Err(_) => {
-                    println!("Could not create directories for {name}.report.")
+                    eprintln!("Could not create directories for {name}.report.")
                 }
             }
         }

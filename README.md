@@ -84,8 +84,9 @@ Report types (--reports):
 
 Your url should be formatted like ```github.com/cargo-prebuilt/index```. cargo-prebuilt requires https.
 
-- ```export PREBUILT_INDEX=gh-pub:URL```
-- ```cargo prebuilt --index=gh-pub:URL CRATES```
+- ```export PREBUILT_INDEX=gh-pub:$URL```
+- ```cargo prebuilt --index=gh-pub:$URL CRATES```
+- [config.toml](CONFIG.md) ```index = "gh-pub:$URL"```
 
 #### GitHub private
 

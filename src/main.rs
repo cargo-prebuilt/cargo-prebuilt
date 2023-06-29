@@ -11,12 +11,6 @@ use sha2::{Digest, Sha256};
 use std::{env, fs, fs::create_dir_all, path::Path, str, string::ToString};
 use tar::Archive;
 
-#[cfg(all(feature = "rustls", feature = "native"))]
-compile_error!("rustls and native features are mutually exclusive and cannot be enabled together.");
-
-#[cfg(not(any(feature = "github-public", feature = "github-private")))]
-compile_error!("You have not enabled any of the indexes. Try enabling the 'indexes' feature, or enabled one of the indexes.");
-
 static TARGET: &str = env!("TARGET");
 
 fn main() -> Result<(), String> {
@@ -26,6 +20,8 @@ fn main() -> Result<(), String> {
         println!(env!("CARGO_PKG_VERSION"));
         std::process::exit(0);
     }
+
+    should_error();
 
     let mut args = args::parse_args();
     #[cfg(debug_assertions)]
@@ -56,12 +52,12 @@ fn main() -> Result<(), String> {
     });
 
     if !args.no_create_path && create_dir_all(&prebuilt_bin).is_err() {
-        println!("Could not create the directories {prebuilt_bin:?}.");
-        std::process::exit(-44);
+        eprintln!("Could not create the directories {prebuilt_bin:?}.");
+        std::process::exit(44);
     }
     else if !Path::new(&prebuilt_bin).exists() {
-        println!("Directories do not exist! {prebuilt_bin:?}.");
-        std::process::exit(-45);
+        eprintln!("Directories do not exist! {prebuilt_bin:?}.");
+        std::process::exit(45);
     }
 
     // Build ureq agent
@@ -72,10 +68,15 @@ fn main() -> Result<(), String> {
     #[cfg(feature = "rustls")]
     let agent = ureq::AgentBuilder::new();
 
+    #[cfg(any(feature = "native", feature = "rustls"))]
     let agent = agent
         .https_only(true)
         .user_agent(format!("cargo-prebuilt_cli {}", env!("CARGO_PKG_VERSION")).as_str())
         .build();
+
+    // Allows for any feature set to be built for, even though this is unsupported.
+    #[cfg(not(any(feature = "native", feature = "rustls")))]
+    let agent = ureq::agent();
 
     // Create interactor, which handles all of the interacts with indexes
     let interact = interact::create_interact(&args.index, &args.auth, agent);
@@ -113,8 +114,8 @@ fn main() -> Result<(), String> {
         let hash = hex::encode(hash);
 
         if !(hash.eq(&sha_hash)) {
-            println!("Hashes do not match.");
-            std::process::exit(-256);
+            eprintln!("Hashes do not match. {sha_hash} != {hash}");
+            std::process::exit(256);
         }
 
         // Extract Tar
@@ -144,8 +145,8 @@ fn main() -> Result<(), String> {
                 }
             }
             Err(_) => {
-                println!("Cannot get entries from downloaded tar.");
-                std::process::exit(-13);
+                eprintln!("Cannot get entries from downloaded tar.");
+                std::process::exit(13);
             }
         }
 
@@ -161,4 +162,18 @@ fn main() -> Result<(), String> {
     println!("{}", "Done!".if_supports_color(Stdout, |text| text.green()));
 
     Ok(())
+}
+
+fn should_error() {
+    // Errors
+    #[cfg(not(any(feature = "native", feature = "rustls")))]
+    {
+        eprintln!("cargo-prebuilt only supports https and was built without the 'native' or 'rustls' feature.");
+        std::process::exit(400);
+    }
+    #[cfg(not(any(feature = "github-public", feature = "github-private")))]
+    {
+        eprintln!("cargo-prebuilt was not built with any indexes, try the 'indexes' feature.");
+        std::process::exit(222);
+    }
 }

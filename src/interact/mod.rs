@@ -17,6 +17,7 @@ pub enum InteractError {
     // Unknown,
 }
 
+// TODO: Remove _ from auth.
 pub fn create_interact(
     input: &Option<String>,
     _auth: &Option<String>,
@@ -34,7 +35,7 @@ pub fn create_interact(
         #[cfg(not(feature = "github-public"))]
         {
             println!("Using the default index requires the github-public feature!");
-            std::process::exit(-220);
+            std::process::exit(220);
         }
     }
 
@@ -53,7 +54,7 @@ pub fn create_interact(
         #[cfg(not(feature = "github-public"))]
         {
             println!("Using this index ({input}) requires the github-public feature!");
-            std::process::exit(-220);
+            std::process::exit(220);
         }
     }
 
@@ -67,19 +68,19 @@ pub fn create_interact(
             println!("Using index https://{url}.");
             return Box::new(github_private::GithubPrivate::new(
                 agent,
-                auth.clone().expect("Need auth token for private index."),
+                _auth.clone().expect("Need auth token for private index."),
                 url,
             ));
         }
         #[cfg(not(feature = "github-private"))]
         {
             println!("Using this index ({input}) requires the github-private feature!");
-            std::process::exit(-220);
+            std::process::exit(220);
         }
     }
 
-    println!("This index ({input}) is not supported.");
-    std::process::exit(-221);
+    eprintln!("This index ({input}) is not supported.");
+    std::process::exit(221);
 }
 
 pub trait Interact {
