@@ -110,12 +110,17 @@ jobs:
         run: rustc --version
       - uses: cargo-prebuilt/cargo-prebuilt-action@v1
         with:
-          tools: just
-      - name: Check features
+          tools: cargo-hack
+      - name: Hack Check (each-feature)
         shell: bash
         run: |
           set -o pipefail
-          just check-features 2>&1 | tee .step-data.txt
+          cargo hack check --each-feature --no-dev-deps --verbose --workspace --locked 2>&1 | tee .step-data.txt
+      - name: Hack Check (feature-powerset)
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo hack check --feature-powerset --no-dev-deps --verbose --workspace --locked 2>&1 | tee .step-data.txt
       - name: Put into summary (success)
         if: success()
         shell: bash

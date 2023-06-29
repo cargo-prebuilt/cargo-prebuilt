@@ -3,8 +3,6 @@ mod conf_file;
 mod data;
 mod get;
 mod interact;
-#[cfg(test)]
-mod test;
 
 use flate2::read::GzDecoder;
 use home::cargo_home;

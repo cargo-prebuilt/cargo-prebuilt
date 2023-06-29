@@ -33,15 +33,14 @@ docker-alpine:
     rust:alpine \
     sh
 
-# Removed for now since some features are mutually exclusive
-#hack:
-#    docker run -t --rm --pull=always \
-#    -e CARGO_TARGET_DIR=/ptarget \
-#    --mount type=bind,source={{pwd}},target=/prebuilt \
-#    --mount type=bind,source=$HOME/.cargo/registry,target=/usr/local/cargo/registry \
-#    -w /prebuilt \
-#    rust:latest \
-#    bash -c 'cargo run -- cargo-hack && cargo hack check --each-feature --no-dev-deps --verbose --workspace --locked && cargo hack check --feature-powerset --no-dev-deps --verbose --workspace --locked'
+hack:
+    docker run -t --rm --pull=always \
+    -e CARGO_TARGET_DIR=/ptarget \
+    --mount type=bind,source={{pwd}},target=/prebuilt \
+    --mount type=bind,source=$HOME/.cargo/registry,target=/usr/local/cargo/registry \
+    -w /prebuilt \
+    rust:latest \
+    bash -c 'cargo run -- cargo-hack && cargo hack check --each-feature --no-dev-deps --verbose --workspace --locked && cargo hack check --feature-powerset --no-dev-deps --verbose --workspace --locked'
 
 msrv:
     docker run -t --rm --pull=always \
@@ -50,7 +49,7 @@ msrv:
     --mount type=bind,source=$HOME/.cargo/registry,target=/usr/local/cargo/registry \
     -w /prebuilt \
     rust:latest \
-    bash -c 'cargo install cargo-msrv --version 0.16.0-beta.11 --profile=dev && cargo msrv -- cargo check --verbose --locked'
+    bash -c 'cargo install cargo-msrv --version 0.16.0-beta.14 --profile=dev && cargo msrv -- cargo check --verbose --locked'
 
 check-features:
     cargo build --verbose --workspace --locked # Default
