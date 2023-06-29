@@ -39,14 +39,14 @@ pub enum HashesFile {
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct HashesFileV1 {
-    hashes: HashMap<String, HashesFileBlobV1>, // File hashes
+    pub hashes: HashMap<String, HashesFileBlobV1>, // File hashes
 }
 
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct HashesFileBlobV1 {
-    archive: HashMap<String, String>,
-    bins: HashMap<String, HashMap<HashType, String>>,
+    pub archive: HashMap<String, String>, // Archive Hashes
+    pub bins: HashMap<String, HashMap<HashType, String>>, // Binary Hashes
 }
 
 #[cfg(test)]

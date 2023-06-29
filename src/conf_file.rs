@@ -1,6 +1,9 @@
 use home::home_dir;
 use std::{fs::File, io::Read};
 
+use crate::data::ConfigFileV1;
+
+// TODO: Needs rework for additional config options.
 pub fn get_index() -> Option<String> {
     let mut conf = home_dir()?;
     conf.push(".config/cargo-prebuilt/config.toml");
@@ -11,10 +14,8 @@ pub fn get_index() -> Option<String> {
         file.read_to_string(&mut str)
             .expect("Could not read config file.");
 
-        let t = nanoserde::TomlParser::parse(str.as_str()).expect("Could not parse config file.");
-        if t.contains_key("prebuilt.index") {
-            return Some(t.get("prebuilt.index")?.str().to_string());
-        }
+        let config: ConfigFileV1 = toml::from_str(&str).unwrap_or(None)?;
+        return config.prebuilt.index;
     }
 
     None

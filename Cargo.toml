@@ -27,7 +27,6 @@ bpaf = { version = "0.8.1", features = ["autocomplete", "batteries"] }
 flate2 = "1.0.26"
 hex = "0.4.3"
 home = "0.5.5"
-nanoserde = "0.1.32"
 native-tls = { version = "0.2.11", optional = true }
 owo-colors = { version = "3.5.0", features = ["supports-colors"] }
 serde = { version = "1.0.164", features = ["derive"] }
@@ -35,6 +34,7 @@ serde_json = "1.0.99"
 sha2 = "0.10.7"
 tar = "0.4.38"
 thiserror = "1.0.40"
+toml = { version = "0.7.5", default-features = false, features = ["parse"] }
 ureq = { version = "2.7.1", default-features = false, features = ["gzip", "brotli"] }
 
 [features]

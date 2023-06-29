@@ -12,32 +12,32 @@ pub enum InfoFile {
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct InfoFileV1 {
-    id: String,                    // Crate ID
-    version: String,               // Crate Version
-    license: String,               // SPDX License String
-    git: String,                   // Url to Git
-    description: String,           // Crate Description
-    bins: Vec<String>,             // Crate Binaries
-    info: HashMap<String, String>, // Metadata
-    archive: InfoFileArchiveV1,    // Archive Info
-    files: InfoFileFilesV1,        // File Names
-    targets: Vec<String>,          // Targets Built For
+    pub id: String,                    // Crate ID
+    pub version: String,               // Crate Version
+    pub license: String,               // SPDX License String
+    pub git: String,                   // Url to Git
+    pub description: String,           // Crate Description
+    pub bins: Vec<String>,             // Crate Binaries
+    pub info: HashMap<String, String>, // Metadata
+    pub archive: InfoFileArchiveV1,    // Archive Info
+    pub files: InfoFileFilesV1,        // File Names
+    pub targets: Vec<String>,          // Targets Built For
 }
 
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct InfoFileArchiveV1 {
-    compression: String, // Archive compression type
-    ext: String,         // Archive extension
+    pub compression: String, // Archive Compression Type
+    pub ext: String,         // Archive Extension
 }
 
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct InfoFileFilesV1 {
-    hash: String,    // Hashes file
-    license: String, // License File
-    deps: String,    // Deps File
-    audit: String,   // Audit File
+    pub hash: String,    // Hashes File
+    pub license: String, // License File
+    pub deps: String,    // Deps File
+    pub audit: String,   // Audit File
 }
 
 #[cfg(test)]
