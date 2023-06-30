@@ -12,7 +12,7 @@ on:
 
 env:
   bin-name: cargo-prebuilt
-  allow-cross-auditable: true
+  feature-set: '--no-default-features --features native,bright-color,indexes,hashes'
   CARGO_TERM_COLOR: always
   CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse
 
@@ -432,12 +432,9 @@ jobs:
           tools: cross,coreutils
       - name: Run tests
         if: ${{ matrix.can-test }}
-        run: cross test --verbose --workspace --release --locked --target ${{ matrix.target }}
-      - name: Cross add auditable support
-        if: ${{ env.allow-cross-auditable }}
-        run: curl -fsSL https://raw.githubusercontent.com/cargo-prebuilt/cross-images/main/cross-auditable/Cross.toml >> Cross.toml
+        run: cross test --verbose --workspace --release --locked --target ${{ matrix.target }} ${{ env.feature-set }}
       - name: Build
-        run: cross build --verbose --workspace --release --locked --target ${{ matrix.target }}
+        run: cross build --verbose --workspace --release --locked --target ${{ matrix.target }} ${{ env.feature-set }}
       - name: Tar
         run: tar czvf ${{ matrix.target }}.tar.gz -C ./target/${{ matrix.target }}/release ${{ env.bin-name }}${{ matrix.ending }}
       - name: Hash
@@ -484,9 +481,9 @@ jobs:
           tools: cargo-auditable,coreutils
       - name: Run tests
         if: ${{ matrix.can-test }}
-        run: cargo test --verbose --workspace --release --locked --target ${{ matrix.target }}
+        run: cargo test --verbose --workspace --release --locked --target ${{ matrix.target }} ${{ env.feature-set }}
       - name: Build
-        run: cargo auditable build --verbose --workspace --release --locked --target ${{ matrix.target }}
+        run: cargo auditable build --verbose --workspace --release --locked --target ${{ matrix.target }} ${{ env.feature-set }}
       - name: Run cargo-prebuilt
         if: ${{ matrix.can-test }}
         run: |
@@ -547,9 +544,9 @@ jobs:
           tools: cargo-auditable,coreutils
       - name: Run tests
         if: ${{ matrix.can-test }}
-        run: cargo test --verbose --workspace --release --locked --target ${{ matrix.target }}
+        run: cargo test --verbose --workspace --release --locked --target ${{ matrix.target }} ${{ env.feature-set }}
       - name: Build
-        run: cargo auditable build --verbose --workspace --release --locked --target ${{ matrix.target }}
+        run: cargo auditable build --verbose --workspace --release --locked --target ${{ matrix.target }} ${{ env.feature-set }}
       - name: Run cargo-prebuilt
         if: ${{ matrix.can-test }}
         run: |
