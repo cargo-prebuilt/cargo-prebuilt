@@ -1,2 +1,16 @@
 [prebuilt]
-index = "gh-pub:$URL"
+target = "$TARGET"        # Target to download for
+index = "hg-pub:$INDEX"   # Index to use
+index_token = "NULL"      # Index auth token
+path = "/prebuilt/bin"    # Absolute path to where the binaries will be installed
+report_path = "/prebuilt" # Absolute path to where the reports will be put
+no_create_path = false    # Do not create paths that do not exist
+reports = [               # Reports to download
+    "license-out",
+    "license-dl",
+    "deps-out",
+    "deps-dl",
+    "audit-out",
+    "audit-dl",
+]
+color = true              # Should CLI colors be on or not

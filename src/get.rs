@@ -1,6 +1,5 @@
 use crate::{
-    args::{Arguments, REPORT_FLAGS},
-    interact::{Interact, InteractError},
+    interact::{Interact, InteractError}, config::{Config, REPORT_FLAGS},
 };
 use owo_colors::{OwoColorize, Stream::Stdout};
 use std::{
@@ -90,7 +89,7 @@ pub fn tar(interact: &dyn Interact, id: &str, version: &str, target: &str) -> Ve
     }
 }
 
-pub fn reports(interact: &dyn Interact, args: &Arguments, path: &Path, id: &str, version: &str) {
+pub fn reports(interact: &dyn Interact, args: &Config, path: &Path, id: &str, version: &str) {
     if !args.ci {
         println!(
             "{} reports... ",

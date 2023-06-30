@@ -19,27 +19,26 @@ pub enum InteractError {
 
 // TODO: Remove _ from auth.
 pub fn create_interact(
-    input: &Option<String>,
-    _auth: &Option<String>,
+    input: String,
+    _auth: Option<&String>,
     agent: Agent,
 ) -> Box<dyn Interact> {
+    //TODO: Set default in config.
     // Default
-    if input.is_none() {
-        #[cfg(feature = "github-public")]
-        {
-            return Box::new(github_public::GithubPublic::new(
-                agent,
-                "github.com/cargo-prebuilt/index",
-            ));
-        }
-        #[cfg(not(feature = "github-public"))]
-        {
-            println!("Using the default index requires the github-public feature!");
-            std::process::exit(220);
-        }
-    }
-
-    let input = input.clone().unwrap();
+//    if input.is_none() {
+//        #[cfg(feature = "github-public")]
+//        {
+//            return Box::new(github_public::GithubPublic::new(
+//                agent,
+//                "github.com/cargo-prebuilt/index",
+//            ));
+//        }
+//        #[cfg(not(feature = "github-public"))]
+//        {
+//            println!("Using the default index requires the github-public feature!");
+//            std::process::exit(220);
+//        }
+//    }
 
     // Github public
     if input.starts_with("gh-pub:") {

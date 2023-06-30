@@ -1,4 +1,4 @@
-mod args;
+mod config;
 mod conf_file;
 mod data;
 mod get;
@@ -14,44 +14,37 @@ use tar::Archive;
 static TARGET: &str = env!("TARGET");
 
 fn main() -> Result<(), String> {
-    // Bypass bpaf, print version, then exit.
-    let args: Vec<String> = env::args().collect();
-    if args.contains(&"--version".to_string()) || args.contains(&"-v".to_string()) {
-        println!(env!("CARGO_PKG_VERSION"));
-        std::process::exit(0);
-    }
-
     should_error();
 
-    let mut args = args::parse_args();
+    let config = config::get();
     #[cfg(debug_assertions)]
-    dbg!(&args);
+    dbg!(&config);
 
     // Try to get index from config file.
-    if !args.ci && args.index.is_none() {
-        args.index = conf_file::get_index();
-    }
+//    if !config.ci {
+////        conf_file::fill(&mut args);
+//    }
 
-    let args = args;
+//    let args = config;
 
-    if args.colors {
-        owo_colors::set_override(true);
-    }
-    if args.no_colors {
-        owo_colors::set_override(false);
-    }
+//    if args.colors {
+//        owo_colors::set_override(true);
+//    }
+//    if args.no_colors {
+//        owo_colors::set_override(false);
+//    }
 
-    let target = args.target.as_str();
+    let target = config.target.as_str();
 
-    let prebuilt_bin = args.path.clone().unwrap_or_else(|| {
+    let prebuilt_bin = config.path.clone()/*.unwrap_or_else(|| {
         let mut cargo_home = cargo_home().expect("Could not find cargo home directory, please set CARGO_HOME or PREBUILT_PATH, or use --path");
         if !cargo_home.ends_with("bin") {
             cargo_home.push("bin");
         }
         cargo_home
-    });
+    })*/;
 
-    if !args.no_create_path && create_dir_all(&prebuilt_bin).is_err() {
+    if !config.no_create_path && create_dir_all(&prebuilt_bin).is_err() {
         eprintln!("Could not create the directories {prebuilt_bin:?}.");
         std::process::exit(44);
     }
@@ -61,29 +54,14 @@ fn main() -> Result<(), String> {
     }
 
     // Build ureq agent
-    #[cfg(feature = "native")]
-    let agent = ureq::AgentBuilder::new().tls_connector(std::sync::Arc::new(
-        native_tls::TlsConnector::new().expect("Could not create TlsConnector"),
-    ));
-    #[cfg(feature = "rustls")]
-    let agent = ureq::AgentBuilder::new();
-
-    #[cfg(any(feature = "native", feature = "rustls"))]
-    let agent = agent
-        .https_only(true)
-        .user_agent(format!("cargo-prebuilt_cli {}", env!("CARGO_PKG_VERSION")).as_str())
-        .build();
-
-    // Allows for any feature set to be built for, even though this is unsupported.
-    #[cfg(not(any(feature = "native", feature = "rustls")))]
-    let agent = ureq::agent();
+    let agent = create_agent();
 
     // Create interactor, which handles all of the interacts with indexes
-    let interact = interact::create_interact(&args.index, &args.auth, agent);
+    let interact = interact::create_interact(config.index.clone(), config.auth.as_ref(), agent);
     let interact = interact.as_ref();
 
     // Get pkgs
-    let pkgs: Vec<&str> = args.pkgs.split(',').collect();
+    let pkgs: Vec<&str> = config.pkgs.split(',').collect();
     for pkg in pkgs {
         let mut id = pkg;
         let mut version = None; // None will pull the latest version
@@ -151,7 +129,7 @@ fn main() -> Result<(), String> {
         }
 
         // Reports
-        get::reports(interact, &args, &prebuilt_bin, id, version);
+        get::reports(interact, &config, &prebuilt_bin, id, version);
 
         println!(
             "{} {id} {version}.",
@@ -176,4 +154,26 @@ fn should_error() {
         eprintln!("cargo-prebuilt was not built with any indexes, try the 'indexes' feature.");
         std::process::exit(222);
     }
+}
+
+fn create_agent() -> ureq::Agent {
+    #[cfg(feature = "native")]
+    let agent = ureq::AgentBuilder::new().tls_connector(std::sync::Arc::new(
+        native_tls::TlsConnector::new().expect("Could not create TlsConnector"),
+    ));
+
+    #[cfg(feature = "rustls")]
+    let agent = ureq::AgentBuilder::new();
+
+    #[cfg(any(feature = "native", feature = "rustls"))]
+    let agent = agent
+        .https_only(true)
+        .user_agent(format!("cargo-prebuilt_cli {}", env!("CARGO_PKG_VERSION")).as_str())
+        .build();
+
+    // Allows for any feature set to be built for, even though this is unsupported.
+    #[cfg(not(any(feature = "native", feature = "rustls")))]
+    let agent = ureq::agent();
+
+    agent
 }

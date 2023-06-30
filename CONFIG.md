@@ -4,15 +4,26 @@ Config info is prioritized in the order of arguments -> environmental variables 
 
 ## File
 
-The config file is under ```$HOME/.config/cargo-prebuilt/config.toml```.
+The config file should be under ```$HOME/.config/cargo-prebuilt/config.toml```.
 
 The config file is ignored when using the --ci flag.
 
 ```toml
 [prebuilt]
-index = "$INDEX"
+target = "$TARGET"          # Target to download for
+index = "$INDEX"            # Index to use
+index_token = "$TOKEN"      # Index auth token
+path = "$PATH"              # Absolute path to where the binaries will be installed
+report_path = "$PATH"       # Absolute path to where the reports will be put
+no_create_path = true|false # Do not create paths that do not exist
+reports = ["$REPORT_TYPE"]  # Reports to download
+color = true|false          # Should CLI colors be on or not
 ```
 
 ## Ref
 
+- ```$TARGET``` is a rustc target string. EX: ```aarch64-apple-darwin```
 - ```$INDEX``` is a custom index string. EX: ```gh-pub:github.com/cargo-prebuilt/index```
+- ```$TOKEN``` is a auth token for the index.
+- ```$PATH``` is a absolute path. EX: ```/User/devops/.cargo/bin```
+- ```$REPORT_TYPE``` is a type of report. ```license-out, license-dl, deps-out, deps-dl, audit-out, audit-dl```
