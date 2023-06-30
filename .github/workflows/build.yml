@@ -134,30 +134,11 @@ jobs:
             can-test: true
           - target: mips64el-unknown-linux-muslabi64
             can-test: true
-          - target: i686-unknown-linux-gnu
-            can-test: false
-          - target: i686-unknown-linux-musl
-            can-test: false
-          - target: i686-unknown-freebsd
-            can-test: false
           - target: armv7-unknown-linux-gnueabihf
             can-test: true
           - target: armv7-unknown-linux-musleabihf
             can-test: true
-          - target: powerpc-unknown-linux-gnu
-            can-test: true
-          - target: mips-unknown-linux-gnu
-            can-test: true
-          - target: mips-unknown-linux-musl
-            can-test: true
-          - target: mipsel-unknown-linux-gnu
-            can-test: true
-          - target: mipsel-unknown-linux-musl
-            can-test: true
           - target: x86_64-pc-windows-gnu
-            can-test: true
-            ending: .exe
-          - target: i686-pc-windows-gnu
             can-test: true
             ending: .exe
     runs-on: ubuntu-latest
@@ -262,8 +243,6 @@ jobs:
             can-test: true
           - target: aarch64-pc-windows-msvc
             can-test: false
-          - target: i686-pc-windows-msvc
-            can-test: true
     runs-on: windows-latest
     needs: [ setup ]
     steps:

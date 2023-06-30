@@ -85,8 +85,3 @@ pkg-fmt = "zip"
 pkg-url = "{ repo }/releases/download/v{ version }/{ target }.zip"
 bin-dir = "{ bin }{ binary-ext }"
 pkg-fmt = "zip"
-
-[package.metadata.binstall.overrides.i686-pc-windows-msvc]
-pkg-url = "{ repo }/releases/download/v{ version }/{ target }.zip"
-bin-dir = "{ bin }{ binary-ext }"
-pkg-fmt = "zip"
