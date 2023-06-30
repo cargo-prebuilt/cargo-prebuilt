@@ -2,6 +2,8 @@ use std::path::PathBuf;
 
 use serde::Deserialize;
 
+use super::HashType;
+
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq, Hash)]
 pub enum ReportType {
     #[serde(rename = "license-out")]
@@ -67,6 +69,7 @@ pub struct ConfigFilePrebuiltV1 {
     pub no_create_path: Option<bool>,
     pub reports: Option<Vec<ReportType>>,
     pub color: Option<bool>,
+    pub hashes: Option<Vec<HashType>>,
 }
 
 #[cfg(test)]

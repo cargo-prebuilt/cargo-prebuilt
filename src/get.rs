@@ -1,6 +1,6 @@
 use crate::{
     config::{Config, REPORT_FLAGS},
-    interact::{Interact, InteractError},
+    interact::{self, Interact, InteractError},
 };
 use owo_colors::{OwoColorize, Stream::Stdout};
 use std::{
@@ -8,6 +8,21 @@ use std::{
     io::Write,
     path::Path,
 };
+use ureq::Agent;
+
+pub struct Fetcher {
+    interact: Box<dyn Interact>,
+}
+impl Fetcher {
+    pub fn new(config: &Config, agent: Agent) -> Self {
+        let interact = interact::create_interact(config.index.clone(), config.auth.as_ref(), agent);
+        Self { interact }
+    }
+
+    pub fn get_latest(&self, id: &str) -> String {
+        todo!()
+    }
+}
 
 pub fn latest_version(interact: &dyn Interact, id: &str) -> String {
     match interact.get_latest(id) {

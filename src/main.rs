@@ -9,6 +9,8 @@ use sha2::{Digest, Sha256};
 use std::{env, fs, fs::create_dir_all, path::Path, str, string::ToString};
 use tar::Archive;
 
+use crate::get::Fetcher;
+
 static TARGET: &str = env!("TARGET");
 
 fn main() -> Result<(), String> {
@@ -43,9 +45,11 @@ fn main() -> Result<(), String> {
     // Build ureq agent
     let agent = create_agent();
 
-    // Create interactor, which handles all of the interacts with indexes
     let interact = interact::create_interact(config.index.clone(), config.auth.as_ref(), agent);
     let interact = interact.as_ref();
+    // TODO: Use Fetcher instead of interact?
+    // Create Fetcher which is used to fetch items from index.
+    //    let fetcher = Fetcher::new(&config, agent);
 
     // Get pkgs
     let pkgs: Vec<&str> = config.pkgs.split(',').collect();
@@ -78,6 +82,7 @@ fn main() -> Result<(), String> {
         let hash: Vec<u8> = hasher.finalize().to_vec();
         let hash = hex::encode(hash);
 
+        // TODO: Say type of hash.
         if !(hash.eq(&sha_hash)) {
             eprintln!("Hashes do not match. {sha_hash} != {hash}");
             std::process::exit(256);

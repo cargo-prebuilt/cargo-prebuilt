@@ -22,6 +22,7 @@ pub struct Config {
     pub ci: bool,
     pub no_create_path: bool,
     pub reports: String,
+    pub hashes: Option<String>, // Use by priority if None. (sha3_512 -> sha3_256 -> sha512 -> sha256)
     pub pkgs: String,
 }
 
@@ -35,6 +36,7 @@ struct Arguments {
     ci: bool,
     no_create_path: bool,
     reports: Option<String>,
+    hashes: Option<String>,
     color: bool,
     no_color: bool,
     pkgs: String,
@@ -89,6 +91,12 @@ fn parse_args() -> Arguments {
         .argument::<String>("REPORTS")
         .optional();
 
+    let hashes = long("hashes")
+        .env("PREBUILT_HASHES")
+        .help("A CSV list of hash types. (sha256, sha512, sha3_256, sha3_512)")
+        .argument::<String>("HASHES")
+        .optional();
+
     let color = long("color")
         .env("PREBUILT_COLOR")
         .help("Force color to be turned on.")
@@ -108,6 +116,7 @@ fn parse_args() -> Arguments {
         ci,
         no_create_path,
         reports,
+        hashes,
         color,
         no_color,
         pkgs,
@@ -152,25 +161,31 @@ fn fill_from_file(args: &mut Arguments) {
                                     }
                                 };
                             }
+                            macro_rules! file_convert_csv {
+                                ($($x:ident), *) => {
+                                    {
+                                        $(args.$x = args.$x.clone().or_else(|| {
+                                            prebuilt.$x.map_or_else(
+                                            || None,
+                                                |val| {
+                                                    Some(
+                                                        val.iter()
+                                                            .map(|v| {
+                                                                let str: &str = v.into();
+                                                                String::from(str)
+                                                            })
+                                                            .collect(),
+                                                    )
+                                                },
+                                            )
+                                        });)*
+                                    }
+                                };
+                            }
 
                             file_convert![target, index, auth, path, report_path];
                             file_convert_switch![no_create_path, color];
-
-                            args.reports = args.reports.clone().or_else(|| {
-                                prebuilt.reports.map_or_else(
-                                    || None,
-                                    |val| {
-                                        Some(
-                                            val.iter()
-                                                .map(|v| {
-                                                    let str: &str = v.into();
-                                                    String::from(str)
-                                                })
-                                                .collect(),
-                                        )
-                                    },
-                                )
-                            });
+                            file_convert_csv![reports, hashes];
                         }
                     }
                     Err(err) => eprintln!("Failed to parse config file.\n{err}"),
@@ -223,6 +238,8 @@ fn convert(args: Arguments) -> Config {
         None => REPORT_FLAGS[1].to_owned(),
     };
 
+    let hashes = args.hashes;
+
     match (args.color, args.no_color) {
         (true, false) => owo_colors::set_override(true),
         (_, true) => owo_colors::set_override(false),
@@ -240,6 +257,7 @@ fn convert(args: Arguments) -> Config {
         ci,
         no_create_path,
         reports,
+        hashes,
         pkgs,
     }
 }

@@ -36,16 +36,16 @@ Need help? Try: ```cargo prebuilt --help``` or see [Config Info](CONFIG.md)
 ## Building
 
 #### vendored-openssl (default)
-```cargo install cargo-prebuilt --no-default-features --features indexes,vendored-openssl```
+```cargo install cargo-prebuilt --no-default-features --features indexes,hashes,vendored-openssl```
 
 #### native tls
-```cargo install cargo-prebuilt --no-default-features --features indexes,native```
+```cargo install cargo-prebuilt --no-default-features --features indexes,hashes,native```
 
 #### rustls
-```cargo install cargo-prebuilt --no-default-features --features indexes,rustls```
+```cargo install cargo-prebuilt --no-default-features --features indexes,hashes,rustls```
 
 #### rustls with native certs
-```cargo install cargo-prebuilt --no-default-features --features indexes,rustls-native-certs```
+```cargo install cargo-prebuilt --no-default-features --features indexes,hashes,rustls-native-certs```
 
 #### limit indexes used
 Remove ```indexes``` feature included by default, then add the features you want below:

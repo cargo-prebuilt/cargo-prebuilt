@@ -14,3 +14,4 @@ reports = [               # Reports to download
     "audit-dl",
 ]
 color = true              # Should CLI colors be on or not
+hashes = ["sha256"]       # Hashes to use for verifying files downloaded

@@ -4,7 +4,7 @@ Config info is prioritized in the order of arguments -> environmental variables 
 
 ## Args
 
-TODO
+TODO: Use ```cargo prebuilt --help``` for now.
 
 ## File
 
@@ -21,6 +21,7 @@ path = "$PATH"              # Absolute path to where the binaries will be instal
 report_path = "$PATH"       # Absolute path to where the reports will be put
 no_create_path = true|false # Do not create paths that do not exist
 reports = ["$REPORT_TYPE"]  # Reports to download
+hashes = ["$HASH_TYPE"]     # Hashes to use for verifying files downloaded
 color = true|false          # Should CLI colors be on or not
 ```
 
@@ -31,3 +32,4 @@ color = true|false          # Should CLI colors be on or not
 - ```$TOKEN``` is a auth token for the index.
 - ```$PATH``` is a absolute path. EX: ```/User/devops/.cargo/bin```
 - ```$REPORT_TYPE``` is a type of report. ```license-out, license-dl, deps-out, deps-dl, audit-out, audit-dl```
+- ```$HASH_TYPE``` is a type of hash. ```sha256, sha512, sha3_256, sha3_512```
