@@ -241,7 +241,7 @@ jobs:
         run: |
           target/${{ matrix.target }}/debug/${{ env.bin-name }} just
           just --version
-          target/${{ matrix.target }}/debug/${{ env.bin-name }} --colors just
+          target/${{ matrix.target }}/debug/${{ env.bin-name }} --color just
       - name: Artifact
         uses: actions/upload-artifact@v3
         with:
