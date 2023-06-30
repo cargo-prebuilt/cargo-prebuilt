@@ -1,7 +1,7 @@
-use crate::{TARGET, data::ConfigFileV1};
+use crate::{data::ConfigFileV1, TARGET};
 use bpaf::*;
-use home::home_dir;
-use std::{path::PathBuf, fs::File, io::Read};
+use home::{cargo_home, home_dir};
+use std::{fs::File, io::Read, path::PathBuf};
 
 pub static REPORT_FLAGS: [&str; 6] = [
     "license-out",
@@ -22,7 +22,6 @@ pub struct Config {
     pub ci: bool,
     pub no_create_path: bool,
     pub reports: String,
-    pub color: bool,
     pub pkgs: String,
 }
 
@@ -34,10 +33,10 @@ struct Arguments {
     path: Option<PathBuf>,
     report_path: Option<PathBuf>,
     ci: bool,
-    no_create_path: Option<bool>,
+    no_create_path: bool,
     reports: Option<String>,
-    color: Option<bool>,
-    no_color: Option<bool>,
+    color: bool,
+    no_color: bool,
     pkgs: String,
 }
 
@@ -80,9 +79,9 @@ fn parse_args() -> Arguments {
         .switch();
 
     let no_create_path = long("no-create-path")
+        .env("PREBUILT_NO_CREATE_PATH")
         .help("Do not create the report and/or bin folder if it is missing.")
-        .switch()
-        .optional();
+        .switch();
 
     let reports = long("reports")
         .env("PREBUILT_REPORTS")
@@ -91,14 +90,14 @@ fn parse_args() -> Arguments {
         .optional();
 
     let color = long("color")
+        .env("PREBUILT_COLOR")
         .help("Force color to be turned on.")
-        .switch()
-        .optional();
+        .switch();
 
     let no_color = long("no-color")
+        .env("PREBUILT_NO_COLOR")
         .help("Force color to be turned off.")
-        .switch()
-        .optional();
+        .switch();
 
     let parser = construct!(Arguments {
         target,
@@ -113,45 +112,150 @@ fn parse_args() -> Arguments {
         no_color,
         pkgs,
     });
-    
+
     cargo_helper("prebuilt", parser)
         .to_options()
         .version(env!("CARGO_PKG_VERSION"))
         .run()
 }
 
-fn fill_from_file(args: &mut Arguments) -> () {
+fn fill_from_file(args: &mut Arguments) {
     match home_dir() {
         Some(mut conf) => {
             conf.push(".config/cargo-prebuilt/config.toml");
             if conf.exists() {
                 let mut file = File::open(conf).expect("Could not open config file.");
                 let mut str = String::new();
-                file.read_to_string(&mut str).expect("Could not read config file.");
+                file.read_to_string(&mut str)
+                    .expect("Could not read config file.");
 
                 let config: Result<ConfigFileV1, toml::de::Error> = toml::from_str(&str);
-                if let Ok(config) = config {
-                    // TODO
-                    todo!();
+                match config {
+                    Ok(config) => {
+                        if let Some(prebuilt) = config.prebuilt {
+                            // TODO: Way to not clone?
+                            macro_rules! file_convert {
+                                ($($x:ident), *) => {
+                                    {
+                                        $(args.$x = args.$x.clone().or(prebuilt.$x);)*
+                                    }
+                                };
+                            }
+                            macro_rules! file_convert_switch {
+                                ($($x:ident), *) => {
+                                    {
+                                        $(if !args.$x {
+                                            if let Some(opt) = prebuilt.$x {
+                                                args.$x = opt;
+                                            }
+                                        })*
+                                    }
+                                };
+                            }
+
+                            file_convert![target, index, auth, path, report_path];
+                            file_convert_switch![no_create_path, color];
+
+                            args.reports = args.reports.clone().or_else(|| {
+                                prebuilt.reports.map_or_else(
+                                    || None,
+                                    |val| {
+                                        Some(
+                                            val.iter()
+                                                .map(|v| {
+                                                    let str: &str = v.into();
+                                                    String::from(str)
+                                                })
+                                                .collect(),
+                                        )
+                                    },
+                                )
+                            });
+                        }
+                    }
+                    Err(err) => eprintln!("Failed to parse config file.\n{err}"),
                 }
             }
-        },
+        }
         None => eprintln!("Could not find home directory! Config file will be ignored."),
     }
 }
 
-fn convert(args: &Arguments) -> Config {
-    todo!()
+fn convert(args: Arguments) -> Config {
+    let target = match args.target {
+        Some(val) => val,
+        None => TARGET.to_owned(),
+    };
+
+    let index = match args.index {
+        Some(val) => val,
+        None => "gh-pub:github.com/cargo-prebuilt/index".to_string(),
+    };
+
+    let auth = args.auth;
+
+    let path = match args.path {
+        Some(val) => val,
+        None => {
+            let mut cargo_home = cargo_home().expect("Could not find cargo home directory, please set CARGO_HOME or use PREBUILT_PATH or --path");
+            if !cargo_home.ends_with("bin") {
+                cargo_home.push("bin");
+            }
+            cargo_home
+        }
+    };
+
+    let report_path = match args.report_path {
+        Some(val) => val,
+        None => {
+            let mut prebuilt_home = home_dir().expect("Could not find home directory, please set HOME or use PREBUILT_REPORT_PATH or --report-path");
+            prebuilt_home.push(".prebuilt");
+            prebuilt_home
+        }
+    };
+
+    let ci = args.ci;
+
+    let no_create_path = args.no_create_path;
+
+    let reports = match args.reports {
+        Some(val) => val,
+        None => REPORT_FLAGS[1].to_owned(),
+    };
+
+    match (args.color, args.no_color) {
+        (true, false) => owo_colors::set_override(true),
+        (_, true) => owo_colors::set_override(false),
+        _ => {}
+    }
+
+    let pkgs = args.pkgs;
+
+    Config {
+        target,
+        index,
+        auth,
+        path,
+        report_path,
+        ci,
+        no_create_path,
+        reports,
+        pkgs,
+    }
 }
 
 pub fn get() -> Config {
     // arguments and env vars
     let mut args = parse_args();
-    
+    #[cfg(debug_assertions)]
+    dbg!(&args);
+
     // config file
-    fill_from_file(&mut args);
-    
-    // defaults
-    
-    convert(&args)
+    if !args.ci {
+        fill_from_file(&mut args);
+        #[cfg(debug_assertions)]
+        dbg!(&args);
+    }
+
+    convert(args)
 }

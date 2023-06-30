@@ -1,11 +1,9 @@
 mod config;
-mod conf_file;
 mod data;
 mod get;
 mod interact;
 
 use flate2::read::GzDecoder;
-use home::cargo_home;
 use owo_colors::{OwoColorize, Stream::Stdout};
 use sha2::{Digest, Sha256};
 use std::{env, fs, fs::create_dir_all, path::Path, str, string::ToString};
@@ -20,36 +18,25 @@ fn main() -> Result<(), String> {
     #[cfg(debug_assertions)]
     dbg!(&config);
 
-    // Try to get index from config file.
-//    if !config.ci {
-////        conf_file::fill(&mut args);
-//    }
-
-//    let args = config;
-
-//    if args.colors {
-//        owo_colors::set_override(true);
-//    }
-//    if args.no_colors {
-//        owo_colors::set_override(false);
-//    }
-
     let target = config.target.as_str();
 
-    let prebuilt_bin = config.path.clone()/*.unwrap_or_else(|| {
-        let mut cargo_home = cargo_home().expect("Could not find cargo home directory, please set CARGO_HOME or PREBUILT_PATH, or use --path");
-        if !cargo_home.ends_with("bin") {
-            cargo_home.push("bin");
-        }
-        cargo_home
-    })*/;
-
+    let prebuilt_bin = config.path.clone();
     if !config.no_create_path && create_dir_all(&prebuilt_bin).is_err() {
         eprintln!("Could not create the directories {prebuilt_bin:?}.");
         std::process::exit(44);
     }
     else if !Path::new(&prebuilt_bin).exists() {
         eprintln!("Directories do not exist! {prebuilt_bin:?}.");
+        std::process::exit(45);
+    }
+
+    let prebuilt_home = config.report_path.clone();
+    if !config.no_create_path && create_dir_all(&prebuilt_home).is_err() {
+        eprintln!("Could not create the directories {prebuilt_home:?}.");
+        std::process::exit(44);
+    }
+    else if !Path::new(&prebuilt_home).exists() {
+        eprintln!("Directories do not exist! {prebuilt_home:?}.");
         std::process::exit(45);
     }
 

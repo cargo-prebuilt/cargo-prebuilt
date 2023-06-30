@@ -18,28 +18,7 @@ pub enum InteractError {
 }
 
 // TODO: Remove _ from auth.
-pub fn create_interact(
-    input: String,
-    _auth: Option<&String>,
-    agent: Agent,
-) -> Box<dyn Interact> {
-    //TODO: Set default in config.
-    // Default
-//    if input.is_none() {
-//        #[cfg(feature = "github-public")]
-//        {
-//            return Box::new(github_public::GithubPublic::new(
-//                agent,
-//                "github.com/cargo-prebuilt/index",
-//            ));
-//        }
-//        #[cfg(not(feature = "github-public"))]
-//        {
-//            println!("Using the default index requires the github-public feature!");
-//            std::process::exit(220);
-//        }
-//    }
-
+pub fn create_interact(input: String, _auth: Option<&String>, agent: Agent) -> Box<dyn Interact> {
     // Github public
     if input.starts_with("gh-pub:") {
         #[cfg(feature = "github-public")]
@@ -67,7 +46,7 @@ pub fn create_interact(
             println!("Using index https://{url}.");
             return Box::new(github_private::GithubPrivate::new(
                 agent,
-                _auth.clone().expect("Need auth token for private index."),
+                _auth.expect("Need auth token for private index.").clone(),
                 url,
             ));
         }
@@ -78,7 +57,7 @@ pub fn create_interact(
         }
     }
 
-    eprintln!("This index ({input}) is not supported.");
+    eprintln!("This index ({input}) is not supported or malformed.");
     std::process::exit(221);
 }
 

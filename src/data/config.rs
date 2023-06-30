@@ -29,6 +29,11 @@ impl From<ReportType> for &str {
         }
     }
 }
+impl From<&ReportType> for &str {
+    fn from(value: &ReportType) -> Self {
+        Into::<&str>::into(*value)
+    }
+}
 impl TryFrom<&str> for ReportType {
     type Error = ();
 
@@ -40,7 +45,7 @@ impl TryFrom<&str> for ReportType {
             "deps-dl" => Ok(ReportType::DepsDL),
             "audit-out" => Ok(ReportType::AuditOut),
             "audit-dl" => Ok(ReportType::AuditDL),
-            _ => Err(())
+            _ => Err(()),
         }
     }
 }
@@ -56,7 +61,7 @@ pub struct ConfigFileV1 {
 pub struct ConfigFilePrebuiltV1 {
     pub target: Option<String>,
     pub index: Option<String>,
-    pub index_token: Option<String>,
+    pub auth: Option<String>, //TODO: Should auth be base64 encoded in config file?
     pub path: Option<PathBuf>,
     pub report_path: Option<PathBuf>,
     pub no_create_path: Option<bool>,

@@ -1,5 +1,6 @@
 use crate::{
-    interact::{Interact, InteractError}, config::{Config, REPORT_FLAGS},
+    config::{Config, REPORT_FLAGS},
+    interact::{Interact, InteractError},
 };
 use owo_colors::{OwoColorize, Stream::Stdout};
 use std::{

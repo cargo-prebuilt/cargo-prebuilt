@@ -2,6 +2,10 @@
 
 Config info is prioritized in the order of arguments -> environmental variables -> config file -> defaults.
 
+## Args
+
+TODO
+
 ## File
 
 The config file should be under ```$HOME/.config/cargo-prebuilt/config.toml```.
@@ -12,7 +16,7 @@ The config file is ignored when using the --ci flag.
 [prebuilt]
 target = "$TARGET"          # Target to download for
 index = "$INDEX"            # Index to use
-index_token = "$TOKEN"      # Index auth token
+auth = "$TOKEN"             # Index auth token
 path = "$PATH"              # Absolute path to where the binaries will be installed
 report_path = "$PATH"       # Absolute path to where the reports will be put
 no_create_path = true|false # Do not create paths that do not exist
