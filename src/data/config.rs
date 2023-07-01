@@ -1,8 +1,10 @@
-use std::path::PathBuf;
+use std::{collections::HashMap, path::PathBuf};
 
 use serde::Deserialize;
 
 use super::HashType;
+
+pub type SigKeys = HashMap<String, Vec<String>>;
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq, Hash)]
 pub enum ReportType {
@@ -56,6 +58,7 @@ impl TryFrom<&str> for ReportType {
 #[serde(deny_unknown_fields)]
 pub struct ConfigFileV1 {
     pub prebuilt: Option<ConfigFilePrebuiltV1>,
+    pub key: Option<HashMap<String, ConfigFileKeysV1>>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -70,6 +73,14 @@ pub struct ConfigFilePrebuiltV1 {
     pub reports: Option<Vec<ReportType>>,
     pub color: Option<bool>,
     pub hashes: Option<Vec<HashType>>,
+    pub force_sig: Option<bool>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ConfigFileKeysV1 {
+    pub index: String,
+    pub pub_key: String,
 }
 
 #[cfg(test)]

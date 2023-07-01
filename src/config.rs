@@ -1,7 +1,10 @@
-use crate::{data::ConfigFileV1, TARGET};
+use crate::{
+    data::{ConfigFileV1, SigKeys},
+    TARGET,
+};
 use bpaf::*;
 use home::{cargo_home, home_dir};
-use std::{fs::File, io::Read, path::PathBuf};
+use std::{collections::HashMap, fs::File, io::Read, path::PathBuf};
 
 pub static REPORT_FLAGS: [&str; 6] = [
     "license-out",
@@ -23,6 +26,8 @@ pub struct Config {
     pub no_create_path: bool,
     pub reports: String,
     pub hashes: Option<String>, // Use by priority if None. (sha3_512 -> sha3_256 -> sha512 -> sha256)
+    pub sigs: SigKeys,
+    pub force_sig: bool,
     pub pkgs: String,
 }
 
@@ -37,6 +42,8 @@ struct Arguments {
     no_create_path: bool,
     reports: Option<String>,
     hashes: Option<String>,
+    sig: Option<String>,
+    force_sig: bool,
     color: bool,
     no_color: bool,
     pkgs: String,
@@ -97,6 +104,17 @@ fn parse_args() -> Arguments {
         .argument::<String>("HASHES")
         .optional();
 
+    let sig = long("sig")
+        .env("PREBUILT_SIG")
+        .help("A public verifying key. Must be used with --index.")
+        .argument::<String>("SIG")
+        .optional();
+
+    let force_sig = long("force-sig")
+        .env("PREBUILT_FORCE_SIG")
+        .help("Force verifying signatures.")
+        .switch();
+
     let color = long("color")
         .env("PREBUILT_COLOR")
         .help("Force color to be turned on.")
@@ -117,6 +135,8 @@ fn parse_args() -> Arguments {
         no_create_path,
         reports,
         hashes,
+        sig,
+        force_sig,
         color,
         no_color,
         pkgs,
@@ -128,7 +148,7 @@ fn parse_args() -> Arguments {
         .run()
 }
 
-fn fill_from_file(args: &mut Arguments) {
+fn fill_from_file(args: &mut Arguments, sig_keys: &mut SigKeys) {
     match home_dir() {
         Some(mut conf) => {
             conf.push(".config/cargo-prebuilt/config.toml");
@@ -141,6 +161,20 @@ fn fill_from_file(args: &mut Arguments) {
                 let config: Result<ConfigFileV1, toml::de::Error> = toml::from_str(&str);
                 match config {
                     Ok(config) => {
+                        if let Some(mut keys) = config.key {
+                            for (_, v) in keys.iter_mut() {
+                                if sig_keys.contains_key(&(v.index)) {
+                                    sig_keys
+                                        .get_mut(&(v.index))
+                                        .unwrap()
+                                        .push(v.pub_key.clone());
+                                }
+                                else {
+                                    sig_keys.insert(v.index.clone(), vec![v.pub_key.clone()]);
+                                }
+                            }
+                        }
+
                         if let Some(prebuilt) = config.prebuilt {
                             // TODO: Way to not clone?
                             macro_rules! file_convert {
@@ -166,7 +200,7 @@ fn fill_from_file(args: &mut Arguments) {
                                     {
                                         $(args.$x = args.$x.clone().or_else(|| {
                                             prebuilt.$x.map_or_else(
-                                            || None,
+                                                || None,
                                                 |val| {
                                                     Some(
                                                         val.iter()
@@ -174,7 +208,8 @@ fn fill_from_file(args: &mut Arguments) {
                                                                 let str: &str = v.into();
                                                                 String::from(str)
                                                             })
-                                                            .collect(),
+                                                            .collect::<Vec<String>>()
+                                                            .join(","),
                                                     )
                                                 },
                                             )
@@ -184,7 +219,7 @@ fn fill_from_file(args: &mut Arguments) {
                             }
 
                             file_convert![target, index, auth, path, report_path];
-                            file_convert_switch![no_create_path, color];
+                            file_convert_switch![no_create_path, force_sig, color];
                             file_convert_csv![reports, hashes];
                         }
                     }
@@ -196,7 +231,7 @@ fn fill_from_file(args: &mut Arguments) {
     }
 }
 
-fn convert(args: Arguments) -> Config {
+fn convert(args: Arguments, sigs: SigKeys) -> Config {
     let target = match args.target {
         Some(val) => val,
         None => TARGET.to_owned(),
@@ -240,6 +275,8 @@ fn convert(args: Arguments) -> Config {
 
     let hashes = args.hashes;
 
+    let force_sig = args.force_sig;
+
     match (args.color, args.no_color) {
         (true, false) => owo_colors::set_override(true),
         (_, true) => owo_colors::set_override(false),
@@ -258,6 +295,8 @@ fn convert(args: Arguments) -> Config {
         no_create_path,
         reports,
         hashes,
+        sigs,
+        force_sig,
         pkgs,
     }
 }
@@ -268,12 +307,24 @@ pub fn get() -> Config {
     #[cfg(debug_assertions)]
     dbg!(&args);
 
+    // Check if sig is used with index.
+    if args.sig.is_some() && args.index.is_none() {
+        eprintln!("--sig must be used with --index.");
+        std::process::exit(502);
+    }
+
+    let mut keys: SigKeys = HashMap::new();
+    // Add sig key if needed
+    if let Some(k) = &args.sig {
+        keys.insert(args.index.clone().unwrap(), vec![k.clone()]);
+    }
+
     // config file
     if !args.ci {
-        fill_from_file(&mut args);
+        fill_from_file(&mut args, &mut keys);
         #[cfg(debug_assertions)]
         dbg!(&args);
     }
 
-    convert(args)
+    convert(args, keys)
 }

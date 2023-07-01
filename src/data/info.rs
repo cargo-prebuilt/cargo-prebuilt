@@ -34,10 +34,12 @@ pub struct InfoFileArchiveV1 {
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct InfoFileFilesV1 {
-    pub hash: String,    // Hashes File
-    pub license: String, // License File
-    pub deps: String,    // Deps File
-    pub audit: String,   // Audit File
+    pub hash: String,             // Hashes File
+    pub license: String,          // License File
+    pub deps: String,             // Deps File
+    pub audit: String,            // Audit File
+    pub sig_info: Option<String>, // Sig File For Info.json
+    pub sig_hash: Option<String>, // Sig File For Hashes.json
 }
 
 #[cfg(test)]

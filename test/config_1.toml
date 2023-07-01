@@ -15,3 +15,8 @@ reports = [               # Reports to download
 ]
 color = true              # Should CLI colors be on or not
 hashes = ["sha256"]       # Hashes to use for verifying files downloaded
+force_sig = true
+
+[key.test]             # Add a public verifying key for an index
+index = "$INDEX"            # Index to add key for
+pub_key = "$PUBLIC_GPG_KEY" # Public verifying key for index

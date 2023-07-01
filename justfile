@@ -13,7 +13,8 @@ fmt:
 check:
     cargo +nightly fmt --check
     cargo clippy --all-targets --locked --workspace -- -D warnings
-    cargo clippy --all-targets --locked --workspace --no-default-features --features indexes,rustls,dull-color -- -D warnings
+    cargo clippy --all-targets --locked --workspace --no-default-features --features indexes,security,dull-color,native -- -D warnings
+    cargo clippy --all-targets --locked --workspace --no-default-features --features indexes,security,dull-color,rustls -- -D warnings
 
 docker:
     docker run -it --rm --pull=always \

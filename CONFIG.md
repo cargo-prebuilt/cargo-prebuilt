@@ -4,7 +4,7 @@ Config info is prioritized in the order of arguments -> environmental variables 
 
 ## Args
 
-TODO: Use ```cargo prebuilt --help``` for now.
+Use ```cargo prebuilt --help```.
 
 ## File
 
@@ -23,6 +23,11 @@ no_create_path = true|false # Do not create paths that do not exist
 reports = ["$REPORT_TYPE"]  # Reports to download
 hashes = ["$HASH_TYPE"]     # Hashes to use for verifying files downloaded
 color = true|false          # Should CLI colors be on or not
+force_sig = true|false      # Force verifying signatures to be used (See [key.$ANYTHING])
+
+[key.$ANYTHING]             # Add a public verifying key for an index
+index = "$INDEX"            # Index to add key for
+pub_key = "$PUBLIC_GPG_KEY" # Public verifying key for index
 ```
 
 ## Ref

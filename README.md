@@ -36,16 +36,16 @@ Need help? Try: ```cargo prebuilt --help``` or see [Config Info](CONFIG.md)
 ## Building
 
 #### vendored-openssl (default)
-```cargo install cargo-prebuilt --no-default-features --features indexes,hashes,bright-color,vendored-openssl```
+```cargo install cargo-prebuilt --no-default-features --features indexes,security,bright-color,vendored-openssl```
 
 #### native tls (github actions/releases default)
-```cargo install cargo-prebuilt --no-default-features --features indexes,hashes,bright-color,native```
+```cargo install cargo-prebuilt --no-default-features --features indexes,security,bright-color,native```
 
 #### rustls
-```cargo install cargo-prebuilt --no-default-features --features indexes,hashes,bright-color,rustls```
+```cargo install cargo-prebuilt --no-default-features --features indexes,security,bright-color,rustls```
 
 #### rustls with native certs
-```cargo install cargo-prebuilt --no-default-features --features indexes,hashes,bright-color,rustls-native-certs```
+```cargo install cargo-prebuilt --no-default-features --features indexes,security,bright-color,rustls-native-certs```
 
 #### limit indexes used
 Remove ```indexes``` feature included by default, then add the features you want below:
