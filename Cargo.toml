@@ -23,6 +23,7 @@ include = [
 ]
 
 [dependencies]
+base64 = { version = "0.21.2", optional = true }
 bpaf = { version = "0.8.1", features = ["autocomplete", "batteries"] }
 flate2 = "1.0.26"
 hex = "0.4.3"
@@ -55,7 +56,7 @@ github-private = [] # TODO: Under dev
 security = ["sha2", "sha3", "sig"]
 sha2 = ["dep:sha2"]
 sha3 = ["dep:sha3"]
-sig = ["dep:pgp"]
+sig = ["dep:pgp", "dep:base64"]
 rustls = ["ureq/tls"]
 rustls-native-certs = ["rustls", "ureq/native-certs"]
 native = ["native-tls", "ureq/native-tls"]
@@ -68,12 +69,14 @@ opt-level = "z"
 lto = true
 codegen-units = 1
 strip = true
+panic = "abort"
 
 [profile.quick-build]
 inherits = "release"
 opt-level = 0
 lto = false
 codegen-units = 16
+panic = "abort"
 
 [package.metadata.binstall]
 pkg-url = "{ repo }/releases/download/v{ version }/{ target }.tar.gz"

@@ -27,7 +27,7 @@ force_sig = true|false      # Force verifying signatures to be used (See [key.$A
 
 [key.$ANYTHING]             # Add a public verifying key for an index
 index = "$INDEX"            # Index to add key for
-pub_key = "$PUBLIC_GPG_KEY" # Public verifying key for index
+pub_key = "$PUBLIC_GPG_KEY" # Public verifying key for index encoded as base64
 ```
 
 ## Ref

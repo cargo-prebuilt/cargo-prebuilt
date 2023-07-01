@@ -106,7 +106,7 @@ fn parse_args() -> Arguments {
 
     let sig = long("sig")
         .env("PREBUILT_SIG")
-        .help("A public verifying key. Must be used with --index.")
+        .help("A public verifying key encoded as base64. Must be used with --index.")
         .argument::<String>("SIG")
         .optional();
 
@@ -278,10 +278,14 @@ fn convert(args: Arguments, sigs: SigKeys) -> Config {
     let force_sig = args.force_sig;
 
     match (args.color, args.no_color) {
+        #[cfg(any(feature = "bright-color", feature = "dull-color"))]
         (true, false) => owo_colors::set_override(true),
         (_, true) => owo_colors::set_override(false),
         _ => {}
     }
+
+    #[cfg(not(any(feature = "bright-color", feature = "dull-color")))]
+    owo_colors::set_override(false);
 
     let pkgs = args.pkgs;
 
@@ -313,6 +317,7 @@ pub fn get() -> Config {
         std::process::exit(502);
     }
 
+    //TODO: Load default sig key.
     let mut keys: SigKeys = HashMap::new();
     // Add sig key if needed
     if let Some(k) = &args.sig {
@@ -327,4 +332,26 @@ pub fn get() -> Config {
     }
 
     convert(args, keys)
+}
+
+#[cfg(test)]
+mod test {
+    use pgp::SignedPublicKey;
+    use pgp::StandaloneSignature;
+    use pgp::Deserializable;
+
+    #[test]
+    fn test_pgp() {
+        let data = include_bytes!("../test/pubdata.test");
+        let sig = include_bytes!("../test/pubdata.test.sig");
+        let pubkey = include_bytes!("../test/pubkey.asc");
+
+        let mut reader = std::io::Cursor::new(sig);
+        let sig = StandaloneSignature::from_bytes(&mut reader).unwrap();
+
+        let mut reader = std::io::Cursor::new(pubkey);
+        let pubkey = SignedPublicKey::from_armor_single(&mut reader).unwrap().0;
+
+        sig.verify(&pubkey, data).unwrap();
+    }
 }
