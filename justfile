@@ -41,7 +41,7 @@ hack:
     --mount type=bind,source=$HOME/.cargo/registry,target=/usr/local/cargo/registry \
     -w /prebuilt \
     rust:latest \
-    bash -c 'cargo run -- cargo-hack && cargo hack check --each-feature --no-dev-deps --verbose --workspace --locked && cargo hack check --feature-powerset --no-dev-deps --verbose --workspace --locked'
+    bash -c 'cargo run -- cargo-hack && cargo hack check --each-feature --no-dev-deps --verbose --workspace --locked && cargo hack check --feature-powerset --group-features rustls,rustls-native-certs,native,vendored-openssl --group-features bright-color,dull-color --no-dev-deps --verbose --workspace --locked'
 
 msrv:
     docker run -t --rm --pull=always \

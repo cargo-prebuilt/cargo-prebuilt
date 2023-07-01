@@ -12,6 +12,8 @@ on:
   workflow_dispatch:
 
 env:
+  feature-set: '--no-default-features --features native,bright-color,indexes,security'
+  hack-group: '--group-features rustls,rustls-native-certs,native,vendored-openssl --group-features bright-color,dull-color'
   CARGO_TERM_COLOR: never
   CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse
 
@@ -68,7 +70,7 @@ jobs:
         run: |
           set -o pipefail
           cargo clippy --all-targets --verbose --workspace --locked -- -D warnings 2>&1 | tee .step-data.txt
-          cargo clippy --all-targets --verbose --workspace --locked --no-default-features --features indexes,rustls,dull-color -- -D warnings 2>&1 | tee .step-data.txt
+          cargo clippy --all-targets --verbose --workspace --locked ${{ env.feature-set }} -- -D warnings 2>&1 | tee .step-data.txt
       - name: Put into summary (success)
         if: success()
         shell: bash
@@ -120,7 +122,7 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          cargo hack check --feature-powerset --no-dev-deps --verbose --workspace --locked 2>&1 | tee .step-data.txt
+          cargo hack check --feature-powerset ${{ env.hack-group }} --no-dev-deps --verbose --workspace --locked 2>&1 | tee .step-data.txt
       - name: Put into summary (success)
         if: success()
         shell: bash
