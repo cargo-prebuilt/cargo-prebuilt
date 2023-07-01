@@ -36,6 +36,7 @@ impl Interact for GithubPublic {
         let mut bytes = Vec::new();
         match self.agent.get(&url).call() {
             Ok(response) => {
+                //TODO: Allow limiting of size.
                 response
                     .into_reader()
                     .read_to_end(&mut bytes)

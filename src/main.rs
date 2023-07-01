@@ -10,6 +10,7 @@ use tar::Archive;
 
 use crate::get::Fetcher;
 
+static DEFAULT_INDEX: &str = "gh-pub:github.com/cargo-prebuilt/index";
 static TARGET: &str = env!("TARGET");
 
 fn main() -> Result<(), String> {

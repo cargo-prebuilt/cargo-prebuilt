@@ -46,35 +46,11 @@ image = "ghcr.io/cargo-prebuilt/cross-openssl:mips64el-unknown-linux-gnuabi64"
 [target.mips64el-unknown-linux-muslabi64]
 image = "ghcr.io/cargo-prebuilt/cross-openssl:mips64el-unknown-linux-muslabi64"
 
-[target.i686-unknown-linux-gnu]
-image = "ghcr.io/cargo-prebuilt/cross-openssl:i686-unknown-linux-gnu"
-
-[target.i686-unknown-linux-musl]
-image = "ghcr.io/cargo-prebuilt/cross-openssl:i686-unknown-linux-musl"
-
-[target.i686-unknown-freebsd]
-image = "ghcr.io/cargo-prebuilt/cross-openssl:i686-unknown-freebsd"
-
 [target.armv7-unknown-linux-gnueabihf]
 image = "ghcr.io/cargo-prebuilt/cross-openssl:armv7-unknown-linux-gnueabihf"
 
 [target.armv7-unknown-linux-musleabihf]
 image = "ghcr.io/cargo-prebuilt/cross-openssl:armv7-unknown-linux-musleabihf"
-
-[target.powerpc-unknown-linux-gnu]
-image = "ghcr.io/cargo-prebuilt/cross-openssl:powerpc-unknown-linux-gnu"
-
-[target.mips-unknown-linux-gnu]
-image = "ghcr.io/cargo-prebuilt/cross-openssl:mips-unknown-linux-gnu"
-
-[target.mips-unknown-linux-musl]
-image = "ghcr.io/cargo-prebuilt/cross-openssl:mips-unknown-linux-musl"
-
-[target.mipsel-unknown-linux-gnu]
-image = "ghcr.io/cargo-prebuilt/cross-openssl:mipsel-unknown-linux-gnu"
-
-[target.mipsel-unknown-linux-musl]
-image = "ghcr.io/cargo-prebuilt/cross-openssl:mipsel-unknown-linux-musl"
 
 [target.x86_64-pc-windows-gnu]
 image = "ghcr.io/cargo-prebuilt/cross-openssl:x86_64-pc-windows-gnu"

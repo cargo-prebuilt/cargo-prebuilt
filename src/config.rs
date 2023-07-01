@@ -1,6 +1,6 @@
 use crate::{
     data::{ConfigFileV1, SigKeys},
-    TARGET,
+    DEFAULT_INDEX, TARGET,
 };
 use bpaf::*;
 use home::{cargo_home, home_dir};
@@ -53,7 +53,7 @@ fn parse_args() -> Arguments {
 
     let index = long("index")
         .env("PREBUILT_INDEX")
-        .help("Index to use. (Default: gh-pub:github.com/cargo-prebuilt/index)")
+        .help(format!("Index to use. (Default: {DEFAULT_INDEX})"))
         .argument::<String>("INDEX")
         .optional();
 
@@ -234,7 +234,7 @@ fn convert(args: Arguments, sigs: SigKeys) -> Config {
 
     let index = match args.index {
         Some(val) => val,
-        None => "gh-pub:github.com/cargo-prebuilt/index".to_string(),
+        None => DEFAULT_INDEX.to_string(),
     };
 
     let auth = args.auth;
@@ -312,8 +312,13 @@ pub fn get() -> Config {
         std::process::exit(502);
     }
 
-    //TODO: Load default sig key.
-    let mut keys: SigKeys = HashMap::new();
+    let mut keys: SigKeys = HashMap::with_capacity(1);
+    // TODO: Allow default index key
+//    keys.insert(
+//        DEFAULT_INDEX.to_string(),
+//        vec![include_str!("../keys/cargo-prebuilt-index.pub.key").to_string()],
+//    );
+
     // Add sig key if needed
     if let Some(k) = &args.sig {
         keys.insert(args.index.clone().unwrap(), vec![k.clone()]);
@@ -341,7 +346,7 @@ mod test {
     use pgp::{Deserializable, SignedPublicKey, StandaloneSignature};
 
     #[test]
-    fn test_pgp() {
+    fn test_pgp1() {
         let data = include_bytes!("../test/pubdata.test");
         let sig = include_bytes!("../test/pubdata.test.sig");
         let pubkey = include_bytes!("../test/pubkey.asc");
