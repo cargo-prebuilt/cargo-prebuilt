@@ -2,6 +2,39 @@ use std::collections::HashMap;
 
 use serde::Deserialize;
 
+/// This is an intermediate format, only for use in this program.
+#[derive(Debug)]
+pub struct InfoFileImm {
+    pub id: String,                    // Crate ID
+    pub version: String,               // Crate Version
+    pub license: String,               // SPDX License String
+    pub git: String,                   // Url to Git
+    pub description: String,           // Crate Description
+    pub bins: Vec<String>,             // Crate Binaries
+    pub info: HashMap<String, String>, // Metadata
+    pub archive: InfoFileArchiveV1,    // Archive Info
+    pub files: InfoFileFilesV1,        // File Names
+    pub targets: Vec<String>,          // Targets Built For
+}
+impl From<InfoFile> for InfoFileImm {
+    fn from(value: InfoFile) -> Self {
+        match value {
+            InfoFile::V1(info) => Self {
+                id: info.id,
+                version: info.version,
+                license: info.license,
+                git: info.git,
+                description: info.description,
+                bins: info.bins,
+                info: info.info,
+                archive: info.archive,
+                files: info.files,
+                targets: info.targets,
+            },
+        }
+    }
+}
+
 #[derive(Debug, Deserialize)]
 #[serde(tag = "info_version")]
 pub enum InfoFile {

@@ -27,7 +27,7 @@ pub struct Config {
     pub reports: String,
     pub hashes: Option<String>, // Use by priority if None. (sha3_512 -> sha3_256 -> sha512 -> sha256)
     pub sigs: SigKeys,
-    pub force_sig: bool,
+    pub force_verify: bool,
     pub pkgs: String,
 }
 
@@ -43,7 +43,7 @@ struct Arguments {
     reports: Option<String>,
     hashes: Option<String>,
     sig: Option<String>,
-    force_sig: bool,
+    force_verify: bool,
     color: bool,
     no_color: bool,
     pkgs: String,
@@ -110,9 +110,9 @@ fn parse_args() -> Arguments {
         .argument::<String>("SIG")
         .optional();
 
-    let force_sig = long("force-sig")
-        .env("PREBUILT_FORCE_SIG")
-        .help("Force verifying signatures.")
+    let force_verify = long("force-verify")
+        .env("PREBUILT_FORCE_VERIFY")
+        .help("Force verifying signatures and hashes.")
         .switch();
 
     let color = long("color")
@@ -136,7 +136,7 @@ fn parse_args() -> Arguments {
         reports,
         hashes,
         sig,
-        force_sig,
+        force_verify,
         color,
         no_color,
         pkgs,
@@ -219,7 +219,7 @@ fn fill_from_file(args: &mut Arguments, sig_keys: &mut SigKeys) {
                             }
 
                             file_convert![target, index, auth, path, report_path];
-                            file_convert_switch![no_create_path, force_sig, color];
+                            file_convert_switch![no_create_path, force_verify, color];
                             file_convert_csv![reports, hashes];
                         }
                     }
@@ -275,7 +275,7 @@ fn convert(args: Arguments, sigs: SigKeys) -> Config {
 
     let hashes = args.hashes;
 
-    let force_sig = args.force_sig;
+    let force_sig = args.force_verify;
 
     match (args.color, args.no_color) {
         #[cfg(any(feature = "bright-color", feature = "dull-color"))]
@@ -300,7 +300,7 @@ fn convert(args: Arguments, sigs: SigKeys) -> Config {
         reports,
         hashes,
         sigs,
-        force_sig,
+        force_verify: force_sig,
         pkgs,
     }
 }
@@ -331,14 +331,19 @@ pub fn get() -> Config {
         dbg!(&args);
     }
 
+    // Check if sig could be forced.
+    #[cfg(not(feature = "sig"))]
+    if args.force_verify {
+        eprintln!("cargo-prebuilt needs the 'sig' feature in order to force verifying.");
+        std::process::exit(224);
+    }
+
     convert(args, keys)
 }
 
 #[cfg(test)]
 mod test {
-    use pgp::SignedPublicKey;
-    use pgp::StandaloneSignature;
-    use pgp::Deserializable;
+    use pgp::{Deserializable, SignedPublicKey, StandaloneSignature};
 
     #[test]
     fn test_pgp() {

@@ -4,8 +4,7 @@ mod get;
 mod interact;
 
 use flate2::read::GzDecoder;
-use owo_colors::{OwoColorize, Stream::Stdout};
-use sha2::{Digest, Sha256};
+use owo_colors::{OwoColorize, Stream::Stderr};
 use std::{env, fs, fs::create_dir_all, path::Path, str, string::ToString};
 use tar::Archive;
 
@@ -45,11 +44,8 @@ fn main() -> Result<(), String> {
     // Build ureq agent
     let agent = create_agent();
 
-    let interact = interact::create_interact(config.index.clone(), config.auth.as_ref(), agent);
-    let interact = interact.as_ref();
-    // TODO: Use Fetcher instead of interact?
     // Create Fetcher which is used to fetch items from index.
-    //    let fetcher = Fetcher::new(&config, agent);
+    let mut fetcher = Fetcher::new(&config, agent);
 
     // Get pkgs
     let pkgs: Vec<&str> = config.pkgs.split(',').collect();
@@ -63,39 +59,23 @@ fn main() -> Result<(), String> {
             version = Some(j)
         }
 
-        // Get latest version
-        let version = match version {
-            Some(v) => v.to_string(),
-            None => get::latest_version(interact, id),
-        };
-        let version = version.as_str();
+        // Init fetcher for this crate and get latest version if needed
+        fetcher.load(id, version);
 
-        // Download hash
-        let sha_hash = get::hash(interact, id, version, target);
+        // Get version that fetcher is using
+        let version = fetcher.get_version();
 
-        // Download tarball
-        let tar_bytes = get::tar(interact, id, version, target);
-
-        // Check hash
-        let mut hasher = Sha256::new();
-        hasher.update(&tar_bytes);
-        let hash: Vec<u8> = hasher.finalize().to_vec();
-        let hash = hex::encode(hash);
-
-        // TODO: Say type of hash.
-        if !(hash.eq(&sha_hash)) {
-            eprintln!("Hashes do not match. {sha_hash} != {hash}");
-            std::process::exit(256);
-        }
+        // Download and hash tar
+        let tar_bytes = fetcher.download(&config);
 
         // Extract Tar
         let reader = std::io::Cursor::new(tar_bytes);
         let mut archive = Archive::new(GzDecoder::new(reader));
         match archive.entries() {
             Ok(es) => {
-                println!(
-                    "{} {id} {version}...",
-                    "Extracting".if_supports_color(Stdout, |text| text.bright_blue())
+                eprintln!(
+                    "{} {id}@{version}...",
+                    "Extracting".if_supports_color(Stderr, |text| text.bright_blue())
                 );
 
                 for e in es {
@@ -108,10 +88,14 @@ fn main() -> Result<(), String> {
                         .expect("Could not extract binaries from downloaded tar archive");
 
                     let abs = fs::canonicalize(path).expect("Could not canonicalize install path");
-                    println!(
+
+                    eprintln!(
                         "{} {abs:?}.",
-                        "Added".if_supports_color(Stdout, |text| text.bright_purple())
+                        "Added".if_supports_color(Stderr, |text| text.bright_purple())
                     );
+
+                    // Print paths to stdout too, maybe so others can parse?
+                    println!("{abs:?}");
                 }
             }
             Err(_) => {
@@ -121,15 +105,21 @@ fn main() -> Result<(), String> {
         }
 
         // Reports
-        get::reports(interact, &config, &prebuilt_bin, id, version);
+        //TODO: Enable
+        if !config.ci {
+            // fetcher.reports(&config);
+        }
 
-        println!(
-            "{} {id} {version}.",
-            "Installed".if_supports_color(Stdout, |text| text.bright_green())
+        eprintln!(
+            "{} {id}@{version}.",
+            "Installed".if_supports_color(Stderr, |text| text.bright_green())
         );
+
+        // Prepare for next crate.
+        fetcher.reset();
     }
 
-    println!("{}", "Done!".if_supports_color(Stdout, |text| text.green()));
+    eprintln!("{}", "Done!".if_supports_color(Stderr, |text| text.green()));
 
     Ok(())
 }

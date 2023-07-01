@@ -54,6 +54,21 @@ impl TryFrom<&str> for HashType {
     }
 }
 
+/// This is an intermediate format, only for use in this program.
+#[derive(Debug)]
+pub struct HashesFileImm {
+    pub hashes: HashMap<String, HashesFileBlobV1>, // File hashes
+}
+impl From<HashesFile> for HashesFileImm {
+    fn from(value: HashesFile) -> Self {
+        match value {
+            HashesFile::V1(hashes) => Self {
+                hashes: hashes.hashes,
+            },
+        }
+    }
+}
+
 #[derive(Debug, Deserialize)]
 #[serde(tag = "hashes_version")]
 pub enum HashesFile {

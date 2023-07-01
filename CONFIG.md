@@ -23,7 +23,7 @@ no_create_path = true|false # Do not create paths that do not exist
 reports = ["$REPORT_TYPE"]  # Reports to download
 hashes = ["$HASH_TYPE"]     # Hashes to use for verifying files downloaded
 color = true|false          # Should CLI colors be on or not
-force_sig = true|false      # Force verifying signatures to be used (See [key.$ANYTHING])
+force_verify = true|false   # Force verifying signatures and hashes (See [key.$ANYTHING])
 
 [key.$ANYTHING]             # Add a public verifying key for an index
 index = "$INDEX"            # Index to add key for

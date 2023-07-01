@@ -1,3 +1,4 @@
+use owo_colors::{OwoColorize, Stream::Stderr};
 use ureq::Agent;
 
 #[cfg(feature = "github-private")]
@@ -26,12 +27,15 @@ pub fn create_interact(input: String, _auth: Option<&String>, agent: Agent) -> B
             let url = input
                 .get(7..input.len())
                 .expect("Missing url after gh-pub:");
-            println!("Using index https://{url}.");
+            eprintln!(
+                "{} index https://{url}.",
+                "Using".if_supports_color(Stderr, |text| text.bright_cyan())
+            );
             return Box::new(github_public::GithubPublic::new(agent, url));
         }
         #[cfg(not(feature = "github-public"))]
         {
-            println!("Using this index ({input}) requires the github-public feature!");
+            eprintln!("Using this index ({input}) requires the github-public feature!");
             std::process::exit(220);
         }
     }
@@ -43,7 +47,10 @@ pub fn create_interact(input: String, _auth: Option<&String>, agent: Agent) -> B
             let url = input
                 .get(7..input.len())
                 .expect("Missing url after gh-pri:");
-            println!("Using index https://{url}.");
+            eprintln!(
+                "{} index https://{url}.",
+                "Using".if_supports_color(Stderr, |text| text.bright_cyan())
+            );
             return Box::new(github_private::GithubPrivate::new(
                 agent,
                 _auth.expect("Need auth token for private index.").clone(),
@@ -52,7 +59,7 @@ pub fn create_interact(input: String, _auth: Option<&String>, agent: Agent) -> B
         }
         #[cfg(not(feature = "github-private"))]
         {
-            println!("Using this index ({input}) requires the github-private feature!");
+            eprintln!("Using this index ({input}) requires the github-private feature!");
             std::process::exit(220);
         }
     }
@@ -62,10 +69,7 @@ pub fn create_interact(input: String, _auth: Option<&String>, agent: Agent) -> B
 }
 
 pub trait Interact {
-    fn pre_url(&self, id: &str, version: &str, target: &str) -> String;
-
     fn get_latest(&self, id: &str) -> Result<String, InteractError>;
-    fn get_hash(&self, id: &str, version: &str, target: &str) -> Result<String, InteractError>;
-    fn get_tar(&self, id: &str, version: &str, target: &str) -> Result<Vec<u8>, InteractError>;
-    fn get_report(&self, id: &str, version: &str, name: &str) -> Result<String, InteractError>;
+    fn get_str(&self, id: &str, version: &str, file_name: &str) -> Result<String, InteractError>;
+    fn get_blob(&self, id: &str, version: &str, file_name: &str) -> Result<Vec<u8>, InteractError>;
 }

@@ -73,7 +73,7 @@ pub struct ConfigFilePrebuiltV1 {
     pub reports: Option<Vec<ReportType>>,
     pub color: Option<bool>,
     pub hashes: Option<Vec<HashType>>,
-    pub force_sig: Option<bool>,
+    pub force_verify: Option<bool>,
 }
 
 #[derive(Debug, Deserialize)]
