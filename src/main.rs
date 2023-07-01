@@ -19,23 +19,21 @@ fn main() -> Result<(), String> {
     #[cfg(debug_assertions)]
     dbg!(&config);
 
-    let prebuilt_bin = config.path.clone();
-    if !config.no_create_path && create_dir_all(&prebuilt_bin).is_err() {
-        eprintln!("Could not create the directories {prebuilt_bin:?}.");
+    if !config.no_create_path && create_dir_all(&config.path).is_err() {
+        eprintln!("Could not create the directories {:?}.", config.path);
         std::process::exit(44);
     }
-    else if !Path::new(&prebuilt_bin).exists() {
-        eprintln!("Directories do not exist! {prebuilt_bin:?}.");
+    else if !Path::new(&config.path).exists() {
+        eprintln!("Directories do not exist! {:?}.", config.path);
         std::process::exit(45);
     }
 
-    let prebuilt_home = config.report_path.clone();
-    if !config.no_create_path && create_dir_all(&prebuilt_home).is_err() {
-        eprintln!("Could not create the directories {prebuilt_home:?}.");
+    if !config.no_create_path && create_dir_all(&config.report_path).is_err() {
+        eprintln!("Could not create the directories {:?}.", config.report_path);
         std::process::exit(44);
     }
-    else if !Path::new(&prebuilt_home).exists() {
-        eprintln!("Directories do not exist! {prebuilt_home:?}.");
+    else if !Path::new(&config.report_path).exists() {
+        eprintln!("Directories do not exist! {:?}.", config.report_path);
         std::process::exit(45);
     }
 
@@ -79,7 +77,7 @@ fn main() -> Result<(), String> {
                 for e in es {
                     let mut e = e.expect("Malformed entry.");
 
-                    let mut path = prebuilt_bin.clone();
+                    let mut path = config.path.clone();
                     path.push(e.path().expect("Could not extract path from tar."));
 
                     e.unpack(&path)
