@@ -314,10 +314,10 @@ pub fn get() -> Config {
 
     let mut keys: SigKeys = HashMap::with_capacity(1);
     // TODO: Allow default index key
-//    keys.insert(
-//        DEFAULT_INDEX.to_string(),
-//        vec![include_str!("../keys/cargo-prebuilt-index.pub.key").to_string()],
-//    );
+    //    keys.insert(
+    //        DEFAULT_INDEX.to_string(),
+    //        vec![include_str!("../keys/cargo-prebuilt-index.pub.key").to_string()],
+    //    );
 
     // Add sig key if needed
     if let Some(k) = &args.sig {

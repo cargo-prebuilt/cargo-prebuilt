@@ -2,6 +2,8 @@ use std::collections::HashMap;
 
 use serde::Deserialize;
 
+pub type Hashes = HashMap<HashType, String>;
+
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq, Hash)]
 pub enum HashType {
     #[cfg(feature = "sha2")]
@@ -85,8 +87,8 @@ pub struct HashesFileV1 {
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct HashesFileBlobV1 {
-    pub archive: HashMap<String, String>, // Archive Hashes
-    pub bins: HashMap<String, HashMap<HashType, String>>, // Binary Hashes
+    pub archive: Hashes,               // Archive Hashes
+    pub bins: HashMap<String, Hashes>, // Binary Hashes
 }
 
 #[cfg(test)]

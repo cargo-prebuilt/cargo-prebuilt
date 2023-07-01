@@ -5,7 +5,7 @@ use std::{
 
 use crate::{
     config::{self, Config},
-    data::{HashesFile, HashesFileImm, InfoFile, InfoFileImm},
+    data::{HashType, Hashes, HashesFile, HashesFileImm, InfoFile, InfoFileImm},
     interact::{self, Interact, InteractError},
 };
 use owo_colors::{OwoColorize, Stream::Stderr};
@@ -16,6 +16,7 @@ struct Data {
     id: Option<String>,
     version: Option<String>,
     info: Option<InfoFileImm>,
+    hashes: Option<HashesFileImm>,
 }
 
 pub struct Fetcher {
@@ -140,10 +141,12 @@ impl Fetcher {
         let tar_bytes = self.fetch_blob(&format!("{}.{}", config.target, info.archive.ext));
 
         // test hashes
-        self.verify_tar(config, &hashes, &tar_bytes);
+        self.verify_archive(config, &hashes, &tar_bytes);
 
-        // store info for ss later if allowed
+        // store info for reports later if allowed
         self.data.info = Some(info);
+        // store hashes for binaries later
+        self.data.hashes = Some(hashes);
 
         tar_bytes
     }
@@ -370,7 +373,49 @@ impl Fetcher {
         }
     }
 
-    fn verify_tar(&self, config: &Config, hashes: &HashesFileImm, tar_bytes: &[u8]) {
+    fn verify_archive(&self, config: &Config, hashes: &HashesFileImm, bytes: &[u8]) {
+        if let Some(blob) = hashes.hashes.get(&config.target) {
+            let hashes = &blob.archive;
+            self.verify_bytes(
+                config,
+                hashes,
+                &format!("{} archive", &config.target),
+                bytes,
+            )
+        }
+    }
+
+    pub fn verify_bin(&self, config: &Config, bin_name: &str, bytes: &[u8]) {
+        let id = self
+            .data
+            .id
+            .as_ref()
+            .expect("Failed to get id, but it should have been guaranteed.");
+        let version = self
+            .data
+            .version
+            .as_ref()
+            .expect("Failed to get version, but it should have been guaranteed.");
+        let hashes = self
+            .data
+            .hashes
+            .as_ref()
+            .expect("Failed to get hashes, but it should have been guaranteed.");
+
+        if let Some(blob) = hashes.hashes.get(&config.target) {
+            match &blob.bins.get(bin_name) {
+                Some(blob) => self.verify_bytes(config, blob, &format!("{bin_name} binary"), bytes),
+                None => {
+                    eprintln!("Could not find {bin_name} hash for {id}@{version}.");
+                    if config.force_verify {
+                        std::process::exit(229);
+                    }
+                }
+            }
+        }
+    }
+
+    fn verify_bytes(&self, config: &Config, hashes: &Hashes, item: &str, bytes: &[u8]) {
         let id = self
             .data
             .id
@@ -382,98 +427,93 @@ impl Fetcher {
             .as_ref()
             .expect("Failed to get version, but it should have been guaranteed.");
 
-        #[cfg(any(feature = "sha3", feature = "sha2"))]
-        if let Some(blob) = hashes.hashes.get(&config.target) {
-            let hashes = &blob.archive;
+        #[cfg(feature = "sha3")]
+        {
+            use sha3::{Digest, Sha3_256, Sha3_512};
 
-            #[cfg(feature = "sha3")]
-            {
-                use sha3::{Digest, Sha3_256, Sha3_512};
+            // sha3_512
+            if let Some(sha_hash) = hashes.get(&HashType::Sha3_512) {
+                let mut hasher = Sha3_512::new();
+                hasher.update(bytes);
+                let hash: Vec<u8> = hasher.finalize().to_vec();
+                let hash = hex::encode(hash);
 
-                // sha3_512
-                if let Some(sha_hash) = hashes.get("sha3_512") {
-                    let mut hasher = Sha3_512::new();
-                    hasher.update(tar_bytes);
-                    let hash: Vec<u8> = hasher.finalize().to_vec();
-                    let hash = hex::encode(hash);
-
-                    if !(hash.eq(sha_hash)) {
-                        eprintln!("sha3_512 hashes do not match. {sha_hash} != {hash}");
-                        std::process::exit(3512);
-                    }
-
-                    eprintln!(
-                        "{} tar for {id}@{version} with sha3_512.",
-                        "Verified".if_supports_color(Stderr, |text| text.bright_blue())
-                    );
-                    return;
+                if !(hash.eq(sha_hash)) {
+                    eprintln!("sha3_512 hashes do not match for {item}. {sha_hash} != {hash}");
+                    std::process::exit(3512);
                 }
 
-                // sha3_256
-                if let Some(sha_hash) = hashes.get("sha3_256") {
-                    let mut hasher = Sha3_256::new();
-                    hasher.update(tar_bytes);
-                    let hash: Vec<u8> = hasher.finalize().to_vec();
-                    let hash = hex::encode(hash);
-
-                    if !(hash.eq(sha_hash)) {
-                        eprintln!("sha3_256 hashes do not match. {sha_hash} != {hash}");
-                        std::process::exit(3512);
-                    }
-
-                    eprintln!(
-                        "{} tar for {id}@{version} with sha3_256.",
-                        "Verified".if_supports_color(Stderr, |text| text.bright_blue())
-                    );
-                    return;
-                }
+                eprintln!(
+                    "{} {item} for {id}@{version} with sha3_512.",
+                    "Verified".if_supports_color(Stderr, |text| text.bright_blue())
+                );
+                return;
             }
 
-            #[cfg(feature = "sha2")]
-            {
-                use sha2::{Digest, Sha256, Sha512};
+            // sha3_256
+            if let Some(sha_hash) = hashes.get(&HashType::Sha3_256) {
+                let mut hasher = Sha3_256::new();
+                hasher.update(bytes);
+                let hash: Vec<u8> = hasher.finalize().to_vec();
+                let hash = hex::encode(hash);
 
-                // sha512
-                if let Some(sha_hash) = hashes.get("sha512") {
-                    let mut hasher = Sha512::new();
-                    hasher.update(tar_bytes);
-                    let hash: Vec<u8> = hasher.finalize().to_vec();
-                    let hash = hex::encode(hash);
-
-                    if !(hash.eq(sha_hash)) {
-                        eprintln!("sha512 hashes do not match. {sha_hash} != {hash}");
-                        std::process::exit(512);
-                    }
-
-                    eprintln!(
-                        "{} tar for {id}@{version} with sha512.",
-                        "Verified".if_supports_color(Stderr, |text| text.bright_blue())
-                    );
-                    return;
+                if !(hash.eq(sha_hash)) {
+                    eprintln!("sha3_256 hashes do not match for {item}. {sha_hash} != {hash}");
+                    std::process::exit(3512);
                 }
 
-                // sha256
-                if let Some(sha_hash) = hashes.get("sha256") {
-                    let mut hasher = Sha256::new();
-                    hasher.update(tar_bytes);
-                    let hash: Vec<u8> = hasher.finalize().to_vec();
-                    let hash = hex::encode(hash);
-
-                    if !(hash.eq(sha_hash)) {
-                        eprintln!("sha256 hashes do not match. {sha_hash} != {hash}");
-                        std::process::exit(256);
-                    }
-
-                    eprintln!(
-                        "{} tar for {id}@{version} with sha256.",
-                        "Verified".if_supports_color(Stderr, |text| text.bright_blue())
-                    );
-                    return;
-                }
+                eprintln!(
+                    "{} {item} for {id}@{version} with sha3_256.",
+                    "Verified".if_supports_color(Stderr, |text| text.bright_blue())
+                );
+                return;
             }
         }
 
-        eprintln!("Could not verify downloaded tar file for {id}@{version}.");
+        #[cfg(feature = "sha2")]
+        {
+            use sha2::{Digest, Sha256, Sha512};
+
+            // sha512
+            if let Some(sha_hash) = hashes.get(&HashType::Sha512) {
+                let mut hasher = Sha512::new();
+                hasher.update(bytes);
+                let hash: Vec<u8> = hasher.finalize().to_vec();
+                let hash = hex::encode(hash);
+
+                if !(hash.eq(sha_hash)) {
+                    eprintln!("sha512 hashes do not match for {item}. {sha_hash} != {hash}");
+                    std::process::exit(512);
+                }
+
+                eprintln!(
+                    "{} {item} for {id}@{version} with sha512.",
+                    "Verified".if_supports_color(Stderr, |text| text.bright_blue())
+                );
+                return;
+            }
+
+            // sha256
+            if let Some(sha_hash) = hashes.get(&HashType::Sha256) {
+                let mut hasher = Sha256::new();
+                hasher.update(bytes);
+                let hash: Vec<u8> = hasher.finalize().to_vec();
+                let hash = hex::encode(hash);
+
+                if !(hash.eq(sha_hash)) {
+                    eprintln!("sha256 hashes do not match for {item}. {sha_hash} != {hash}");
+                    std::process::exit(256);
+                }
+
+                eprintln!(
+                    "{} {item} for {id}@{version} with sha256.",
+                    "Verified".if_supports_color(Stderr, |text| text.bright_blue())
+                );
+                return;
+            }
+        }
+
+        eprintln!("Could not verify downloaded {item} for {id}@{version}.");
         if config.force_verify {
             std::process::exit(228);
         }

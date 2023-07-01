@@ -5,7 +5,13 @@ mod interact;
 
 use flate2::read::GzDecoder;
 use owo_colors::{OwoColorize, Stream::Stderr};
-use std::{env, fs, fs::create_dir_all, path::Path, str};
+use std::{
+    env,
+    fs::{self, create_dir_all, File},
+    io::{Read, Write},
+    path::Path,
+    str,
+};
 use tar::Archive;
 
 use crate::get::Fetcher;
@@ -76,19 +82,36 @@ fn main() -> Result<(), String> {
                 );
 
                 for e in es {
-                    let mut e = e.expect("Malformed entry.");
+                    let mut e = e.expect("Malformed entry in tarball.");
+
+                    let mut blob_data = Vec::new();
+                    e.read_to_end(&mut blob_data)
+                        .expect("Could not extract binary from archive.");
+
+                    let bin_path = e.path().expect("Could not extract path from archive.");
+                    let str_name = bin_path
+                        .clone()
+                        .into_owned()
+                        .into_os_string()
+                        .into_string()
+                        .expect("Archive has non utf-8 path.");
+
+                    // Verify each binary in archive
+                    fetcher.verify_bin(&config, &str_name, &blob_data);
 
                     let mut path = config.path.clone();
-                    path.push(e.path().expect("Could not extract path from tar."));
+                    path.push(bin_path);
 
-                    e.unpack(&path)
-                        .expect("Could not extract binaries from downloaded tar archive");
+                    let mut file =
+                        File::create(&path).expect("Could not open file to write binary to.");
+                    file.write_all(&blob_data)
+                        .expect("Could not write binary to file.");
 
-                    let abs = fs::canonicalize(path).expect("Could not canonicalize install path");
+                    let abs = fs::canonicalize(path).expect("Could not canonicalize install path.");
 
                     eprintln!(
                         "{} {abs:?}.",
-                        "Added".if_supports_color(Stderr, |text| text.bright_purple())
+                        "Installed".if_supports_color(Stderr, |text| text.bright_purple())
                     );
 
                     // Print paths to stdout too, maybe so others can parse?
