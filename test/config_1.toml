@@ -6,12 +6,9 @@ path = "/prebuilt/bin"    # Absolute path to where the binaries will be installe
 report_path = "/prebuilt" # Absolute path to where the reports will be put
 no_create_path = false    # Do not create paths that do not exist
 reports = [               # Reports to download
-    "license-out",
-    "license-dl",
-    "deps-out",
-    "deps-dl",
-    "audit-out",
-    "audit-dl",
+    "license",
+    "deps",
+    "audit",
 ]
 color = true              # Should CLI colors be on or not
 hashes = ["sha256"]       # Hashes to use for verifying files downloaded

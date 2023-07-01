@@ -8,28 +8,19 @@ pub type SigKeys = HashMap<String, Vec<String>>;
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq, Hash)]
 pub enum ReportType {
-    #[serde(rename = "license-out")]
-    LicenseOut,
-    #[serde(rename = "license-dl")]
+    #[serde(rename = "license")]
     LicenseDL,
-    #[serde(rename = "deps-out")]
-    DepsOut,
-    #[serde(rename = "deps-dl")]
+    #[serde(rename = "deps")]
     DepsDL,
-    #[serde(rename = "audit-out")]
-    AuditOut,
-    #[serde(rename = "audit-dl")]
+    #[serde(rename = "audit")]
     AuditDL,
 }
 impl From<ReportType> for &str {
     fn from(value: ReportType) -> Self {
         match value {
-            ReportType::LicenseOut => "license-out",
-            ReportType::LicenseDL => "license-dl",
-            ReportType::DepsOut => "deps-out",
-            ReportType::DepsDL => "deps-dl",
-            ReportType::AuditOut => "audit-out",
-            ReportType::AuditDL => "audit-dl",
+            ReportType::LicenseDL => "license",
+            ReportType::DepsDL => "deps",
+            ReportType::AuditDL => "audit",
         }
     }
 }
@@ -43,12 +34,9 @@ impl TryFrom<&str> for ReportType {
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value {
-            "license-out" => Ok(ReportType::LicenseOut),
-            "license-dl" => Ok(ReportType::LicenseDL),
-            "deps-out" => Ok(ReportType::DepsOut),
-            "deps-dl" => Ok(ReportType::DepsDL),
-            "audit-out" => Ok(ReportType::AuditOut),
-            "audit-dl" => Ok(ReportType::AuditDL),
+            "license" => Ok(ReportType::LicenseDL),
+            "deps" => Ok(ReportType::DepsDL),
+            "audit" => Ok(ReportType::AuditDL),
             _ => Err(()),
         }
     }

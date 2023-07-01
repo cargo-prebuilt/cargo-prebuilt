@@ -47,6 +47,10 @@ Need help? Try: ```cargo prebuilt --help``` or see [Config Info](CONFIG.md)
 #### rustls with native certs
 ```cargo install cargo-prebuilt --no-default-features --features indexes,security,bright-color,rustls-native-certs```
 
+### limit security used
+Remove ```security``` feature included by default, then add the features you want below:
+- 
+
 #### limit indexes used
 Remove ```indexes``` feature included by default, then add the features you want below:
 - [github-public](#github-public)
@@ -57,6 +61,8 @@ Remove ```indexes``` feature included by default, then add the features you want
 - [forgejo-private](#forgejo-private) (Not supported yet)
 - [gitea-public](#gitea-public) (Not supported yet)
 - [gitea-private](#gitea-private) (Not supported yet)
+- [custom-http-public](#custom-http-private) (Not supported yet)
+- [custom-http-private](#custom-http-private) (Not supported yet)
 
 #### colors
 ```bright-color``` feature is used by default.
@@ -66,15 +72,12 @@ Add feature ```bright-color``` or ```dull-color```.
 
 Reports are generated when a crate is built in the index.
 
-They are stored under $HOME/.prebuilt/reports/CRATE/VERSION bu default.
+They are stored under $HOME/.prebuilt/reports/CRATE/VERSION by default.
 
 Report types (--reports):
-- license-out: Print license to stdout.
-- license-dl: Download license and put it under the prebuilt folder in the installation dir. (Default on)
-- deps-out: Print deps tree to stdout.
-- deps-dl: Download deps tree and put it under the prebuilt folder in the installation dir.
-- audit-out: Print audit to stdout.
-- audit-dl: Download audit and put it under the prebuilt folder in the installation dir.
+- license: Download license and put it under the prebuilt folder in the installation dir. (Default on)
+- deps: Download deps tree and put it under the prebuilt folder in the installation dir.
+- audit: Download audit and put it under the prebuilt folder in the installation dir.
 
 ## Using a custom index
 

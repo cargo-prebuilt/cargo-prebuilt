@@ -1,14 +1,14 @@
+use std::{
+    fs::{create_dir_all, File},
+    io::Write,
+};
+
 use crate::{
-    config::{Config, REPORT_FLAGS},
+    config::{self, Config},
     data::{HashesFile, HashesFileImm, InfoFile, InfoFileImm},
     interact::{self, Interact, InteractError},
 };
 use owo_colors::{OwoColorize, Stream::Stderr};
-use std::{
-    fs::{create_dir_all, File},
-    io::Write,
-    path::Path,
-};
 use ureq::Agent;
 
 #[derive(Debug, Default)]
@@ -63,10 +63,16 @@ impl Fetcher {
             .as_ref()
             .expect("Failed to get version, but it should have been guaranteed.");
 
+        eprintln!(
+            "{} info about {id}@{version} for target {}.",
+            "Fetching".if_supports_color(Stderr, |text| text.bright_blue()),
+            &config.target
+        );
+
         // info.json
         let raw_info_file = &self.fetch_str("info.json");
         let info: InfoFile = serde_json::from_str(raw_info_file)
-            .expect(&format!("info.json is malformed for {id}@{version}"));
+            .unwrap_or_else(|_| panic!("info.json is malformed for {id}@{version}"));
         let info: InfoFileImm = info.into();
 
         // info.json.sig and test
@@ -92,22 +98,24 @@ impl Fetcher {
 
         // check if target is supported
         if !info.targets.contains(&config.target) {
-            eprintln!("{id}@{version} does not support target {}", config.target);
+            eprintln!(
+                "{id}@{version} does {} target {}",
+                "not support".if_supports_color(Stderr, |text| text.bright_red()),
+                config.target
+            );
             std::process::exit(505);
         }
 
         // check if compression is supported
         if !info.archive.compression.eq("gz") {
-            eprintln!("{id}@{version} does not support target {}", config.target);
+            eprintln!("{id}@{version} does not support compression gzip");
             std::process::exit(505);
         }
 
         // hashes.json
         let raw_hashes_file = &self.fetch_str(&info.files.hash);
-        let hashes: HashesFile = serde_json::from_str(raw_hashes_file).expect(&format!(
-            "{} is malformed for {id}@{version}",
-            info.files.hash
-        ));
+        let hashes: HashesFile = serde_json::from_str(raw_hashes_file)
+            .unwrap_or_else(|_| panic!("{} is malformed for {id}@{version}", info.files.hash));
         let hashes: HashesFileImm = hashes.into();
 
         // hashes.json.sig and test
@@ -134,14 +142,70 @@ impl Fetcher {
         // test hashes
         self.verify_tar(config, &hashes, &tar_bytes);
 
-        // store info for reports later if allowed
+        // store info for ss later if allowed
         self.data.info = Some(info);
 
         tar_bytes
     }
 
     pub fn reports(&mut self, config: &Config) {
-        todo!();
+        eprintln!(
+            "{} reports... ",
+            "Getting".if_supports_color(Stderr, |text| text.bright_blue())
+        );
+
+        let id = self
+            .data
+            .id
+            .as_ref()
+            .expect("Failed to get id, but it should have been guaranteed.");
+        let version = self
+            .data
+            .version
+            .as_ref()
+            .expect("Failed to get version, but it should have been guaranteed.");
+        let info = self
+            .data
+            .info
+            .as_ref()
+            .expect("Failed to get info, but it should have been guaranteed.");
+
+        let reports: Vec<&str> = config.reports.split(',').collect();
+        for report in reports {
+            if !config::REPORT_FLAGS.contains(&report) {
+                eprintln!("Bad report type: {report}.");
+                std::process::exit(600);
+            }
+
+            let report_name = match report {
+                "license" => info.files.license.clone(),
+                "deps" => info.files.deps.clone(),
+                "audit" => info.files.audit.clone(),
+                _ => panic!("Bad report type, but this should never be reached."),
+            };
+
+            let raw_str = &self.fetch_str(&report_name);
+
+            let mut dir = config.report_path.clone();
+            dir.push(format!("{id}/{version}"));
+            match create_dir_all(&dir) {
+                Ok(_) => {
+                    dir.push(&report_name);
+                    match File::create(&dir) {
+                        Ok(mut file) => match file.write(raw_str.as_bytes()) {
+                            Ok(_) => {}
+                            Err(_) => {
+                                eprintln!("Could not write to {report_name} file.")
+                            }
+                        },
+                        Err(_) => eprintln!("Could not create {report_name} file."),
+                    }
+                }
+                Err(_) => {
+                    eprintln!("Could not create directories for {report_name}.")
+                }
+            }
+        }
     }
 
     fn fetch_latest(&self) -> String {
@@ -268,20 +332,19 @@ impl Fetcher {
         let sig = StandaloneSignature::from_bytes(&mut reader).unwrap();
 
         if config.sigs.contains_key(&config.index)
-            && config.sigs.get(&config.index).unwrap().len() > 0
+            && !config.sigs.get(&config.index).unwrap().is_empty()
         {
             let mut verified = false;
             let keys = config.sigs.get(&config.index).unwrap();
             for key in keys {
                 let raw_key = base64::engine::general_purpose::STANDARD
                     .decode(key)
-                    .expect(&format!("A key for {} is malformed base64.", config.index));
+                    .unwrap_or_else(|_| panic!("A key for {} is malformed base64.", config.index));
                 let mut reader = std::io::Cursor::new(raw_key);
                 let pubkey = SignedPublicKey::from_armor_single(&mut reader).unwrap().0;
 
-                match sig.verify(&pubkey, raw_file.as_bytes()) {
-                    Ok(_) => verified = true,
-                    Err(_) => {}
+                if sig.verify(&pubkey, raw_file.as_bytes()).is_ok() {
+                    verified = true;
                 }
             }
 
@@ -330,17 +393,17 @@ impl Fetcher {
                 // sha3_512
                 if let Some(sha_hash) = hashes.get("sha3_512") {
                     let mut hasher = Sha3_512::new();
-                    hasher.update(&tar_bytes);
+                    hasher.update(tar_bytes);
                     let hash: Vec<u8> = hasher.finalize().to_vec();
                     let hash = hex::encode(hash);
 
                     if !(hash.eq(sha_hash)) {
-                        eprintln!("Sha3_512 hashes do not match. {sha_hash} != {hash}");
+                        eprintln!("sha3_512 hashes do not match. {sha_hash} != {hash}");
                         std::process::exit(3512);
                     }
 
                     eprintln!(
-                        "{} tar for {id}@{version} with Sha3_512.",
+                        "{} tar for {id}@{version} with sha3_512.",
                         "Verified".if_supports_color(Stderr, |text| text.bright_blue())
                     );
                     return;
@@ -349,17 +412,17 @@ impl Fetcher {
                 // sha3_256
                 if let Some(sha_hash) = hashes.get("sha3_256") {
                     let mut hasher = Sha3_256::new();
-                    hasher.update(&tar_bytes);
+                    hasher.update(tar_bytes);
                     let hash: Vec<u8> = hasher.finalize().to_vec();
                     let hash = hex::encode(hash);
 
                     if !(hash.eq(sha_hash)) {
-                        eprintln!("Sha3_256 hashes do not match. {sha_hash} != {hash}");
+                        eprintln!("sha3_256 hashes do not match. {sha_hash} != {hash}");
                         std::process::exit(3512);
                     }
 
                     eprintln!(
-                        "{} tar for {id}@{version} with Sha3_256.",
+                        "{} tar for {id}@{version} with sha3_256.",
                         "Verified".if_supports_color(Stderr, |text| text.bright_blue())
                     );
                     return;
@@ -373,17 +436,17 @@ impl Fetcher {
                 // sha512
                 if let Some(sha_hash) = hashes.get("sha512") {
                     let mut hasher = Sha512::new();
-                    hasher.update(&tar_bytes);
+                    hasher.update(tar_bytes);
                     let hash: Vec<u8> = hasher.finalize().to_vec();
                     let hash = hex::encode(hash);
 
                     if !(hash.eq(sha_hash)) {
-                        eprintln!("Sha512 hashes do not match. {sha_hash} != {hash}");
+                        eprintln!("sha512 hashes do not match. {sha_hash} != {hash}");
                         std::process::exit(512);
                     }
 
                     eprintln!(
-                        "{} tar for {id}@{version} with Sha512.",
+                        "{} tar for {id}@{version} with sha512.",
                         "Verified".if_supports_color(Stderr, |text| text.bright_blue())
                     );
                     return;
@@ -392,17 +455,17 @@ impl Fetcher {
                 // sha256
                 if let Some(sha_hash) = hashes.get("sha256") {
                     let mut hasher = Sha256::new();
-                    hasher.update(&tar_bytes);
+                    hasher.update(tar_bytes);
                     let hash: Vec<u8> = hasher.finalize().to_vec();
                     let hash = hex::encode(hash);
 
                     if !(hash.eq(sha_hash)) {
-                        eprintln!("Sha256 hashes do not match. {sha_hash} != {hash}");
+                        eprintln!("sha256 hashes do not match. {sha_hash} != {hash}");
                         std::process::exit(256);
                     }
 
                     eprintln!(
-                        "{} tar for {id}@{version} with Sha256.",
+                        "{} tar for {id}@{version} with sha256.",
                         "Verified".if_supports_color(Stderr, |text| text.bright_blue())
                     );
                     return;
@@ -504,7 +567,7 @@ impl Fetcher {
 //            "{} reports... ",
 //            "Getting".if_supports_color(Stderr, |text| text.bright_blue())
 //        );
-//
+
 //        let license_out = args.reports.contains(&REPORT_FLAGS[0].to_string());
 //        let license_dl = args.reports.contains(&REPORT_FLAGS[1].to_string());
 //        let deps_out = args.reports.contains(&REPORT_FLAGS[2].to_string());

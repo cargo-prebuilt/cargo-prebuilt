@@ -6,14 +6,7 @@ use bpaf::*;
 use home::{cargo_home, home_dir};
 use std::{collections::HashMap, fs::File, io::Read, path::PathBuf};
 
-pub static REPORT_FLAGS: [&str; 6] = [
-    "license-out",
-    "license-dl",
-    "deps-out",
-    "deps-dl",
-    "audit-out",
-    "audit-dl",
-];
+pub static REPORT_FLAGS: [&str; 3] = ["license", "deps", "audit"];
 
 #[derive(Clone, Debug)]
 pub struct Config {
@@ -94,7 +87,7 @@ fn parse_args() -> Arguments {
 
     let reports = long("reports")
         .env("PREBUILT_REPORTS")
-        .help("A CSV list of reports types. (license-out, license-dl, deps-out, deps-dl, audit-out, audit-dl)")
+        .help("A CSV list of reports types. (license, deps, audit)")
         .argument::<String>("REPORTS")
         .optional();
 
@@ -220,6 +213,8 @@ fn fill_from_file(args: &mut Arguments, sig_keys: &mut SigKeys) {
 
                             file_convert![target, index, auth, path, report_path];
                             file_convert_switch![no_create_path, force_verify, color];
+
+                            // TODO: Dedupe?
                             file_convert_csv![reports, hashes];
                         }
                     }
@@ -270,7 +265,7 @@ fn convert(args: Arguments, sigs: SigKeys) -> Config {
 
     let reports = match args.reports {
         Some(val) => val,
-        None => REPORT_FLAGS[1].to_owned(),
+        None => REPORT_FLAGS[0].to_owned(),
     };
 
     let hashes = args.hashes;

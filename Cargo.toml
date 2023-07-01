@@ -10,10 +10,8 @@ license = "MIT"
 repository = "https://github.com/cargo-prebuilt/cargo-prebuilt"
 keywords = ["cargo", "cargo-subcommand", "binary"]
 rust-version = "1.65"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 include = [
+    "keys/",
     "src/",
     "build.rs",
     "Cargo.lock",

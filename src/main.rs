@@ -5,7 +5,7 @@ mod interact;
 
 use flate2::read::GzDecoder;
 use owo_colors::{OwoColorize, Stream::Stderr};
-use std::{env, fs, fs::create_dir_all, path::Path, str, string::ToString};
+use std::{env, fs, fs::create_dir_all, path::Path, str};
 use tar::Archive;
 
 use crate::get::Fetcher;
@@ -18,8 +18,6 @@ fn main() -> Result<(), String> {
     let config = config::get();
     #[cfg(debug_assertions)]
     dbg!(&config);
-
-    let target = config.target.as_str();
 
     let prebuilt_bin = config.path.clone();
     if !config.no_create_path && create_dir_all(&prebuilt_bin).is_err() {
@@ -105,9 +103,8 @@ fn main() -> Result<(), String> {
         }
 
         // Reports
-        //TODO: Enable
         if !config.ci {
-            // fetcher.reports(&config);
+            fetcher.reports(&config);
         }
 
         eprintln!(
