@@ -13,8 +13,8 @@ fmt:
 check:
     cargo +nightly fmt --check
     cargo clippy --all-targets --locked --workspace -- -D warnings
-    cargo clippy --all-targets --locked --workspace --no-default-features --features indexes,security,dull-color,native -- -D warnings
-    cargo clippy --all-targets --locked --workspace --no-default-features --features indexes,security,dull-color,rustls -- -D warnings
+    cargo clippy --all-targets --locked --workspace --no-default-features --features default-native -- -D warnings
+    cargo clippy --all-targets --locked --workspace --no-default-features --features default-rustls -- -D warnings
 
 docker:
     docker run -it --rm --pull=always \
@@ -51,13 +51,6 @@ msrv:
     -w /prebuilt \
     rust:latest \
     bash -c 'cargo install cargo-msrv --version 0.16.0-beta.14 --profile=dev && cargo msrv -- cargo check --verbose --locked'
-
-check-features:
-    cargo build --verbose --workspace --locked # Default
-    cargo build --verbose --workspace --locked --no-default-features --features indexes,native # All, native
-    cargo build --verbose --workspace --locked --no-default-features --features indexes,vendored-openssl # All, vendored-openssl
-    cargo build --verbose --workspace --locked --no-default-features --features indexes,rustls # All, rustls
-    cargo build --verbose --workspace --locked --no-default-features --features indexes,rustls-native-certs # All, rustls native certs
 
 rund +ARGS:
     cargo build

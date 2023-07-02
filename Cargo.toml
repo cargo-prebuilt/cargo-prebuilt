@@ -39,7 +39,10 @@ toml = { version = "0.7.5", default-features = false, features = ["parse"] }
 ureq = { version = "2.7.1", default-features = false, features = ["gzip", "brotli"] }
 
 [features]
-default = ["native", "vendored-openssl", "bright-color", "indexes", "security"]
+default = ["native", "vendored-openssl", "default-no-tls"]
+default-native = ["native", "default-no-tls"]
+default-rust = ["rustls", "default-no-tls"]
+default-no-tls = ["bright-color", "indexes", "security"]
 indexes = ["github-public"]
 github-public = []
 github-private = [] # TODO: Under dev
