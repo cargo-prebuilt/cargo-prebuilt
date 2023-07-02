@@ -107,6 +107,14 @@ fn main() -> Result<(), String> {
                     file.write_all(&blob_data)
                         .expect("Could not write binary to file.");
 
+                    // Add exe permission on unix platforms.
+                    #[cfg(target_family = "unix")]
+                    {
+                        use std::os::unix::fs::PermissionsExt;
+                        fs::set_permissions(&path, fs::Permissions::from_mode(0o755))
+                            .expect("Could not set permissions.");
+                    }
+
                     let abs = fs::canonicalize(path).expect("Could not canonicalize install path.");
 
                     eprintln!(

@@ -152,6 +152,10 @@ impl Fetcher {
     }
 
     pub fn reports(&mut self, config: &Config) {
+        if config.reports.is_empty() {
+            return;
+        }
+
         eprintln!(
             "{} reports... ",
             "Getting".if_supports_color(Stderr, |text| text.bright_blue())
@@ -348,6 +352,7 @@ impl Fetcher {
 
                 if sig.verify(&pubkey, raw_file.as_bytes()).is_ok() {
                     verified = true;
+                    break;
                 }
             }
 
