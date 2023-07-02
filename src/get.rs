@@ -388,12 +388,7 @@ impl Fetcher {
     fn verify_archive(&self, config: &Config, hashes: &HashesFileImm, bytes: &[u8]) {
         if let Some(blob) = hashes.hashes.get(&config.target) {
             let hashes = &blob.archive;
-            self.verify_bytes(
-                config,
-                hashes,
-                &format!("{} archive", &config.target),
-                bytes,
-            )
+            self.verify_bytes(hashes, &format!("{} archive", &config.target), bytes)
         }
     }
 
@@ -416,18 +411,16 @@ impl Fetcher {
 
         if let Some(blob) = hashes.hashes.get(&config.target) {
             match &blob.bins.get(bin_name) {
-                Some(blob) => self.verify_bytes(config, blob, &format!("{bin_name} binary"), bytes),
+                Some(blob) => self.verify_bytes(blob, &format!("{bin_name} binary"), bytes),
                 None => {
                     eprintln!("Could not find {bin_name} hash for {id}@{version}.");
-                    if config.force_verify {
-                        std::process::exit(229);
-                    }
+                    std::process::exit(229);
                 }
             }
         }
     }
 
-    fn verify_bytes(&self, config: &Config, hashes: &Hashes, item: &str, bytes: &[u8]) {
+    fn verify_bytes(&self, hashes: &Hashes, item: &str, bytes: &[u8]) {
         let id = self
             .data
             .id
@@ -526,8 +519,7 @@ impl Fetcher {
         }
 
         eprintln!("Could not verify downloaded {item} for {id}@{version}.");
-        if config.force_verify {
-            std::process::exit(228);
-        }
+        #[cfg(any(feature = "sha2", feature = "sha3"))]
+        std::process::exit(228);
     }
 }

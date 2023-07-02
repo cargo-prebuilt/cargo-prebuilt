@@ -313,11 +313,10 @@ pub fn get() -> Config {
     }
 
     let mut keys: SigKeys = HashMap::with_capacity(1);
-    // TODO: Allow default index key
-    //    keys.insert(
-    //        DEFAULT_INDEX.to_string(),
-    //        vec![include_str!("../keys/cargo-prebuilt-index.pub.key").to_string()],
-    //    );
+    keys.insert(
+        DEFAULT_INDEX.to_string(),
+        vec![include_str!("../keys/cargo-prebuilt-index.pub.base64").to_string()],
+    );
 
     // Add sig key if needed
     if let Some(k) = &args.sig {
@@ -332,9 +331,9 @@ pub fn get() -> Config {
     }
 
     // Check if sig could be forced.
-    #[cfg(not(feature = "sig"))]
+    #[cfg(not(all(feature = "sig", any(feature = "sha2", feature = "sha3"))))]
     if args.force_verify {
-        eprintln!("cargo-prebuilt needs the 'sig' feature in order to force verifying.");
+        eprintln!("cargo-prebuilt needs the 'security' feature in order to force verifying. Or the 'sig' feature with one of the features 'sha2' or 'sha3'");
         std::process::exit(224);
     }
 
