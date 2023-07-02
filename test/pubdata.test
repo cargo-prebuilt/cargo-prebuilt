@@ -1,9 +1,1 @@
-Stuff for generating key stuff:
-
-1. gpg --full-generate-key
-2. gpg --detach-sign -o pubdata.test.sig pubdata.test
-3. gpg --armor --export null@harmless.tech > pubkey.asc
-4. gpg --armor --export-secret-keys null@harmless.tech > privkey.asc
-5. gpg --import privkey.asc
-6. openssl base64 -e -A -in test/privkey.asc -out tt.tmp
-7. openssl base64 -d -A -in tt.tmp
+Minisign ftw

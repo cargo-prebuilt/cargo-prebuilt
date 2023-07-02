@@ -343,20 +343,22 @@ pub fn get() -> Config {
 
 #[cfg(test)]
 mod test {
-    use pgp::{Deserializable, SignedPublicKey, StandaloneSignature};
+    use std::io::Cursor;
+
+    use minisign::{PublicKeyBox, SignatureBox};
 
     #[test]
-    fn test_pgp1() {
+    fn test_minisign1() {
         let data = include_bytes!("../test/pubdata.test");
-        let sig = include_bytes!("../test/pubdata.test.sig");
-        let pubkey = include_bytes!("../test/pubkey.asc");
+        let sig = include_str!("../test/pubdata.test.minisig");
+        let pubkey = include_str!("../test/pubdata.pub");
 
-        let mut reader = std::io::Cursor::new(sig);
-        let sig = StandaloneSignature::from_bytes(&mut reader).unwrap();
+        let signature_box = SignatureBox::from_string(sig).unwrap();
 
-        let mut reader = std::io::Cursor::new(pubkey);
-        let pubkey = SignedPublicKey::from_armor_single(&mut reader).unwrap().0;
+        let pk_box = PublicKeyBox::from_string(pubkey).unwrap();
+        let pk = pk_box.into_public_key().unwrap();
 
-        sig.verify(&pubkey, data).unwrap();
+        let data_reader = Cursor::new(data);
+        minisign::verify(&pk, &signature_box, data_reader, true, false, false).unwrap();
     }
 }

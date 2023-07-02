@@ -321,7 +321,7 @@ impl Fetcher {
     #[cfg(feature = "sig")]
     fn verify_file(&self, file: &str, config: &Config, sig_file: &str, raw_file: &str) {
         use base64::Engine;
-        use pgp::{Deserializable, SignedPublicKey, StandaloneSignature};
+        use minisign::{PublicKeyBox, SignatureBox};
 
         let id = self
             .data
@@ -334,9 +334,8 @@ impl Fetcher {
             .as_ref()
             .expect("Failed to get version, but it should have been guaranteed.");
 
-        let sig = &self.fetch_blob(sig_file);
-        let mut reader = std::io::Cursor::new(sig);
-        let sig = StandaloneSignature::from_bytes(&mut reader).unwrap();
+        let sig = &self.fetch_str(sig_file);
+        let signature_box = SignatureBox::from_string(sig).expect("Signature was malformed.");
 
         if config.sigs.contains_key(&config.index)
             && !config.sigs.get(&config.index).unwrap().is_empty()
@@ -347,24 +346,32 @@ impl Fetcher {
                 let raw_key = base64::engine::general_purpose::STANDARD
                     .decode(key)
                     .unwrap_or_else(|_| panic!("A key for {} is malformed base64.", config.index));
-                let mut reader = std::io::Cursor::new(raw_key);
-                let pubkey = SignedPublicKey::from_armor_single(&mut reader).unwrap().0;
+                let str_key = String::from_utf8(raw_key).expect("Public key was not utf8.");
+                let pk_box =
+                    PublicKeyBox::from_string(&str_key).expect("Public key was malformed.");
+                let pk = pk_box
+                    .into_public_key()
+                    .expect("Could not convert public key box into public key");
 
-                if sig.verify(&pubkey, raw_file.as_bytes()).is_ok() {
+                let reader = std::io::Cursor::new(raw_file.as_bytes());
+                if minisign::verify(&pk, &signature_box, reader, true, false, false).is_ok() {
                     verified = true;
                     break;
                 }
             }
 
             if !verified {
-                eprintln!("Could not verify {file} for {id}@{version}.");
+                eprintln!(
+                    "{} verify {file} for {id}@{version}.",
+                    "Could not".if_supports_color(Stderr, |text| text.bright_red())
+                );
                 if config.force_verify {
                     std::process::exit(224);
                 }
             }
             else {
                 eprintln!(
-                    "{} {file} for {id}@{version} with pgp.",
+                    "{} {file} for {id}@{version} with minisign.",
                     "Verified".if_supports_color(Stderr, |text| text.bright_blue())
                 );
             }
