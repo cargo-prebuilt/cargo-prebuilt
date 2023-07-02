@@ -172,6 +172,12 @@ jobs:
         run: cross test --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
       - name: Build
         run: cross build --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
+      - name: Run cargo-prebuilt
+        if: ${{ contains(matrix.target, 'x86_64-unknown-linux-') }}
+        run: |
+          target/${{ matrix.target }}/debug/${{ env.bin-name }} just
+          just --version
+          target/${{ matrix.target }}/debug/${{ env.bin-name }} --color just
       - name: Artifact
         uses: actions/upload-artifact@v3
         with:

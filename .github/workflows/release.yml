@@ -417,6 +417,11 @@ jobs:
         run: cross test --verbose --workspace --release --locked --target ${{ matrix.target }} ${{ env.feature-set }}
       - name: Build
         run: cross build --verbose --workspace --release --locked --target ${{ matrix.target }} ${{ env.feature-set }}
+      - name: Run cargo-prebuilt
+        if: ${{ contains(matrix.target, 'x86_64-unknown-linux-') }}
+        run: |
+          target/${{ matrix.target }}/release/${{ env.bin-name }} just
+          just --version
       - name: Tar
         run: tar czvf ${{ matrix.target }}.tar.gz -C ./target/${{ matrix.target }}/release ${{ env.bin-name }}${{ matrix.ending }}
       - name: Hash
