@@ -3,7 +3,7 @@
 [![Rust Build and Test](https://github.com/cargo-prebuilt/cargo-prebuilt/actions/workflows/build.yml/badge.svg?event=push)](https://github.com/cargo-prebuilt/cargo-prebuilt/actions/workflows/build.yml)
 [![Rust Checks](https://github.com/cargo-prebuilt/cargo-prebuilt/actions/workflows/checks.yml/badge.svg?event=push)](https://github.com/cargo-prebuilt/cargo-prebuilt/actions/workflows/checks.yml)
 [![Crates.io](https://img.shields.io/crates/v/cargo-prebuilt)](https://crates.io/crates/cargo-prebuilt)
-[![rustc-msrv](https://img.shields.io/badge/rustc-1.63%2B-blue?logo=rust)](https://www.rust-lang.org/tools/install)
+[![rustc-msrv](https://img.shields.io/badge/rustc-1.65%2B-blue?logo=rust)](https://www.rust-lang.org/tools/install)
 
 Download prebuilt binaries of some crate.io crates.
 
@@ -36,16 +36,20 @@ Need help? Try: ```cargo prebuilt --help``` or see [Config Info](CONFIG.md)
 ## Building
 
 #### vendored-openssl (default)
-```cargo install cargo-prebuilt --no-default-features --features indexes,vendored-openssl```
+```cargo install cargo-prebuilt --no-default-features --features indexes,security,bright-color,vendored-openssl```
 
-#### native tls
-```cargo install cargo-prebuilt --no-default-features --features indexes,native```
+#### native tls (github actions/releases default)
+```cargo install cargo-prebuilt --no-default-features --features indexes,security,bright-color,native```
 
 #### rustls
-```cargo install cargo-prebuilt --no-default-features --features indexes,rustls```
+```cargo install cargo-prebuilt --no-default-features --features indexes,security,bright-color,rustls```
 
 #### rustls with native certs
-```cargo install cargo-prebuilt --no-default-features --features indexes,rustls-native-certs```
+```cargo install cargo-prebuilt --no-default-features --features indexes,security,bright-color,rustls-native-certs```
+
+### limit security used
+Remove ```security``` feature included by default, then add the features you want below:
+- 
 
 #### limit indexes used
 Remove ```indexes``` feature included by default, then add the features you want below:
@@ -57,6 +61,8 @@ Remove ```indexes``` feature included by default, then add the features you want
 - [forgejo-private](#forgejo-private) (Not supported yet)
 - [gitea-public](#gitea-public) (Not supported yet)
 - [gitea-private](#gitea-private) (Not supported yet)
+- [custom-http-public](#custom-http-private) (Not supported yet)
+- [custom-http-private](#custom-http-private) (Not supported yet)
 
 #### colors
 ```bright-color``` feature is used by default.
@@ -66,15 +72,12 @@ Add feature ```bright-color``` or ```dull-color```.
 
 Reports are generated when a crate is built in the index.
 
-They are stored under INSTALL_PATH/.prebuilt/reports/CRATE/VERSION.
+They are stored under $HOME/.prebuilt/reports/CRATE/VERSION by default.
 
 Report types (--reports):
-- license-out: Print license to stdout.
-- license-dl: Download license and put it under the prebuilt folder in the installation dir. (Default on)
-- deps-out: Print deps tree to stdout.
-- deps-dl: Download deps tree and put it under the prebuilt folder in the installation dir.
-- audit-out: Print audit to stdout.
-- audit-dl: Download audit and put it under the prebuilt folder in the installation dir.
+- license: Download license and put it under the prebuilt folder in the installation dir. (Default on)
+- deps: Download deps tree and put it under the prebuilt folder in the installation dir.
+- audit: Download audit and put it under the prebuilt folder in the installation dir.
 
 ## Using a custom index
 
@@ -84,8 +87,9 @@ Report types (--reports):
 
 Your url should be formatted like ```github.com/cargo-prebuilt/index```. cargo-prebuilt requires https.
 
-- ```export PREBUILT_INDEX=gh-pub:URL```
-- ```cargo prebuilt --index=gh-pub:URL CRATES```
+- ```export PREBUILT_INDEX=gh-pub:$URL```
+- ```cargo prebuilt --index=gh-pub:$URL CRATES```
+- [config.toml](CONFIG.md) ```index = "gh-pub:$URL"```
 
 #### GitHub private
 

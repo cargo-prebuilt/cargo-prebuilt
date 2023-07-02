@@ -12,30 +12,31 @@ impl GithubPublic {
             slug: slug.to_string(),
         }
     }
-}
-impl Interact for GithubPublic {
-    fn pre_url(&self, id: &str, version: &str, target: &str) -> String {
+
+    fn pre_url(&self, id: &str, version: &str, file: &str) -> String {
         format!(
-            "https://{}/releases/download/{id}-{version}/{target}",
+            "https://{}/releases/download/{id}-{version}/{file}",
             self.slug
         )
     }
-
+}
+impl Interact for GithubPublic {
     fn get_latest(&self, id: &str) -> Result<String, InteractError> {
         let url = format!("https://{}/releases/download/stable-index/{id}", self.slug);
         call(&self.agent, &url)
     }
 
-    fn get_hash(&self, id: &str, version: &str, target: &str) -> Result<String, InteractError> {
-        let url = format!("{}.sha256", self.pre_url(id, version, target));
+    fn get_str(&self, id: &str, version: &str, file_name: &str) -> Result<String, InteractError> {
+        let url = self.pre_url(id, version, file_name);
         call(&self.agent, &url)
     }
 
-    fn get_tar(&self, id: &str, version: &str, target: &str) -> Result<Vec<u8>, InteractError> {
-        let url = format!("{}.tar.gz", self.pre_url(id, version, target));
+    fn get_blob(&self, id: &str, version: &str, file_name: &str) -> Result<Vec<u8>, InteractError> {
+        let url = self.pre_url(id, version, file_name);
         let mut bytes = Vec::new();
         match self.agent.get(&url).call() {
             Ok(response) => {
+                //TODO: Allow limiting of size.
                 response
                     .into_reader()
                     .read_to_end(&mut bytes)
@@ -46,14 +47,6 @@ impl Interact for GithubPublic {
         }
 
         Ok(bytes)
-    }
-
-    fn get_report(&self, id: &str, version: &str, name: &str) -> Result<String, InteractError> {
-        let url = format!(
-            "https://{}/releases/download/{id}-{version}/{name}.report",
-            self.slug
-        );
-        call(&self.agent, &url)
     }
 }
 

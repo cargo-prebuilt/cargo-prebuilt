@@ -12,7 +12,8 @@ on:
 
 env:
   bin-name: cargo-prebuilt
-  allow-cross-auditable: true
+  feature-set: '--no-default-features --features default-native'
+  hack-group: '--group-features rustls,rustls-native-certs,native,vendored-openssl --group-features bright-color,dull-color'
   CARGO_TERM_COLOR: always
   CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse
 
@@ -134,7 +135,7 @@ jobs:
         run: |
           set -o pipefail
           cargo clippy --all-targets --verbose --workspace --release --locked -- -D warnings 2>&1 | tee .step-data.txt
-          cargo clippy --all-targets --verbose --workspace --release --locked --no-default-features --features indexes,rustls,dull-color -- -D warnings 2>&1 | tee .step-data.txt
+          cargo clippy --all-targets --verbose --workspace --release --locked ${{ env.feature-set }} -- -D warnings 2>&1 | tee .step-data.txt
       - name: Put into summary (success)
         if: success()
         shell: bash
@@ -185,12 +186,17 @@ jobs:
         run: rustc --version
       - uses: cargo-prebuilt/cargo-prebuilt-action@v1
         with:
-          tools: just
-      - name: Check features
+          tools: cargo-hack
+      - name: Hack Check (each-feature)
         shell: bash
         run: |
           set -o pipefail
-          just check-features 2>&1 | tee .step-data.txt
+          cargo hack check --each-feature --no-dev-deps --verbose --workspace --release --locked 2>&1 | tee .step-data.txt
+      - name: Hack Check (feature-powerset)
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo hack check --feature-powerset ${{ env.hack-group }} --no-dev-deps --verbose --workspace --release --locked 2>&1 | tee .step-data.txt
       - name: Put into summary (success)
         if: success()
         shell: bash
@@ -243,7 +249,7 @@ jobs:
         with:
           tools: cargo-binstall
       - name: Install cargo-msrv
-        run: cargo binstall --version 0.16.0-beta.11 --no-confirm cargo-msrv
+        run: cargo binstall --version 0.16.0-beta.14 --no-confirm cargo-msrv
       - name: MSRV Check
         shell: bash
         run: |
@@ -378,30 +384,11 @@ jobs:
             can-test: true
           - target: mips64el-unknown-linux-muslabi64
             can-test: true
-          - target: i686-unknown-linux-gnu
-            can-test: false
-          - target: i686-unknown-linux-musl
-            can-test: false
-          - target: i686-unknown-freebsd
-            can-test: false
           - target: armv7-unknown-linux-gnueabihf
             can-test: true
           - target: armv7-unknown-linux-musleabihf
             can-test: true
-          - target: powerpc-unknown-linux-gnu
-            can-test: true
-          - target: mips-unknown-linux-gnu
-            can-test: true
-          - target: mips-unknown-linux-musl
-            can-test: true
-          - target: mipsel-unknown-linux-gnu
-            can-test: true
-          - target: mipsel-unknown-linux-musl
-            can-test: true
           - target: x86_64-pc-windows-gnu
-            can-test: true
-            ending: .exe
-          - target: i686-pc-windows-gnu
             can-test: true
             ending: .exe
     runs-on: ubuntu-latest
@@ -427,12 +414,14 @@ jobs:
           tools: cross,coreutils
       - name: Run tests
         if: ${{ matrix.can-test }}
-        run: cross test --verbose --workspace --release --locked --target ${{ matrix.target }}
-      - name: Cross add auditable support
-        if: ${{ env.allow-cross-auditable }}
-        run: curl -fsSL https://raw.githubusercontent.com/cargo-prebuilt/cross-images/main/cross-auditable/Cross.toml >> Cross.toml
+        run: cross test --verbose --workspace --release --locked --target ${{ matrix.target }} ${{ env.feature-set }}
       - name: Build
-        run: cross build --verbose --workspace --release --locked --target ${{ matrix.target }}
+        run: cross build --verbose --workspace --release --locked --target ${{ matrix.target }} ${{ env.feature-set }}
+      - name: Run cargo-prebuilt
+        if: ${{ contains(matrix.target, 'x86_64-unknown-linux-') }}
+        run: |
+          target/${{ matrix.target }}/release/${{ env.bin-name }} just
+          just --version
       - name: Tar
         run: tar czvf ${{ matrix.target }}.tar.gz -C ./target/${{ matrix.target }}/release ${{ env.bin-name }}${{ matrix.ending }}
       - name: Hash
@@ -479,9 +468,9 @@ jobs:
           tools: cargo-auditable,coreutils
       - name: Run tests
         if: ${{ matrix.can-test }}
-        run: cargo test --verbose --workspace --release --locked --target ${{ matrix.target }}
+        run: cargo test --verbose --workspace --release --locked --target ${{ matrix.target }} ${{ env.feature-set }}
       - name: Build
-        run: cargo auditable build --verbose --workspace --release --locked --target ${{ matrix.target }}
+        run: cargo auditable build --verbose --workspace --release --locked --target ${{ matrix.target }} ${{ env.feature-set }}
       - name: Run cargo-prebuilt
         if: ${{ matrix.can-test }}
         run: |
@@ -508,8 +497,6 @@ jobs:
             can-test: true
           - target: aarch64-pc-windows-msvc
             can-test: false
-          - target: i686-pc-windows-msvc
-            can-test: true
     runs-on: windows-latest
     needs: [ setup, check-fmt, clippy, cargo-hack, cargo-msrv ]
     steps:
@@ -542,9 +529,9 @@ jobs:
           tools: cargo-auditable,coreutils
       - name: Run tests
         if: ${{ matrix.can-test }}
-        run: cargo test --verbose --workspace --release --locked --target ${{ matrix.target }}
+        run: cargo test --verbose --workspace --release --locked --target ${{ matrix.target }} ${{ env.feature-set }}
       - name: Build
-        run: cargo auditable build --verbose --workspace --release --locked --target ${{ matrix.target }}
+        run: cargo auditable build --verbose --workspace --release --locked --target ${{ matrix.target }} ${{ env.feature-set }}
       - name: Run cargo-prebuilt
         if: ${{ matrix.can-test }}
         run: |

@@ -1,0 +1,5 @@
+* text=auto
+
+# Because of it being signed.
+test/pubdata.test text eol=lf
+test/pubdata.test.sig binary

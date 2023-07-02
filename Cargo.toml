@@ -1,6 +1,6 @@
 [package]
 name = "cargo-prebuilt"
-version = "0.5.3"
+version = "0.6.0-dev"
 edition = "2021"
 authors = ["harmless-tech"]
 description = "Download prebuilt crate binaries for many different platforms"
@@ -9,11 +9,9 @@ license = "MIT"
 #homepage = ""
 repository = "https://github.com/cargo-prebuilt/cargo-prebuilt"
 keywords = ["cargo", "cargo-subcommand", "binary"]
-rust-version = "1.63"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
+rust-version = "1.65"
 include = [
+    "keys/",
     "src/",
     "build.rs",
     "Cargo.lock",
@@ -23,20 +21,28 @@ include = [
 ]
 
 [dependencies]
-bpaf = { version = "0.7.10", features = ["autocomplete", "batteries"] }
+base64 = { version = "0.21.2", optional = true }
+bpaf = { version = "0.8.1", features = ["autocomplete", "batteries"] }
 flate2 = "1.0.26"
 hex = "0.4.3"
 home = "0.5.5"
-nanoserde = "0.1.32"
+minisign = { version = "0.7.5", optional = true }
 native-tls = { version = "0.2.11", optional = true }
 owo-colors = { version = "3.5.0", features = ["supports-colors"] }
-sha2 = "0.10.6"
+serde = { version = "1.0.164", features = ["derive"] }
+serde_json = "1.0.99"
+sha2 = { version = "0.10.7", optional = true }
+sha3 = { version = "0.10.8", optional = true }
 tar = "0.4.38"
 thiserror = "1.0.40"
-ureq = { version = "2.6.2", default-features = false, features = ["gzip", "brotli"] }
+toml = { version = "0.7.5", default-features = false, features = ["parse"] }
+ureq = { version = "2.7.1", default-features = false, features = ["gzip", "brotli"] }
 
 [features]
-default = ["native", "vendored-openssl", "bright-color", "indexes"]
+default = ["native", "vendored-openssl", "default-no-tls"]
+default-native = ["native", "default-no-tls"]
+default-rustls = ["rustls", "default-no-tls"]
+default-no-tls = ["bright-color", "indexes", "security"]
 indexes = ["github-public"]
 github-public = []
 github-private = [] # TODO: Under dev
@@ -46,6 +52,12 @@ github-private = [] # TODO: Under dev
 #forgejo-private = [] #TODO: Under dev
 #gitea-public = ["forgejo-public"] #TODO: Under dev
 #gitea-private = ["forgejo-private"] #TODO: Under dev
+#custom-http-public = [] #TODO: Under dev
+#custom-http-private = [] #TODO: Under dev
+security = ["sha2", "sha3", "sig"]
+sha2 = ["dep:sha2"]
+sha3 = ["dep:sha3"]
+sig = ["dep:minisign", "dep:base64"]
 rustls = ["ureq/tls"]
 rustls-native-certs = ["rustls", "ureq/native-certs"]
 native = ["native-tls", "ureq/native-tls"]
@@ -58,12 +70,14 @@ opt-level = "z"
 lto = true
 codegen-units = 1
 strip = true
+panic = "abort"
 
 [profile.quick-build]
 inherits = "release"
 opt-level = 0
 lto = false
 codegen-units = 16
+panic = "abort"
 
 [package.metadata.binstall]
 pkg-url = "{ repo }/releases/download/v{ version }/{ target }.tar.gz"
@@ -76,11 +90,6 @@ bin-dir = "{ bin }{ binary-ext }"
 pkg-fmt = "zip"
 
 [package.metadata.binstall.overrides.aarch64-pc-windows-msvc]
-pkg-url = "{ repo }/releases/download/v{ version }/{ target }.zip"
-bin-dir = "{ bin }{ binary-ext }"
-pkg-fmt = "zip"
-
-[package.metadata.binstall.overrides.i686-pc-windows-msvc]
 pkg-url = "{ repo }/releases/download/v{ version }/{ target }.zip"
 bin-dir = "{ bin }{ binary-ext }"
 pkg-fmt = "zip"
