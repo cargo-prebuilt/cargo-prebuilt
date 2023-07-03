@@ -181,7 +181,7 @@ jobs:
       - name: Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ matrix.target }}
+          name: target-${{ matrix.target }}
           path: |
             target/${{ matrix.target }}/debug/${{ env.bin-name }}${{ matrix.ending }}
 
@@ -236,7 +236,7 @@ jobs:
       - name: Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ matrix.target }}
+          name: target-${{ matrix.target }}
           path: |
             target/${{ matrix.target }}/debug/${{ env.bin-name }}
 
@@ -297,6 +297,22 @@ jobs:
       - name: Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ matrix.target }}
+          name: target-${{ matrix.target }}
           path: |
             target/${{ matrix.target }}/debug/${{ env.bin-name }}.exe
+
+# TODO: TEST REMOVE
+  publish-github-releases:
+    runs-on: ubuntu-latest
+    needs: [ cross, apple-darwin, pc-windows-msvc ]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/download-artifact@v3
+      - name: ls
+        run: ls -R
+      - name: Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: target-${{ matrix.target }}
+          path: |
+            .
