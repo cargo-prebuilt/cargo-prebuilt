@@ -501,13 +501,13 @@ jobs:
     needs: [ setup, check-fmt, clippy, cargo-hack, cargo-msrv ]
     steps:
       - uses: actions/checkout@v3
-      - name: Change file endings in Cargo.lock
-        shell: bash
-        run: |
-          ex Cargo.lock <<EOF
-          :set fileformat=unix
-          :wq
-          EOF
+#      - name: Change file endings in Cargo.lock
+#        shell: bash
+#        run: |
+#          ex Cargo.lock <<EOF
+#          :set fileformat=unix
+#          :wq
+#          EOF
       - name: Get deps from cache
         uses: actions/cache@v3
         with:
