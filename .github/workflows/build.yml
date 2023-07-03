@@ -311,11 +311,14 @@ jobs:
       - name: ls
         run: ls -R
       - name: CMD
+        shell: bash
         run: |
           for D in target-*; do
             if [ -d "${D}" ]; then
                 echo "${D}"   # your processing here
+                pushd "${D}"
                 ls -a
+                popd
             fi
           done
       - name: Artifact
