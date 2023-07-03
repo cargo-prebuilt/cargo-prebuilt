@@ -13,11 +13,18 @@ on:
 
 env:
   feature-set: '--no-default-features --features native,bright-color,indexes,security'
-  hack-group: '--group-features rustls,rustls-native-certs,native,vendored-openssl --group-features bright-color,dull-color'
+  hack-group: '--group-features rustls,rustls-native-certs,native,vendored-openssl'
   CARGO_TERM_COLOR: never
   CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse
 
 jobs:
+  typos:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Check spelling of file.txt
+        uses: crate-ci/typos@master
+
   fmt-check:
     runs-on: ubuntu-latest
     steps:

@@ -6,6 +6,10 @@ Config info is prioritized in the order of arguments -> environmental variables 
 
 Use ```cargo prebuilt --help```.
 
+## Environmental Vars
+
+Use ```cargo prebuilt --help```.
+
 ## File
 
 The config file should be under ```$HOME/.config/cargo-prebuilt/config.toml```.

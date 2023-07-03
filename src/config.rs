@@ -109,12 +109,12 @@ fn parse_args() -> Arguments {
         .switch();
 
     let color = long("color")
-        .env("PREBUILT_COLOR")
+        .env("FORCE_COLOR")
         .help("Force color to be turned on.")
         .switch();
 
     let no_color = long("no-color")
-        .env("PREBUILT_NO_COLOR")
+        .env("NO_COLOR")
         .help("Force color to be turned off.")
         .switch();
 
@@ -273,13 +273,13 @@ fn convert(args: Arguments, sigs: SigKeys) -> Config {
     let force_sig = args.force_verify;
 
     match (args.color, args.no_color) {
-        #[cfg(any(feature = "bright-color", feature = "dull-color"))]
+        #[cfg(feature = "color")]
         (true, false) => owo_colors::set_override(true),
         (_, true) => owo_colors::set_override(false),
         _ => {}
     }
 
-    #[cfg(not(any(feature = "bright-color", feature = "dull-color")))]
+    #[cfg(not(feature = "color"))]
     owo_colors::set_override(false);
 
     let pkgs = args.pkgs;

@@ -24,7 +24,8 @@
 - Switch to gen2 index. (#43)
 - Reports can no longer be printed to stdout.
 - Extracted binaries are now checked with a hash.
-- Permissions are now explictly set to 755 on unix platforms.
+- Permissions are now explicitly set to 755 on unix platforms.
+- To opt in or out of colors use the env vars FORCE_COLOR/NO_COLOR;
 
 ## [0.5.3](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.5.3)
 

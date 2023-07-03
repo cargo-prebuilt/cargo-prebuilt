@@ -42,7 +42,7 @@ ureq = { version = "2.7.1", default-features = false, features = ["gzip", "brotl
 default = ["native", "vendored-openssl", "default-no-tls"]
 default-native = ["native", "default-no-tls"]
 default-rustls = ["rustls", "default-no-tls"]
-default-no-tls = ["bright-color", "indexes", "security"]
+default-no-tls = ["indexes", "security", "color"]
 indexes = ["github-public"]
 github-public = []
 github-private = [] # TODO: Under dev
@@ -62,8 +62,7 @@ rustls = ["ureq/tls"]
 rustls-native-certs = ["rustls", "ureq/native-certs"]
 native = ["native-tls", "ureq/native-tls"]
 vendored-openssl = ["native", "ureq/native-tls", "native-tls/vendored"]
-bright-color = ["bpaf/bright-color"]
-dull-color = ["bpaf/dull-color"]
+color = ["bpaf/bright-color"]
 
 [profile.release]
 opt-level = "z"

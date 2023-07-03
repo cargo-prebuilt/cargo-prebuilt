@@ -6,7 +6,6 @@ mod interact;
 use flate2::read::GzDecoder;
 use owo_colors::{OwoColorize, Stream::Stderr};
 use std::{
-    env,
     fs::{self, create_dir_all, File},
     io::{Read, Write},
     path::Path,
@@ -20,11 +19,12 @@ static DEFAULT_INDEX: &str = "gh-pub:github.com/cargo-prebuilt/index";
 static TARGET: &str = env!("TARGET");
 
 fn main() -> Result<(), String> {
-    should_error();
-
     let config = config::get();
     #[cfg(debug_assertions)]
     dbg!(&config);
+
+    // Check if a needed feature was excluded.
+    should_error();
 
     if !config.no_create_path && create_dir_all(&config.path).is_err() {
         eprintln!("Could not create the directories {:?}.", config.path);
@@ -152,12 +152,14 @@ fn main() -> Result<(), String> {
 }
 
 fn should_error() {
-    // Errors
+    // No TLS
     #[cfg(not(any(feature = "native", feature = "rustls")))]
     {
         eprintln!("cargo-prebuilt only supports https and was built without the 'native' or 'rustls' feature.");
         std::process::exit(400);
     }
+
+    // No Indexes
     #[cfg(not(any(feature = "github-public", feature = "github-private")))]
     {
         eprintln!("cargo-prebuilt was not built with any indexes, try the 'indexes' feature.");
