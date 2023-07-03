@@ -15,6 +15,10 @@ use tar::Archive;
 
 use crate::get::Fetcher;
 
+#[cfg(feature = "mimalloc")]
+#[global_allocator]
+static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
+
 static DEFAULT_INDEX: &str = "gh-pub:github.com/cargo-prebuilt/index";
 static TARGET: &str = env!("TARGET");
 
