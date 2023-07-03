@@ -302,7 +302,7 @@ jobs:
             target/${{ matrix.target }}/debug/${{ env.bin-name }}.exe
 
 # TODO: TEST REMOVE
-  publish-github-releases:
+  tmp-github-releases:
     runs-on: ubuntu-latest
     needs: [ cross, apple-darwin, pc-windows-msvc ]
     steps:
@@ -310,6 +310,14 @@ jobs:
       - uses: actions/download-artifact@v3
       - name: ls
         run: ls -R
+      - name: CMD
+        run: |
+          for D in target-*; do
+            if [ -d "${D}" ]; then
+                echo "${D}"   # your processing here
+                ls -a
+            fi
+          done
       - name: Artifact
         uses: actions/upload-artifact@v3
         with:
