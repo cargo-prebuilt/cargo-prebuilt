@@ -1,5 +1,7 @@
 * text=auto
 
+# Because of caching in GitHub Actions
+Cargo.lock text eol=lf
+
 # Because of it being signed.
 test/pubdata.test text eol=lf
-test/pubdata.test.sig binary

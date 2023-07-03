@@ -181,7 +181,7 @@ jobs:
       - name: Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ matrix.target }}
+          name: target-${{ matrix.target }}
           path: |
             target/${{ matrix.target }}/debug/${{ env.bin-name }}${{ matrix.ending }}
 
@@ -236,7 +236,7 @@ jobs:
       - name: Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ matrix.target }}
+          name: target-${{ matrix.target }}
           path: |
             target/${{ matrix.target }}/debug/${{ env.bin-name }}
 
@@ -253,13 +253,6 @@ jobs:
     needs: [ setup ]
     steps:
       - uses: actions/checkout@v3
-      - name: Change file endings in Cargo.lock
-        shell: bash
-        run: |
-          ex Cargo.lock <<EOF
-          :set fileformat=unix
-          :wq
-          EOF
       - name: Get deps from cache
         uses: actions/cache@v3
         with:
@@ -297,6 +290,6 @@ jobs:
       - name: Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ matrix.target }}
+          name: target-${{ matrix.target }}
           path: |
             target/${{ matrix.target }}/debug/${{ env.bin-name }}.exe
