@@ -313,14 +313,19 @@ jobs:
       - name: CMD
         shell: bash
         run: |
+          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          brew install minisign
+          echo -n "$SIGNING_KEY" | base64 --decode > ~/.minisign_secret.key
           for D in target-*; do
             if [ -d "${D}" ]; then
-                echo "${D}"   # your processing here
+                echo "${D}"
                 pushd "${D}"
-                ls -a
+                minisign -S -s ~/.minisign_secret.key -m cargo-prebuilt
+                minisign -V -p ../keys/cargo-prebuilt.pub -m cargo-prebuilt
                 popd
             fi
           done
+          rm -f ~/.minisign_secret.key
       - name: Artifact
         uses: actions/upload-artifact@v3
         with:
