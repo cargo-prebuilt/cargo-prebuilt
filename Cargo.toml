@@ -22,7 +22,7 @@ include = [
 
 [dependencies]
 base64 = { version = "0.21.2", optional = true }
-bpaf = { version = "0.8.1", features = ["autocomplete", "batteries"] }
+bpaf = { version = "0.9.0", features = ["autocomplete", "batteries"] }
 flate2 = "1.0.26"
 hex = "0.4.3"
 home = "0.5.5"
