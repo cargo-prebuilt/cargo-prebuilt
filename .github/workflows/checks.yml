@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
 
 env:
-  feature-set: '--no-default-features --features native,bright-color,indexes,security'
+  feature-set: '--no-default-features --features default-native'
   hack-group: '--group-features rustls,rustls-native-certs,native,vendored-openssl'
   CARGO_TERM_COLOR: never
   CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse

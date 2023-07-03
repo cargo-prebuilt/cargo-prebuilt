@@ -19,7 +19,7 @@ pub struct Config {
     pub no_create_path: bool,
     pub reports: String,
     pub hashes: Option<String>, // Use by priority if None. (sha3_512 -> sha3_256 -> sha512 -> sha256)
-    pub sigs: SigKeys,
+    pub sigs: Vec<String>,
     pub force_verify: bool,
     pub pkgs: String,
 }
@@ -226,7 +226,7 @@ fn fill_from_file(args: &mut Arguments, sig_keys: &mut SigKeys) {
     }
 }
 
-fn convert(args: Arguments, sigs: SigKeys) -> Config {
+fn convert(args: Arguments, mut sigs: SigKeys) -> Config {
     let target = match args.target {
         Some(val) => val,
         None => TARGET.to_owned(),
@@ -271,6 +271,14 @@ fn convert(args: Arguments, sigs: SigKeys) -> Config {
     let hashes = args.hashes;
 
     let force_sig = args.force_verify;
+
+    let sigs = sigs.remove(&index).unwrap_or_else(|| {
+        if force_sig {
+            eprintln!("Expected to find public key(s) for index {index}, but there was none.");
+            std::process::exit(403);
+        }
+        Vec::new()
+    });
 
     match (args.color, args.no_color) {
         #[cfg(feature = "color")]
@@ -318,7 +326,7 @@ pub fn get() -> Config {
         vec![include_str!("../keys/cargo-prebuilt-index.pub.base64").to_string()],
     );
 
-    // Add sig key if needed
+    // Add sig key from args
     if let Some(k) = &args.sig {
         keys.insert(args.index.clone().unwrap(), vec![k.clone()]);
     }
