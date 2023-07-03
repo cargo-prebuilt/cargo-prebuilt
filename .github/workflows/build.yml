@@ -326,6 +326,8 @@ jobs:
             fi
           done
           rm -f ~/.minisign_secret.key
+        env:
+          SIGNING_KEY: ${{ secrets.MINISIGN_SIGNING_KEY }}
       - name: Artifact
         uses: actions/upload-artifact@v3
         with:
