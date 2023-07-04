@@ -53,7 +53,7 @@ fn parse_args() -> Arguments {
 
     let index = long("index")
         .env("PREBUILT_INDEX")
-        .help(format!("Index to use. (Default: {DEFAULT_INDEX})"))
+        .help(format!("Index to use. (Default: {DEFAULT_INDEX})").as_str())
         .argument::<String>("INDEX")
         .optional();
 
