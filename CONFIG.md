@@ -41,4 +41,3 @@ pub_key = "$PUBLIC_GPG_KEY" # Public minisign verifying key for index (No commen
 - ```$TOKEN``` is a auth token for the index.
 - ```$PATH``` is a absolute path. EX: ```/User/devops/.cargo/bin```
 - ```$REPORT_TYPE``` is a type of report. ```license, deps, audit```
-- ```$HASH_TYPE``` is a type of hash. ```sha256, sha512, sha3_256, sha3_512```

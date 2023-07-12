@@ -96,7 +96,7 @@ fi
 echo "Determined target: $TARGET_STRING"
 
 TAR="$TARGET_STRING.tar.gz"
-SIG="$TARGET_STRING.minisig"
+SIG="$TAR.minisig"
 
 # Bootstrap cargo-prebuilt
 TAR_URL="$URL""$TAR"
