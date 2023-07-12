@@ -52,7 +52,3 @@ msrv:
     -w /prebuilt \
     rust:latest \
     bash -c 'cargo install cargo-msrv --version 0.16.0-beta.14 --profile=dev && cargo msrv -- cargo check --verbose --locked'
-
-rund +ARGS:
-    cargo build
-    /ptarget/debug/cargo-prebuilt {{ARGS}}

@@ -4,11 +4,11 @@ use std::{
 };
 
 use crate::{
+    color::{err_color_print, PossibleColor},
     config::Config,
     data::{HashType, Hashes, HashesFile, HashesFileImm, InfoFile, InfoFileImm, ReportType},
     interact::{self, Interact, InteractError},
 };
-use owo_colors::{OwoColorize, Stream::Stderr};
 use ureq::Agent;
 
 #[derive(Debug, Default)]
@@ -66,7 +66,7 @@ impl Fetcher {
 
         eprintln!(
             "{} info about {id}@{version} for target {}.",
-            "Fetching".if_supports_color(Stderr, |text| text.bright_blue()),
+            err_color_print("Fetching", PossibleColor::BrightBlue),
             &config.target
         );
 
@@ -101,7 +101,7 @@ impl Fetcher {
         if !info.targets.contains(&config.target) {
             eprintln!(
                 "{id}@{version} does {} target {}",
-                "not support".if_supports_color(Stderr, |text| text.bright_red()),
+                err_color_print("not support", PossibleColor::BrightRed),
                 config.target
             );
             std::process::exit(505);
@@ -135,7 +135,7 @@ impl Fetcher {
         // tar
         eprintln!(
             "{} {id}@{version} for target {}.",
-            "Downloading".if_supports_color(Stderr, |text| text.bright_blue()),
+            err_color_print("Downloading", PossibleColor::BrightBlue),
             &config.target
         );
         let tar_bytes = self.fetch_blob(&format!("{}.{}", config.target, info.archive.ext));
@@ -158,7 +158,7 @@ impl Fetcher {
 
         eprintln!(
             "{} reports... ",
-            "Getting".if_supports_color(Stderr, |text| text.bright_blue())
+            err_color_print("Getting", PossibleColor::BrightBlue)
         );
 
         let id = self
@@ -224,7 +224,7 @@ impl Fetcher {
             Err(InteractError::HttpCode(404)) => {
                 eprintln!(
                     "Crate {id} {} in index!",
-                    "not found".if_supports_color(Stderr, |text| text.bright_red())
+                    err_color_print("not found", PossibleColor::BrightRed)
                 );
                 std::process::exit(3);
             }
@@ -260,7 +260,7 @@ impl Fetcher {
             Err(InteractError::HttpCode(404)) => {
                 eprintln!(
                     "File {file} for {id}@{version} is {}!",
-                    "not found".if_supports_color(Stderr, |text| text.bright_red())
+                    err_color_print("not found", PossibleColor::BrightRed)
                 );
                 std::process::exit(12);
             }
@@ -296,7 +296,7 @@ impl Fetcher {
             Err(InteractError::HttpCode(404)) => {
                 eprintln!(
                     "File {file} for {id}@{version} is {}!",
-                    "not found".if_supports_color(Stderr, |text| text.bright_red())
+                    err_color_print("not found", PossibleColor::BrightRed)
                 );
                 std::process::exit(24);
             }
@@ -351,7 +351,7 @@ impl Fetcher {
         if !verified {
             eprintln!(
                 "{} verify {file} for {id}@{version}.",
-                "Could not".if_supports_color(Stderr, |text| text.bright_red())
+                err_color_print("Could not", PossibleColor::BrightRed)
             );
             if config.force_verify {
                 std::process::exit(224);
@@ -360,7 +360,7 @@ impl Fetcher {
         else {
             eprintln!(
                 "{} {file} for {id}@{version} with minisign.",
-                "Verified".if_supports_color(Stderr, |text| text.bright_blue())
+                err_color_print("Verified", PossibleColor::BrightBlue)
             );
         }
     }
@@ -400,7 +400,6 @@ impl Fetcher {
         }
     }
 
-    // TODO: This should enforce 'hashes' config option.
     fn verify_bytes(&self, hashes: &Hashes, item: &str, bytes: &[u8]) {
         let id = self
             .data
@@ -431,7 +430,7 @@ impl Fetcher {
 
                 eprintln!(
                     "{} {item} for {id}@{version} with sha3_512.",
-                    "Verified".if_supports_color(Stderr, |text| text.bright_blue())
+                    err_color_print("Verified", PossibleColor::BrightBlue)
                 );
                 return;
             }
@@ -450,7 +449,7 @@ impl Fetcher {
 
                 eprintln!(
                     "{} {item} for {id}@{version} with sha3_256.",
-                    "Verified".if_supports_color(Stderr, |text| text.bright_blue())
+                    err_color_print("Verified", PossibleColor::BrightBlue)
                 );
                 return;
             }
@@ -474,7 +473,7 @@ impl Fetcher {
 
                 eprintln!(
                     "{} {item} for {id}@{version} with sha512.",
-                    "Verified".if_supports_color(Stderr, |text| text.bright_blue())
+                    err_color_print("Verified", PossibleColor::BrightBlue)
                 );
                 return;
             }
@@ -493,7 +492,7 @@ impl Fetcher {
 
                 eprintln!(
                     "{} {item} for {id}@{version} with sha256.",
-                    "Verified".if_supports_color(Stderr, |text| text.bright_blue())
+                    err_color_print("Verified", PossibleColor::BrightBlue)
                 );
                 return;
             }

@@ -1,10 +1,10 @@
+mod color;
 mod config;
 mod data;
 mod get;
 mod interact;
 
 use flate2::read::GzDecoder;
-use owo_colors::{OwoColorize, Stream::Stderr};
 use std::{
     fs::{self, create_dir_all, File},
     io::{Read, Write},
@@ -13,7 +13,10 @@ use std::{
 };
 use tar::Archive;
 
-use crate::get::Fetcher;
+use crate::{
+    color::{err_color_print, PossibleColor},
+    get::Fetcher,
+};
 
 #[cfg(feature = "mimalloc")]
 #[global_allocator]
@@ -81,7 +84,7 @@ fn main() -> Result<(), String> {
             Ok(es) => {
                 eprintln!(
                     "{} {id}@{version}...",
-                    "Extracting".if_supports_color(Stderr, |text| text.bright_blue())
+                    err_color_print("Extracting", PossibleColor::BrightBlue)
                 );
 
                 for e in es {
@@ -124,7 +127,7 @@ fn main() -> Result<(), String> {
 
                     eprintln!(
                         "{} {abs:?}.",
-                        "Installed".if_supports_color(Stderr, |text| text.bright_purple())
+                        err_color_print("Installed", PossibleColor::BrightPurple)
                     );
 
                     // Print paths to stdout too, maybe so others can parse?
@@ -144,14 +147,14 @@ fn main() -> Result<(), String> {
 
         eprintln!(
             "{} {id}@{version}.",
-            "Installed".if_supports_color(Stderr, |text| text.bright_green())
+            err_color_print("Installed", PossibleColor::BrightGreen)
         );
 
         // Prepare for next crate.
         fetcher.reset();
     }
 
-    eprintln!("{}", "Done!".if_supports_color(Stderr, |text| text.green()));
+    eprintln!("{}", err_color_print("Done!", PossibleColor::Green));
 
     Ok(())
 }

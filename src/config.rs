@@ -1,4 +1,5 @@
 use crate::{
+    color,
     data::{ConfigFileV1, ReportType, SigKeys},
     DEFAULT_INDEX, TARGET,
 };
@@ -279,14 +280,10 @@ fn convert(args: Arguments, mut sigs: SigKeys) -> Config {
     });
 
     match (args.color, args.no_color) {
-        #[cfg(feature = "color")]
-        (true, false) => owo_colors::set_override(true),
-        (_, true) => owo_colors::set_override(false),
-        _ => {}
+        (true, false) => color::set_override(true),
+        (_, true) => color::set_override(false),
+        _ => color::from_stream(),
     }
-
-    #[cfg(not(feature = "color"))]
-    owo_colors::set_override(false);
 
     let pkgs = args.pkgs;
 

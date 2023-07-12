@@ -1,5 +1,6 @@
-use owo_colors::{OwoColorize, Stream::Stderr};
 use ureq::Agent;
+
+use crate::color::{err_color_print, PossibleColor};
 
 #[cfg(feature = "github-private")]
 mod github_private;
@@ -29,7 +30,7 @@ pub fn create_interact(input: String, _auth: Option<&String>, agent: Agent) -> B
                 .expect("Missing url after gh-pub:");
             eprintln!(
                 "{} index https://{url}.",
-                "Using".if_supports_color(Stderr, |text| text.bright_cyan())
+                err_color_print("Using", PossibleColor::BrightCyan),
             );
             return Box::new(github_public::GithubPublic::new(agent, url));
         }
@@ -49,7 +50,7 @@ pub fn create_interact(input: String, _auth: Option<&String>, agent: Agent) -> B
                 .expect("Missing url after gh-pri:");
             eprintln!(
                 "{} index https://{url}.",
-                "Using".if_supports_color(Stderr, |text| text.bright_cyan())
+                err_color_print("Using", PossibleColor::BrightCyan),
             );
             return Box::new(github_private::GithubPrivate::new(
                 agent,
