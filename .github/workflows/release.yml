@@ -87,7 +87,7 @@ jobs:
           name: ${{ needs.release.outputs.name }}
           allowUpdates: true
           prerelease: ${{ needs.release.outputs.prerelease }}
-          artifacts: "target-*/*.minisig,target-*/*.tar.gz,target-*/*.zip"
+          artifacts: "target-*/*.minisig,target-*/*.tar.gz,target-*/*.zip,target-*/*.sha256"
           body: ""
 
   check-fmt:
@@ -429,7 +429,7 @@ jobs:
         run: rustc --version
       - uses: cargo-prebuilt/cargo-prebuilt-action@v1
         with:
-          tools: cross
+          tools: cross,coreutils
       - name: Run tests
         if: ${{ matrix.can-test }}
         run: cross test --verbose --workspace --release --locked --target ${{ matrix.target }} ${{ env.feature-set }}
@@ -442,12 +442,15 @@ jobs:
           just --version
       - name: Tar
         run: tar czvf ${{ matrix.target }}.tar.gz -C ./target/${{ matrix.target }}/release ${{ env.bin-name }}${{ matrix.ending }}
+      - name: Hash
+        run: echo "$(coreutils sha256sum ${{ matrix.target }}.tar.gz)" > ${{ matrix.target }}.sha256
       - name: Artifact
         uses: actions/upload-artifact@v3
         with:
           name: target-${{ matrix.target }}
           path: |
             ${{ matrix.target }}.tar.gz
+            ${{ matrix.target }}.sha256
 
   apple-darwin:
     strategy:
@@ -480,7 +483,7 @@ jobs:
         run: rustup target add ${{ matrix.target }}
       - uses: cargo-prebuilt/cargo-prebuilt-action@v1
         with:
-          tools: cargo-auditable
+          tools: cargo-auditable,coreutils
       - name: Run tests
         if: ${{ matrix.can-test }}
         run: cargo test --verbose --workspace --release --locked --target ${{ matrix.target }} ${{ env.feature-set }}
@@ -493,12 +496,15 @@ jobs:
           just --version
       - name: Tar
         run: tar czvf ${{ matrix.target }}.tar.gz -C ./target/${{ matrix.target }}/release ${{ env.bin-name }}
+      - name: Hash
+        run: echo "$(coreutils sha256sum ${{ matrix.target }}.tar.gz)" > ${{ matrix.target }}.sha256
       - name: Artifact
         uses: actions/upload-artifact@v3
         with:
           name: target-${{ matrix.target }}
           path: |
             ${{ matrix.target }}.tar.gz
+            ${{ matrix.target }}.sha256
 
   pc-windows-msvc:
     strategy:
@@ -531,7 +537,7 @@ jobs:
         run: rustup target add ${{ matrix.target }}
       - uses: cargo-prebuilt/cargo-prebuilt-action@v1
         with:
-          tools: cargo-auditable
+          tools: cargo-auditable,coreutils
       - name: Run tests
         if: ${{ matrix.can-test }}
         run: cargo test --verbose --workspace --release --locked --target ${{ matrix.target }} ${{ env.feature-set }}
@@ -547,9 +553,12 @@ jobs:
         with:
           files: ./target/${{ matrix.target }}/release/${{ env.bin-name }}.exe
           dest: ${{ matrix.target }}.zip
+      - name: Hash
+        run: echo "$(coreutils sha256sum ${{ matrix.target }}.zip)" > ${{ matrix.target }}.sha256
       - name: Artifact
         uses: actions/upload-artifact@v3
         with:
           name: target-${{ matrix.target }}
           path: |
             ${{ matrix.target }}.zip
+            ${{ matrix.target }}.sha256
