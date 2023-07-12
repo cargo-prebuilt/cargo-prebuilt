@@ -318,7 +318,7 @@ pub fn get() -> Config {
     let mut keys: SigKeys = HashMap::with_capacity(1);
     keys.insert(
         DEFAULT_INDEX.to_string(),
-        vec![include_str!("../keys/cargo-prebuilt-index.pub.base64").to_string()],
+        vec![include_str!("../keys/cargo-prebuilt-index.pub").to_string()],
     );
 
     // Add sig key from args
@@ -345,9 +345,7 @@ pub fn get() -> Config {
 
 #[cfg(test)]
 mod test {
-    use std::io::Cursor;
-
-    use minisign::{PublicKeyBox, SignatureBox};
+    use minisign_verify::{PublicKey, Signature};
 
     #[test]
     fn test_minisign1() {
@@ -355,12 +353,8 @@ mod test {
         let sig = include_str!("../test/pubdata.test.minisig");
         let pubkey = include_str!("../test/pubdata.pub");
 
-        let signature_box = SignatureBox::from_string(sig).unwrap();
-
-        let pk_box = PublicKeyBox::from_string(pubkey).unwrap();
-        let pk = pk_box.into_public_key().unwrap();
-
-        let data_reader = Cursor::new(data);
-        minisign::verify(&pk, &signature_box, data_reader, true, false, false).unwrap();
+        let signature = Signature::decode(sig).unwrap();
+        let pk = PublicKey::from_base64(pubkey).unwrap();
+        pk.verify(data, &signature, false).unwrap();
     }
 }

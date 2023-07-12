@@ -31,7 +31,7 @@ skip_bin_hash = true|false  # Skip verifying extracted binaries
 
 [key.$ANYTHING]             # Add a public verifying key for an index
 index = "$INDEX"            # Index to add key for
-pub_key = "$PUBLIC_GPG_KEY" # Public verifying key for index encoded as base64
+pub_key = "$PUBLIC_GPG_KEY" # Public minisign verifying key for index (No comments)
 ```
 
 ## Ref

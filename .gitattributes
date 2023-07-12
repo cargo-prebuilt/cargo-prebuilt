@@ -1,7 +1,10 @@
 * text=auto
 
-# Because of caching in GitHub Actions
-Cargo.lock text eol=lf
+# Because scripts
+scripts/*.sh text eol=lf
 
 # Because of it being signed.
 test/pubdata.test text eol=lf
+
+# Because of caching in GitHub Actions
+Cargo.lock text eol=lf

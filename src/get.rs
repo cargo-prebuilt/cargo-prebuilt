@@ -313,8 +313,7 @@ impl Fetcher {
 
     #[cfg(feature = "sig")]
     fn verify_file(&self, file: &str, config: &Config, sig_file: &str, raw_file: &str) {
-        use base64::Engine;
-        use minisign::{PublicKeyBox, SignatureBox};
+        use minisign_verify::{PublicKey, Signature};
 
         let id = self
             .data
@@ -328,21 +327,12 @@ impl Fetcher {
             .expect("Failed to get version, but it should have been guaranteed.");
 
         let sig = &self.fetch_str(sig_file);
-        let signature_box = SignatureBox::from_string(sig).expect("Signature was malformed.");
+        let signature = Signature::decode(sig).expect("Signature was malformed.");
 
         let mut verified = false;
         for key in config.sigs.iter() {
-            let raw_key = base64::engine::general_purpose::STANDARD
-                .decode(key)
-                .unwrap_or_else(|_| panic!("A key for {} is malformed base64.", config.index));
-            let str_key = String::from_utf8(raw_key).expect("Public key was not utf8.");
-            let pk_box = PublicKeyBox::from_string(&str_key).expect("Public key was malformed.");
-            let pk = pk_box
-                .into_public_key()
-                .expect("Could not convert public key box into public key");
-
-            let reader = std::io::Cursor::new(raw_file.as_bytes());
-            if minisign::verify(&pk, &signature_box, reader, true, false, false).is_ok() {
+            let pk = PublicKey::from_base64(key).expect("Public key was malformed.");
+            if pk.verify(raw_file.as_bytes(), &signature, false).is_ok() {
                 verified = true;
                 break;
             }

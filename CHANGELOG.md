@@ -27,6 +27,8 @@
 - Permissions are now explicitly set to 755 on unix platforms.
 - To opt in or out of colors use the env vars FORCE_COLOR/NO_COLOR.
 - Releases are signed using minisign.
+- Color feature is now linked to owo-colors and supports-color.
+- Remove need for atty dependency.
 
 ## [0.5.3](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.5.3)
 
