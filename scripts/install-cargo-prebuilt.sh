@@ -27,6 +27,9 @@ pushd "$TEMP_DIR"
 : ${OS_TYPE:="$(uname -s)"}
 : ${LIBC:="gnu"}
 
+: ${PUB_KEY:="RWTSqAR1Hbfu6mBFiaz4hb9I9gikhMmvKkVbyz4SJF/oxJcbbScmCqqO"}
+: ${MINISIGN:="false"}
+
 # Build target string
 TARGET_STRING=""
 
@@ -92,14 +95,30 @@ fi
 
 echo "Determined target: $TARGET_STRING"
 
+TAR="$TARGET_STRING.tar.gz"
+SIG="$TARGET_STRING.minisig"
+
 # Bootstrap cargo-prebuilt
-URL+="$TARGET_STRING"
-URL+=".tar.gz"
+TAR_URL="$URL""$TAR"
+SIG_URL="$URL""$SIG"
 
-#TODO: Use minisign, if installed, to verify download
+curl --proto '=https' --tlsv1.2 -fsSL "$TAR_URL" -o "$TAR"
 
-curl --proto '=https' --tlsv1.2 -fsSL "$URL" -o bootstrap.tar.gz
-tar -xzvf bootstrap.tar.gz
+if [ "$MINISIGN" == "true" ]; then
+    curl --proto '=https' --tlsv1.2 -fsSL "$SIG_URL" -o "$SIG"
+
+    if minisign --version ; then
+        minisign -Vm "$TAR" -P "$PUB_KEY"
+    elif rsign --version ; then
+        rsign verify "$TAR" -P "$PUB_KEY"
+    else
+        echo "Minisign needs to be installed. (https://jedisct1.github.io/minisign)"
+        echo "Or rsign2. (https://github.com/jedisct1/rsign2)"
+        exit -1
+    fi
+fi
+
+tar -xzvf "$TAR"
 
 # Install cargo-prebuilt with cargo-prebuilt
 ARGS=""
@@ -110,3 +129,4 @@ fi
 ./cargo-prebuilt $ARGS cargo-prebuilt
 
 popd
+rm -rf "$TEMP_DIR"
