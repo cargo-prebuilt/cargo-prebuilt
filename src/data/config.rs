@@ -1,5 +1,6 @@
 use std::{collections::HashMap, path::PathBuf};
 
+use indexmap::IndexSet;
 use serde::Deserialize;
 
 use super::HashType;
@@ -58,9 +59,9 @@ pub struct ConfigFilePrebuiltV1 {
     pub path: Option<PathBuf>,
     pub report_path: Option<PathBuf>,
     pub no_create_path: Option<bool>,
-    pub reports: Option<Vec<ReportType>>,
+    pub reports: Option<IndexSet<ReportType>>,
     pub color: Option<bool>,
-    pub hashes: Option<Vec<HashType>>,
+    pub hashes: Option<IndexSet<HashType>>,
     pub force_verify: Option<bool>,
 }
 

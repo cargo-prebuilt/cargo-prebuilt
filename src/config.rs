@@ -1,12 +1,11 @@
 use crate::{
-    data::{ConfigFileV1, SigKeys},
+    data::{ConfigFileV1, HashType, ReportType, SigKeys},
     DEFAULT_INDEX, TARGET,
 };
 use bpaf::*;
 use home::{cargo_home, home_dir};
+use indexmap::IndexSet;
 use std::{collections::HashMap, fs::File, io::Read, path::PathBuf};
-
-pub static REPORT_FLAGS: [&str; 3] = ["license", "deps", "audit"];
 
 #[derive(Clone, Debug)]
 pub struct Config {
@@ -17,8 +16,9 @@ pub struct Config {
     pub report_path: PathBuf,
     pub ci: bool,
     pub no_create_path: bool,
-    pub reports: String,
-    pub hashes: Option<String>, // Use by priority if None. (sha3_512 -> sha3_256 -> sha512 -> sha256)
+    pub reports: IndexSet<ReportType>,
+    // TODO: REMOVE THIS
+    pub hashes: Option<IndexSet<HashType>>, // Hashes that could be used. By default uses max one.
     pub sigs: Vec<String>,
     pub force_verify: bool,
     pub pkgs: String,
@@ -33,8 +33,8 @@ struct Arguments {
     report_path: Option<PathBuf>,
     ci: bool,
     no_create_path: bool,
-    reports: Option<String>,
-    hashes: Option<String>,
+    reports: Option<IndexSet<ReportType>>,
+    hashes: Option<IndexSet<HashType>>,
     sig: Option<String>,
     force_verify: bool,
     color: bool,
@@ -43,6 +43,7 @@ struct Arguments {
 }
 
 fn parse_args() -> Arguments {
+    // TODO: Parse here!
     let pkgs = positional::<String>("PKGS").help("A CSV list of packages with optional @VERSION");
 
     let target = long("target")
@@ -89,12 +90,36 @@ fn parse_args() -> Arguments {
         .env("PREBUILT_REPORTS")
         .help("A CSV list of reports types. (license, deps, audit)")
         .argument::<String>("REPORTS")
+        .parse(|s| {
+            let mut v = IndexSet::new();
+            for i in s.split(',') {
+                match TryInto::<ReportType>::try_into(i) {
+                    Ok(d) => {
+                        let _ = v.insert(d);
+                    }
+                    Err(_) => return Err(format!("{i} is not a report type.")),
+                }
+            }
+            Ok(v)
+        })
         .optional();
 
     let hashes = long("hashes")
         .env("PREBUILT_HASHES")
         .help("A CSV list of hash types. (sha256, sha512, sha3_256, sha3_512)")
         .argument::<String>("HASHES")
+        .parse(|s| {
+            let mut v = IndexSet::new();
+            for i in s.split(',') {
+                match TryInto::<HashType>::try_into(i) {
+                    Ok(d) => {
+                        let _ = v.insert(d);
+                    }
+                    Err(_) => return Err(format!("{i} is not a hash type.")),
+                }
+            }
+            Ok(v)
+        })
         .optional();
 
     let sig = long("sig")
@@ -141,6 +166,7 @@ fn parse_args() -> Arguments {
         .run()
 }
 
+// TODO: This overrides?
 fn fill_from_file(args: &mut Arguments, sig_keys: &mut SigKeys) {
     match home_dir() {
         Some(mut conf) => {
@@ -188,34 +214,9 @@ fn fill_from_file(args: &mut Arguments, sig_keys: &mut SigKeys) {
                                     }
                                 };
                             }
-                            macro_rules! file_convert_csv {
-                                ($($x:ident), *) => {
-                                    {
-                                        $(args.$x = args.$x.clone().or_else(|| {
-                                            prebuilt.$x.map_or_else(
-                                                || None,
-                                                |val| {
-                                                    Some(
-                                                        val.iter()
-                                                            .map(|v| {
-                                                                let str: &str = v.into();
-                                                                String::from(str)
-                                                            })
-                                                            .collect::<Vec<String>>()
-                                                            .join(","),
-                                                    )
-                                                },
-                                            )
-                                        });)*
-                                    }
-                                };
-                            }
 
-                            file_convert![target, index, auth, path, report_path];
+                            file_convert![target, index, auth, path, report_path, reports, hashes];
                             file_convert_switch![no_create_path, force_verify, color];
-
-                            // TODO: Dedupe?
-                            file_convert_csv![reports, hashes];
                         }
                     }
                     Err(err) => eprintln!("Failed to parse config file.\n{err}"),
@@ -265,7 +266,7 @@ fn convert(args: Arguments, mut sigs: SigKeys) -> Config {
 
     let reports = match args.reports {
         Some(val) => val,
-        None => REPORT_FLAGS[0].to_owned(),
+        None => IndexSet::from([ReportType::LicenseDL]),
     };
 
     let hashes = args.hashes;

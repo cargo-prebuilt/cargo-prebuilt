@@ -13,6 +13,7 @@ fmt:
 check:
     cargo +nightly fmt --check
     cargo clippy --all-targets --locked --workspace -- -D warnings
+    cargo clippy --all-targets --locked --workspace --no-default-features --features vendored-openssl,indexes,security -- -D warnings
     cargo clippy --all-targets --locked --workspace --no-default-features --features default-native -- -D warnings
     cargo clippy --all-targets --locked --workspace --no-default-features --features default-rustls -- -D warnings
 

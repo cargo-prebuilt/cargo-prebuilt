@@ -4,8 +4,8 @@ use std::{
 };
 
 use crate::{
-    config::{self, Config},
-    data::{HashType, Hashes, HashesFile, HashesFileImm, InfoFile, InfoFileImm},
+    config::Config,
+    data::{HashType, Hashes, HashesFile, HashesFileImm, InfoFile, InfoFileImm, ReportType},
     interact::{self, Interact, InteractError},
 };
 use owo_colors::{OwoColorize, Stream::Stderr};
@@ -177,18 +177,11 @@ impl Fetcher {
             .as_ref()
             .expect("Failed to get info, but it should have been guaranteed.");
 
-        let reports: Vec<&str> = config.reports.split(',').collect();
-        for report in reports {
-            if !config::REPORT_FLAGS.contains(&report) {
-                eprintln!("Bad report type: {report}.");
-                std::process::exit(600);
-            }
-
+        for report in config.reports.iter() {
             let report_name = match report {
-                "license" => info.files.license.clone(),
-                "deps" => info.files.deps.clone(),
-                "audit" => info.files.audit.clone(),
-                _ => panic!("Bad report type, but this should never be reached."),
+                ReportType::LicenseDL => info.files.license.clone(),
+                ReportType::DepsDL => info.files.deps.clone(),
+                ReportType::AuditDL => info.files.audit.clone(),
             };
 
             let raw_str = &self.fetch_str(&report_name);
@@ -407,6 +400,7 @@ impl Fetcher {
         }
     }
 
+    // TODO: This should enforce 'hashes' config option.
     fn verify_bytes(&self, hashes: &Hashes, item: &str, bytes: &[u8]) {
         let id = self
             .data

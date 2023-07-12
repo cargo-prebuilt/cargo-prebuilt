@@ -29,7 +29,7 @@ Need help? Try: ```cargo prebuilt --help``` or see [Config Info](CONFIG.md)
 
 - You can download the latest prebuilt binaries of cargo-prebuilt [here](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/latest).
 - Cargo install: ```cargo install cargo-prebuilt``` or ```cargo install cargo-prebuilt --profile=quick-build```
-- Cargo prebuild: ```cargo prebuild cargo-prebuilt```
+- Cargo prebuilt: ```cargo prebuilt cargo-prebuilt```
 - Cargo binstall: ```cargo binstall cargo-prebuilt --no-confirm```
 - Cargo quickinstall: ```cargo quickinstall cargo-prebuilt```
 - Homebrew: ```brew install crow-rest/harmless/cargo-prebuilt```
@@ -38,23 +38,31 @@ Need help? Try: ```cargo prebuilt --help``` or see [Config Info](CONFIG.md)
 
 ## Building
 
-#### vendored-openssl (default)
-```cargo install cargo-prebuilt --no-default-features --features indexes,security,bright-color,vendored-openssl```
+(Cargo prebuilt requires a tls feature)
 
-#### native tls (github actions/releases default)
-```cargo install cargo-prebuilt --no-default-features --features indexes,security,bright-color,native```
+#### vendored-openssl (default)
+```cargo install cargo-prebuilt```
+
+#### native tls (github releases default)
+```cargo install cargo-prebuilt --no-default-features --features default-native```
 
 #### rustls
-```cargo install cargo-prebuilt --no-default-features --features indexes,security,bright-color,rustls```
+```cargo install cargo-prebuilt --no-default-features --features default-rustls```
 
 #### rustls with native certs
-```cargo install cargo-prebuilt --no-default-features --features indexes,security,bright-color,rustls-native-certs```
+```cargo install cargo-prebuilt --no-default-features --features default-rustls,rustls-native-certs```
 
 ### limit security used
+(Cargo prebuilt is tested with default features and may break without the ```security``` feature)
+
 Remove ```security``` feature included by default, then add the features you want below:
-- 
+- ```sha2```: Sha2 hashing
+- ```sha3```: Sha3 hashing
+- ```sig```: Minisign signatures
 
 #### limit indexes used
+(Cargo prebuilt is tested with default features and may break without the ```indexes``` feature)
+
 Remove ```indexes``` feature included by default, then add the features you want below:
 - [github-public](#github-public)
 - [github-private](#github-private) (Not supported yet)
@@ -67,9 +75,14 @@ Remove ```indexes``` feature included by default, then add the features you want
 - [custom-http-public](#custom-http-private) (Not supported yet)
 - [custom-http-private](#custom-http-private) (Not supported yet)
 
-#### colors
-```bright-color``` feature is used by default.
-Add feature ```bright-color``` or ```dull-color```.
+#### limit color
+(Cargo prebuilt is tested with default features and may break without the ```color``` feature)
+
+- Remove the ```color``` feature (enabled by default)
+- Or use ```--no-color```, ```NO_COLOR=true``` env var, or ```color = false``` in the config file.
+
+### use mimalloc
+```cargo install cargo-prebuilt --features mimalloc```
 
 ## Reports
 
