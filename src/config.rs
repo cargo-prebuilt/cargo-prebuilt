@@ -1,5 +1,5 @@
 use crate::{
-    data::{ConfigFileV1, HashType, ReportType, SigKeys},
+    data::{ConfigFileV1, ReportType, SigKeys},
     DEFAULT_INDEX, TARGET,
 };
 use bpaf::*;
@@ -17,11 +17,10 @@ pub struct Config {
     pub ci: bool,
     pub no_create_path: bool,
     pub reports: IndexSet<ReportType>,
-    // TODO: REMOVE THIS
-    pub hashes: Option<IndexSet<HashType>>, // Hashes that could be used. By default uses max one.
     pub sigs: Vec<String>,
     pub force_verify: bool,
-    pub pkgs: String,
+    pub skip_bin_hash: bool,
+    pub pkgs: IndexSet<String>,
 }
 
 #[derive(Clone, Debug)]
@@ -34,17 +33,24 @@ struct Arguments {
     ci: bool,
     no_create_path: bool,
     reports: Option<IndexSet<ReportType>>,
-    hashes: Option<IndexSet<HashType>>,
     sig: Option<String>,
     force_verify: bool,
+    skip_bin_hash: bool,
     color: bool,
     no_color: bool,
-    pkgs: String,
+    pkgs: IndexSet<String>,
 }
 
 fn parse_args() -> Arguments {
-    // TODO: Parse here!
-    let pkgs = positional::<String>("PKGS").help("A CSV list of packages with optional @VERSION");
+    let pkgs = positional::<String>("PKGS")
+        .help("A CSV list of packages with optional @VERSION")
+        .parse(|s| {
+            let mut v = IndexSet::new();
+            for i in s.split(',') {
+                v.insert(i.to_string());
+            }
+            Ok::<IndexSet<String>, String>(v)
+        });
 
     let target = long("target")
         .env("PREBUILT_TARGET")
@@ -104,24 +110,6 @@ fn parse_args() -> Arguments {
         })
         .optional();
 
-    let hashes = long("hashes")
-        .env("PREBUILT_HASHES")
-        .help("A CSV list of hash types. (sha256, sha512, sha3_256, sha3_512)")
-        .argument::<String>("HASHES")
-        .parse(|s| {
-            let mut v = IndexSet::new();
-            for i in s.split(',') {
-                match TryInto::<HashType>::try_into(i) {
-                    Ok(d) => {
-                        let _ = v.insert(d);
-                    }
-                    Err(_) => return Err(format!("{i} is not a hash type.")),
-                }
-            }
-            Ok(v)
-        })
-        .optional();
-
     let sig = long("sig")
         .env("PREBUILT_SIG")
         .help("A public verifying key encoded as base64. Must be used with --index.")
@@ -131,6 +119,11 @@ fn parse_args() -> Arguments {
     let force_verify = long("force-verify")
         .env("PREBUILT_FORCE_VERIFY")
         .help("Force verifying signatures and hashes.")
+        .switch();
+
+    let skip_bin_hash = long("skip-bin-hash")
+        .env("PREBUILT_SKIP_BIN_HASH")
+        .help("Skip hashing extracted binaries.")
         .switch();
 
     let color = long("color")
@@ -152,9 +145,9 @@ fn parse_args() -> Arguments {
         ci,
         no_create_path,
         reports,
-        hashes,
         sig,
         force_verify,
+        skip_bin_hash,
         color,
         no_color,
         pkgs,
@@ -166,7 +159,6 @@ fn parse_args() -> Arguments {
         .run()
 }
 
-// TODO: This overrides?
 fn fill_from_file(args: &mut Arguments, sig_keys: &mut SigKeys) {
     match home_dir() {
         Some(mut conf) => {
@@ -215,8 +207,13 @@ fn fill_from_file(args: &mut Arguments, sig_keys: &mut SigKeys) {
                                 };
                             }
 
-                            file_convert![target, index, auth, path, report_path, reports, hashes];
-                            file_convert_switch![no_create_path, force_verify, color];
+                            file_convert![target, index, auth, path, report_path, reports];
+                            file_convert_switch![
+                                no_create_path,
+                                force_verify,
+                                skip_bin_hash,
+                                color
+                            ];
                         }
                     }
                     Err(err) => eprintln!("Failed to parse config file.\n{err}"),
@@ -269,9 +266,9 @@ fn convert(args: Arguments, mut sigs: SigKeys) -> Config {
         None => IndexSet::from([ReportType::LicenseDL]),
     };
 
-    let hashes = args.hashes;
-
     let force_sig = args.force_verify;
+
+    let skip_bin_hash = args.skip_bin_hash;
 
     let sigs = sigs.remove(&index).unwrap_or_else(|| {
         if force_sig {
@@ -302,9 +299,9 @@ fn convert(args: Arguments, mut sigs: SigKeys) -> Config {
         ci,
         no_create_path,
         reports,
-        hashes,
         sigs,
         force_verify: force_sig,
+        skip_bin_hash,
         pkgs,
     }
 }

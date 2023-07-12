@@ -1,8 +1,9 @@
 #!/bin/bash
 
-### Accepts in params INSTALL_PATH, LIBC, ARCH, OS_TYPE, FORCE.
+### Accepts in params (env vars) INSTALL_PATH, LIBC, ARCH, OS_TYPE, FORCE.
 ### INSTALL_PATH: Path to where cargo-prebuilt should be installed.
 ### LIBC: Which libc flavor to use. (gnu or musl) (Does nothing on macos)
+### MINISIGN: If true, minisign will be used to verify the download. (Requires minisign to be installed)
 
 set -euxo pipefail
 
@@ -96,6 +97,7 @@ URL+="$TARGET_STRING"
 URL+=".tar.gz"
 
 #TODO: Use minisign, if installed, to verify download
+
 curl --proto '=https' --tlsv1.2 -fsSL "$URL" -o bootstrap.tar.gz
 tar -xzvf bootstrap.tar.gz
 

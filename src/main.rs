@@ -55,9 +55,8 @@ fn main() -> Result<(), String> {
     let mut fetcher = Fetcher::new(&config, agent);
 
     // Get pkgs
-    let pkgs: Vec<&str> = config.pkgs.split(',').collect();
-    for pkg in pkgs {
-        let mut id = pkg;
+    for pkg in config.pkgs.iter() {
+        let mut id = pkg.as_str();
         let mut version = None; // None will pull the latest version
 
         // If there is a version string get it
@@ -101,7 +100,9 @@ fn main() -> Result<(), String> {
                         .expect("Archive has non utf-8 path.");
 
                     // Verify each binary in archive
-                    fetcher.verify_bin(&config, &str_name, &blob_data);
+                    if !config.skip_bin_hash {
+                        fetcher.verify_bin(&config, &str_name, &blob_data);
+                    }
 
                     let mut path = config.path.clone();
                     path.push(bin_path);
