@@ -84,10 +84,12 @@ jobs:
             if [ -d "${D}" ]; then
                 echo "${D}"
                 pushd "${D}"
-                minisign -S -s ~/.minisign_secret.key -m *.tar.gz
-                minisign -V -p ../keys/cargo-prebuilt.pub -m *.tar.gz
-                minisign -S -s ~/.minisign_secret.key -m *.zip
-                minisign -V -p ../keys/cargo-prebuilt.pub -m *.zip
+        
+                for file in ./*.tar.gz ./*.zip; do
+                    minisign -S -s ~/.minisign_secret.key -m $file
+                    minisign -V -p ../keys/cargo-prebuilt.pub -m $file
+                done
+                
                 popd
             fi
           done
