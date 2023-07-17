@@ -65,9 +65,8 @@ impl Fetcher {
             .expect("Failed to get version, but it should have been guaranteed.");
 
         eprintln!(
-            "{} info about {id}@{version} for target {}.",
+            "{} info for {id}@{version}.",
             err_color_print("Fetching", PossibleColor::BrightBlue),
-            &config.target
         );
 
         // info.json
@@ -128,6 +127,12 @@ impl Fetcher {
                 }
             }
         }
+
+        eprintln!(
+            "{} hashes for {id}@{version} with target {}.",
+            err_color_print("Fetching", PossibleColor::BrightBlue),
+            &config.target
+        );
 
         // hashes.json
         let raw_hashes_file = &self.fetch_str(&info.files.hash);

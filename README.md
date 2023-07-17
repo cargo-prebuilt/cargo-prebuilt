@@ -15,6 +15,8 @@ Request a crate to be added [here](https://github.com/cargo-prebuilt/index/issue
 
 ## How to Use
 
+*Cargo prebuilt overwrites existing binaries by default. To stop this use the ```-s``` flag, ```--safe``` flag, or add ```safe = true``` to your config file.*
+
 To download a crate: ```cargo prebuilt CRATE_NAME```
 
 To download multiple crates: ```cargo prebuilt CRATE_1,CRATE_2,CRATE_3,...```

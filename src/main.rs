@@ -119,14 +119,12 @@ fn main() -> Result<(), String> {
                     let mut path = config.path.clone();
                     path.push(bin_path);
 
-                    if config.safe {
-                        if path.exists() {
-                            eprintln!(
-                                "Binary {str_name} {} for {id}@{version}",
-                                err_color_print("already exists", PossibleColor::BrightRed)
-                            );
-                            std::process::exit(4091);
-                        }
+                    if config.safe && path.exists() {
+                        eprintln!(
+                            "Binary {str_name} {} for {id}@{version}",
+                            err_color_print("already exists", PossibleColor::BrightRed)
+                        );
+                        std::process::exit(4091);
                     }
 
                     let mut file =
