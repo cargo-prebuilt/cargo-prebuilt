@@ -62,6 +62,18 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: actions/download-artifact@v3
+      - name: Merge hashes
+        shell: bash
+        run: |
+          echo -n "" > hashes.sha256
+          for D in target-*; do
+            if [ -d "${D}" ]; then
+                echo "${D}"
+                pushd "${D}"
+                cat *.sha256 >> ../hashes.sha256
+                popd
+            fi
+          done
       - name: Sign archives
         shell: bash
         run: |
@@ -72,8 +84,10 @@ jobs:
             if [ -d "${D}" ]; then
                 echo "${D}"
                 pushd "${D}"
-                minisign -S -s ~/.minisign_secret.key -m *.*
-                minisign -V -p ../keys/cargo-prebuilt.pub -m *.*
+                minisign -S -s ~/.minisign_secret.key -m *.tar.gz
+                minisign -V -p ../keys/cargo-prebuilt.pub -m *.tar.gz
+                minisign -S -s ~/.minisign_secret.key -m *.zip
+                minisign -V -p ../keys/cargo-prebuilt.pub -m *.zip
                 popd
             fi
           done
@@ -87,7 +101,7 @@ jobs:
           name: ${{ needs.release.outputs.name }}
           allowUpdates: true
           prerelease: ${{ needs.release.outputs.prerelease }}
-          artifacts: "target-*/*.minisig,target-*/*.tar.gz,target-*/*.zip,target-*/*.sha256"
+          artifacts: "target-*/*.minisig,target-*/*.tar.gz,target-*/*.zip,hashes.sha256"
           body: ""
 
   check-fmt:
