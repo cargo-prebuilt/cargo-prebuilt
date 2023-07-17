@@ -102,6 +102,15 @@ fn main() -> Result<(), String> {
                         .into_string()
                         .expect("Archive has non utf-8 path.");
 
+                    // Make sure there are no path separators since this will be appended
+                    if str_name.contains(std::path::is_separator) {
+                        eprintln!(
+                            "{} path separator in archive for {id}@{version}",
+                            err_color_print("Illegal", PossibleColor::BrightRed)
+                        );
+                        std::process::exit(488);
+                    }
+
                     // Verify each binary in archive
                     if !config.skip_bin_hash {
                         fetcher.verify_bin(&config, &str_name, &blob_data);
@@ -110,12 +119,22 @@ fn main() -> Result<(), String> {
                     let mut path = config.path.clone();
                     path.push(bin_path);
 
+                    if config.safe {
+                        if path.exists() {
+                            eprintln!(
+                                "Binary {str_name} {} for {id}@{version}",
+                                err_color_print("already exists", PossibleColor::BrightRed)
+                            );
+                            std::process::exit(4091);
+                        }
+                    }
+
                     let mut file =
                         File::create(&path).expect("Could not open file to write binary to.");
                     file.write_all(&blob_data)
                         .expect("Could not write binary to file.");
 
-                    // Add exe permission on unix platforms.
+                    // Add +x permission on unix platforms.
                     #[cfg(target_family = "unix")]
                     {
                         use std::os::unix::fs::PermissionsExt;

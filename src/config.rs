@@ -20,6 +20,7 @@ pub struct Config {
     pub reports: IndexSet<ReportType>,
     pub sigs: Vec<String>,
     pub force_verify: bool,
+    pub safe: bool,
     pub skip_bin_hash: bool,
     pub pkgs: IndexSet<String>,
 }
@@ -36,6 +37,7 @@ struct Arguments {
     reports: Option<IndexSet<ReportType>>,
     sig: Option<String>,
     force_verify: bool,
+    safe: bool,
     skip_bin_hash: bool,
     color: bool,
     no_color: bool,
@@ -122,6 +124,12 @@ fn parse_args() -> Arguments {
         .help("Force verifying signatures and hashes.")
         .switch();
 
+    let safe = short('s')
+        .long("safe")
+        .env("PREBUILT_SAFE")
+        .help("Do not overwrite binaries that already exist.")
+        .switch();
+
     let skip_bin_hash = long("skip-bin-hash")
         .env("PREBUILT_SKIP_BIN_HASH")
         .help("Skip hashing extracted binaries.")
@@ -148,6 +156,7 @@ fn parse_args() -> Arguments {
         reports,
         sig,
         force_verify,
+        safe,
         skip_bin_hash,
         color,
         no_color,
@@ -212,6 +221,7 @@ fn fill_from_file(args: &mut Arguments, sig_keys: &mut SigKeys) {
                             file_convert_switch![
                                 no_create_path,
                                 force_verify,
+                                safe,
                                 skip_bin_hash,
                                 color
                             ];
@@ -269,6 +279,8 @@ fn convert(args: Arguments, mut sigs: SigKeys) -> Config {
 
     let force_sig = args.force_verify;
 
+    let safe = args.safe;
+
     let skip_bin_hash = args.skip_bin_hash;
 
     let sigs = sigs.remove(&index).unwrap_or_else(|| {
@@ -298,6 +310,7 @@ fn convert(args: Arguments, mut sigs: SigKeys) -> Config {
         reports,
         sigs,
         force_verify: force_sig,
+        safe,
         skip_bin_hash,
         pkgs,
     }

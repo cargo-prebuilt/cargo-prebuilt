@@ -13,6 +13,7 @@ reports = [               # Reports to download
 color = true              # Should CLI colors be on or not
 hashes = ["sha256"]       # Hashes to use for verifying files downloaded
 force_verify = true
+safe = true
 
 [key.test]             # Add a public verifying key for an index
 index = "$INDEX"            # Index to add key for

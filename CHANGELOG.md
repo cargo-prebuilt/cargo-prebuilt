@@ -29,6 +29,8 @@
 - Releases are signed using minisign.
 - Color feature is now linked to owo-colors and supports-color.
 - Remove need for atty dependency.
+- Add -s/--safe flag to prevent overwriting of binaries.
+- Do not allow path separators in tar archives.
 
 ## [0.5.3](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.5.3)
 

@@ -63,6 +63,7 @@ pub struct ConfigFilePrebuiltV1 {
     pub color: Option<bool>,
     pub hashes: Option<IndexSet<HashType>>,
     pub force_verify: Option<bool>,
+    pub safe: Option<bool>,
     pub skip_bin_hash: Option<bool>,
 }
 

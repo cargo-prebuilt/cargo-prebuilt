@@ -113,6 +113,22 @@ impl Fetcher {
             std::process::exit(505);
         }
 
+        // check if binary does not exist, if safe mode is on
+        if config.safe {
+            for bin in info.bins.iter() {
+                let mut path = config.path.clone();
+                path.push(bin);
+
+                if path.exists() {
+                    eprintln!(
+                        "Binary {bin} {} for {id}@{version}",
+                        err_color_print("already exists", PossibleColor::BrightRed)
+                    );
+                    std::process::exit(409);
+                }
+            }
+        }
+
         // hashes.json
         let raw_hashes_file = &self.fetch_str(&info.files.hash);
         let hashes: HashesFile = serde_json::from_str(raw_hashes_file)

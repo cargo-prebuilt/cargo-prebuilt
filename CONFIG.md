@@ -27,6 +27,7 @@ no_create_path = true|false # Do not create paths that do not exist
 reports = ["$REPORT_TYPE"]  # Reports to download
 color = true|false          # Should CLI colors be on or not
 force_verify = true|false   # Force verifying signatures and hashes (See [key.$ANYTHING])
+safe = true|false           # Prevent the overwriting of binaires
 skip_bin_hash = true|false  # Skip verifying extracted binaries
 
 [key.$ANYTHING]             # Add a public verifying key for an index
