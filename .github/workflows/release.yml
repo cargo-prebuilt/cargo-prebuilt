@@ -68,10 +68,10 @@ jobs:
           echo -n "" > hashes.sha256
           for D in target-*; do
             if [ -d "${D}" ]; then
-                echo "${D}"
-                pushd "${D}"
-                cat *.sha256 >> ../hashes.sha256
-                popd
+              echo "${D}"
+              pushd "${D}"
+              cat *.sha256 >> ../hashes.sha256
+              popd
             fi
           done
       - name: Sign archives
@@ -82,15 +82,17 @@ jobs:
           echo -n "$SIGNING_KEY" | base64 --decode > ~/.minisign_secret.key
           for D in target-*; do
             if [ -d "${D}" ]; then
-                echo "${D}"
-                pushd "${D}"
+              echo "${D}"
+              pushd "${D}"
         
-                for file in ./*.tar.gz ./*.zip; do
-                    minisign -S -s ~/.minisign_secret.key -m $file
-                    minisign -V -p ../keys/cargo-prebuilt.pub -m $file
-                done
+              for file in ./*.tar.gz ./*.zip; do
+                if [ -f "$file" ]; then
+                  minisign -S -s ~/.minisign_secret.key -m $file
+                  minisign -V -p ../keys/cargo-prebuilt.pub -m $file
+                fi 
+              done
                 
-                popd
+              popd
             fi
           done
           rm -f ~/.minisign_secret.key
