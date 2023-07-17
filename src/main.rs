@@ -111,15 +111,18 @@ fn main() -> Result<(), String> {
                         std::process::exit(488);
                     }
 
-                    // Verify each binary in archive
-                    if !config.skip_bin_hash {
-                        fetcher.verify_bin(&config, &str_name, &blob_data);
+                    if !fetcher.is_bin(&str_name) {
+                        eprintln!(
+                            "{} binary ({str_name}) in archive for {id}@{version}",
+                            err_color_print("Illegal", PossibleColor::BrightRed)
+                        );
+                        std::process::exit(499);
                     }
 
                     let mut path = config.path.clone();
                     path.push(bin_path);
 
-                    if config.safe && path.exists() {
+                    if config.safe && !config.ci && path.exists() {
                         eprintln!(
                             "Binary {str_name} {} for {id}@{version}",
                             err_color_print("already exists", PossibleColor::BrightRed)

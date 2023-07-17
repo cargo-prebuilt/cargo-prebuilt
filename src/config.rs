@@ -19,9 +19,8 @@ pub struct Config {
     pub no_create_path: bool,
     pub reports: IndexSet<ReportType>,
     pub sigs: Vec<String>,
-    pub force_verify: bool,
+    pub no_verify: bool,
     pub safe: bool,
-    pub skip_bin_hash: bool,
     pub pkgs: IndexSet<String>,
 }
 
@@ -35,10 +34,9 @@ struct Arguments {
     ci: bool,
     no_create_path: bool,
     reports: Option<IndexSet<ReportType>>,
-    sig: Option<String>,
-    force_verify: bool,
+    pub_key: Option<String>,
+    no_verify: bool,
     safe: bool,
-    skip_bin_hash: bool,
     color: bool,
     no_color: bool,
     pkgs: IndexSet<String>,
@@ -87,7 +85,7 @@ fn parse_args() -> Arguments {
 
     let ci = long("ci")
         .env("PREBUILT_CI")
-        .help("Do not download reports, create a .prebuilt directory, and check for a config file.")
+        .help("Do not download reports, create a .prebuilt directory, check for a config file, or allow safe mode.")
         .switch();
 
     let no_create_path = long("no-create-path")
@@ -101,38 +99,35 @@ fn parse_args() -> Arguments {
         .argument::<String>("REPORTS")
         .parse(|s| {
             let mut v = IndexSet::new();
-            for i in s.split(',') {
-                match TryInto::<ReportType>::try_into(i) {
-                    Ok(d) => {
-                        let _ = v.insert(d);
+            if !s.eq("") {
+                for i in s.split(',') {
+                    match TryInto::<ReportType>::try_into(i) {
+                        Ok(d) => {
+                            let _ = v.insert(d);
+                        }
+                        Err(_) => return Err(format!("{i} is not a report type.")),
                     }
-                    Err(_) => return Err(format!("{i} is not a report type.")),
                 }
             }
             Ok(v)
         })
         .optional();
 
-    let sig = long("sig")
-        .env("PREBUILT_SIG")
+    let pub_key = long("pub-key")
+        .env("PREBUILT_PUB_KEY")
         .help("A public verifying key encoded as base64. Must be used with --index.")
-        .argument::<String>("SIG")
+        .argument::<String>("PUB_KEY")
         .optional();
 
-    let force_verify = long("force-verify")
-        .env("PREBUILT_FORCE_VERIFY")
-        .help("Force verifying signatures and hashes.")
+    let no_verify = long("no-verify")
+        .env("PREBUILT_NO_VERIFY")
+        .help("Do not verify downloaded info.json's and hashes.json's.")
         .switch();
 
     let safe = short('s')
         .long("safe")
         .env("PREBUILT_SAFE")
         .help("Do not overwrite binaries that already exist.")
-        .switch();
-
-    let skip_bin_hash = long("skip-bin-hash")
-        .env("PREBUILT_SKIP_BIN_HASH")
-        .help("Skip hashing extracted binaries.")
         .switch();
 
     let color = long("color")
@@ -154,10 +149,9 @@ fn parse_args() -> Arguments {
         ci,
         no_create_path,
         reports,
-        sig,
-        force_verify,
+        pub_key,
+        no_verify,
         safe,
-        skip_bin_hash,
         color,
         no_color,
         pkgs,
@@ -218,13 +212,7 @@ fn fill_from_file(args: &mut Arguments, sig_keys: &mut SigKeys) {
                             }
 
                             file_convert![target, index, auth, path, report_path, reports];
-                            file_convert_switch![
-                                no_create_path,
-                                force_verify,
-                                safe,
-                                skip_bin_hash,
-                                color
-                            ];
+                            file_convert_switch![no_create_path, no_verify, safe, color];
                         }
                     }
                     Err(err) => eprintln!("Failed to parse config file.\n{err}"),
@@ -277,14 +265,12 @@ fn convert(args: Arguments, mut sigs: SigKeys) -> Config {
         None => IndexSet::from([ReportType::LicenseDL]),
     };
 
-    let force_sig = args.force_verify;
+    let no_verify = args.no_verify;
 
     let safe = args.safe;
 
-    let skip_bin_hash = args.skip_bin_hash;
-
     let sigs = sigs.remove(&index).unwrap_or_else(|| {
-        if force_sig {
+        if no_verify {
             eprintln!("Expected to find public key(s) for index {index}, but there was none.");
             std::process::exit(403);
         }
@@ -309,9 +295,8 @@ fn convert(args: Arguments, mut sigs: SigKeys) -> Config {
         no_create_path,
         reports,
         sigs,
-        force_verify: force_sig,
+        no_verify,
         safe,
-        skip_bin_hash,
         pkgs,
     }
 }
@@ -323,8 +308,8 @@ pub fn get() -> Config {
     dbg!(&args);
 
     // Check if sig is used with index.
-    if args.sig.is_some() && args.index.is_none() {
-        eprintln!("--sig must be used with --index.");
+    if args.pub_key.is_some() && args.index.is_none() {
+        eprintln!("pub_key must be used with index.");
         std::process::exit(502);
     }
 
@@ -335,7 +320,7 @@ pub fn get() -> Config {
     );
 
     // Add sig key from args
-    if let Some(k) = &args.sig {
+    if let Some(k) = &args.pub_key {
         keys.insert(args.index.clone().unwrap(), vec![k.clone()]);
     }
 
@@ -344,13 +329,6 @@ pub fn get() -> Config {
         fill_from_file(&mut args, &mut keys);
         #[cfg(debug_assertions)]
         dbg!(&args);
-    }
-
-    // Check if sig could be forced.
-    #[cfg(not(all(feature = "sig", any(feature = "sha2", feature = "sha3"))))]
-    if args.force_verify {
-        eprintln!("cargo-prebuilt needs the 'security' feature in order to force verifying. Or the 'sig' feature with one of the features 'sha2' or 'sha3'");
-        std::process::exit(224);
     }
 
     convert(args, keys)

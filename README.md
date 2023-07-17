@@ -92,6 +92,8 @@ Reports are generated when a crate is built in the index.
 
 They are stored under $HOME/.prebuilt/reports/CRATE/VERSION by default.
 
+Use ```--report-path``` to change where they are stored.
+
 Report types (--reports):
 - license: Download license and put it under the prebuilt folder in the installation dir. (Default on)
 - deps: Download deps tree and put it under the prebuilt folder in the installation dir.
@@ -107,7 +109,11 @@ Your url should be formatted like ```github.com/cargo-prebuilt/index```. cargo-p
 
 - ```export PREBUILT_INDEX=gh-pub:$URL```
 - ```cargo prebuilt --index=gh-pub:$URL CRATES```
-- [config.toml](CONFIG.md) ```index = "gh-pub:$URL"```
+- [config.toml](CONFIG.md) 
+    ```toml
+    [key.index]
+    index = "gh-pub:$URL"
+    ```
 
 #### GitHub private
 

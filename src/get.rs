@@ -75,25 +75,27 @@ impl Fetcher {
             .unwrap_or_else(|_| panic!("info.json is malformed for {id}@{version}"));
         let info: InfoFileImm = info.into();
 
-        // info.json.sig and test
+        // info.json.minisig and test
         #[cfg(feature = "sig")]
-        if let Some(sig_file) = info.files.sig_info.clone() {
-            self.verify_file("info.json", config, &sig_file, raw_info_file);
+        if !config.no_verify {
+            if let Some(sig_file) = info.files.sig_info.clone() {
+                self.verify_file("info.json", config, &sig_file, raw_info_file);
+            }
+            else {
+                eprintln!(
+                    "Could not force sig for index {}. info.json is not signed for {id}@{version}.",
+                    config.index
+                );
+                std::process::exit(224);
+            }
         }
-        else if config.force_verify {
-            eprintln!(
-                "Could not force sig for index {}. info.json is not signed for {id}@{version}.",
-                config.index
-            );
-            std::process::exit(224);
-        }
-
         #[cfg(not(feature = "sig"))]
-        if config.force_verify {
+        if !config.no_verify {
             eprintln!(
-                "Could not force sig for index {}. Feature 'sig' is disabled.",
-                config.index
-            );
+                "Could not force sig for index {}. This requires the 'security' and/or 'sig' feature(s). Or you can use the flag '--no-verify'.",
+                    config.index
+                );
+            std::process::exit(225);
         }
 
         // check if target is supported
@@ -113,7 +115,7 @@ impl Fetcher {
         }
 
         // check if binary does not exist, if safe mode is on
-        if config.safe {
+        if config.safe && !config.ci {
             for bin in info.bins.iter() {
                 let mut path = config.path.clone();
                 path.push(bin);
@@ -140,17 +142,19 @@ impl Fetcher {
             .unwrap_or_else(|_| panic!("{} is malformed for {id}@{version}", info.files.hash));
         let hashes: HashesFileImm = hashes.into();
 
-        // hashes.json.sig and test
+        // hashes.json.minisig and test
         #[cfg(feature = "sig")]
-        if let Some(sig_file) = info.files.sig_hash.clone() {
-            self.verify_file(&info.files.hash, config, &sig_file, raw_hashes_file);
-        }
-        else if config.force_verify {
-            eprintln!(
-                "Could not force sig for index {}. info.json is not signed for {id}@{version}.",
-                config.index
-            );
-            std::process::exit(224);
+        if !config.no_verify {
+            if let Some(sig_file) = info.files.sig_hash.clone() {
+                self.verify_file(&info.files.hash, config, &sig_file, raw_hashes_file);
+            }
+            else {
+                eprintln!(
+                    "Could not force sig for index {}. hashes.json is not signed for {id}@{version}.",
+                    config.index
+                );
+                std::process::exit(224);
+            }
         }
 
         // tar
@@ -364,9 +368,7 @@ impl Fetcher {
                 "{} verify {file} for {id}@{version}.",
                 err_color_print("Could not", PossibleColor::BrightRed)
             );
-            if config.force_verify {
-                std::process::exit(224);
-            }
+            std::process::exit(226);
         }
         else {
             eprintln!(
@@ -383,33 +385,47 @@ impl Fetcher {
         }
     }
 
-    pub fn verify_bin(&self, config: &Config, bin_name: &str, bytes: &[u8]) {
-        let id = self
+    pub fn is_bin(&self, bin_name: &str) -> bool {
+        let info = self
             .data
-            .id
-            .as_ref()
-            .expect("Failed to get id, but it should have been guaranteed.");
-        let version = self
-            .data
-            .version
-            .as_ref()
-            .expect("Failed to get version, but it should have been guaranteed.");
-        let hashes = self
-            .data
-            .hashes
+            .info
             .as_ref()
             .expect("Failed to get hashes, but it should have been guaranteed.");
 
-        if let Some(blob) = hashes.hashes.get(&config.target) {
-            match &blob.bins.get(bin_name) {
-                Some(blob) => self.verify_bytes(blob, &format!("{bin_name} binary"), bytes),
-                None => {
-                    eprintln!("Could not find {bin_name} hash for {id}@{version}.");
-                    std::process::exit(229);
-                }
-            }
-        }
+        let bin_name = bin_name.replace(".exe", "");
+
+        info.bins.contains(&bin_name)
     }
+
+    // TODO: Use for update hashing.
+    // No need to verify bins, since archive hash should do this for us.
+    //    pub fn verify_bin(&self, config: &Config, bin_name: &str, bytes: &[u8]) {
+    //        let id = self
+    //            .data
+    //            .id
+    //            .as_ref()
+    //            .expect("Failed to get id, but it should have been guaranteed.");
+    //        let version = self
+    //            .data
+    //            .version
+    //            .as_ref()
+    //            .expect("Failed to get version, but it should have been guaranteed.");
+    //        let hashes = self
+    //            .data
+    //            .hashes
+    //            .as_ref()
+    //            .expect("Failed to get hashes, but it should have been guaranteed.");
+    //
+    //        if let Some(blob) = hashes.hashes.get(&config.target) {
+    //            match &blob.bins.get(bin_name) {
+    //                Some(blob) => self.verify_bytes(blob, &format!("{bin_name} binary"), bytes),
+    //                None => {
+    //                    eprintln!("Could not find {bin_name} hash for {id}@{version}.");
+    //                    std::process::exit(229);
+    //                }
+    //            }
+    //        }
+    //    }
 
     fn verify_bytes(&self, hashes: &Hashes, item: &str, bytes: &[u8]) {
         let id = self
@@ -509,8 +525,13 @@ impl Fetcher {
             }
         }
 
-        eprintln!("Could not verify downloaded {item} for {id}@{version}.");
+        #[cfg(not(any(feature = "sha2", feature = "sha3")))]
+        eprintln!("Could not verify downloaded {item} for {id}@{version}. This requires the 'security', 'sha3', and/or 'sha2' feature(s).");
+
         #[cfg(any(feature = "sha2", feature = "sha3"))]
-        std::process::exit(228);
+        {
+            eprintln!("Could not verify downloaded {item} for {id}@{version}.");
+            std::process::exit(228);
+        }
     }
 }

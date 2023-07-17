@@ -2,20 +2,19 @@
 
 ## Upcoming
 
-## [0.6.0](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.6.0) (DEV)
+## [0.6.0](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.6.0) (RC)
 
 - Changed how features work.
 - Errors now use eprintln!().
 - Changed error exit codes to be positive.
 - Removed nanoserde in favor of serde.
-- Bump ureq, sha2, bpaf.
-- Boost MSRV to Rust 1.65+ from Rust 1.63+.
+- Bump deps.
+- Bump MSRV from Rust 1.63+ to Rust 1.65+.
 - version flag (--version) now uses bpaf's built in method.
 - .prebuilt folder is now by default put in the home directory, but can be overridden.
 - config.toml now more useful. (See [CONFIG](CONFIG.md))
 - Better config handling.
 - Added support for sha3_256, sha3_512, and sha512.
-- Allowed users to pick hash types to use.
 - GitHub release builds now use native-tls instead of vendored openssl.
 - Some 32-bit platforms were dropped from support. (#46)
 - Added minisign key verifying for info.json and hashes.json.
@@ -23,7 +22,6 @@
 - File install locations are outputted into stdout. (#45)
 - Switch to gen2 index. (#43)
 - Reports can no longer be printed to stdout.
-- Extracted binaries are now checked with a hash.
 - Permissions are now explicitly set to 755 on unix platforms.
 - To opt in or out of colors use the env vars FORCE_COLOR/NO_COLOR.
 - Releases are signed using minisign.
@@ -31,6 +29,7 @@
 - Remove need for atty dependency.
 - Add -s/--safe flag to prevent overwriting of binaries.
 - Do not allow path separators in tar archives.
+- Check binaires extracted from tar archive to make sure they are the correct ones.
 
 ## [0.5.3](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.5.3)
 
