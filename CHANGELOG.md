@@ -18,6 +18,7 @@
 - GitHub release builds now use native-tls instead of vendored openssl.
 - Some 32-bit platforms were dropped from support. (#46)
 - Added minisign key verifying for info.json and hashes.json.
+- Verify by default and allow opt out.
 - Uses abort for panics.
 - File install locations are outputted into stdout. (#45)
 - Switch to gen2 index. (#43)
@@ -30,6 +31,9 @@
 - Add -s/--safe flag to prevent overwriting of binaries.
 - Do not allow path separators in tar archives.
 - Check binaires extracted from tar archive to make sure they are the correct ones.
+- Allow adding to the config using the cmd line using --gen-config. (#76) (#77)
+- Add --out flag that prints out json events. (#75)
+- Follow directory standards. (#79)
 
 ## [0.5.3](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.5.3)
 

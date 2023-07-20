@@ -55,7 +55,7 @@ pub struct ConfigFileV1 {
 pub struct ConfigFilePrebuiltV1 {
     pub target: Option<String>,
     pub index: Option<String>,
-    pub auth: Option<String>, //TODO: Should auth be base64 encoded in config file?
+    pub auth: Option<String>,
     pub path: Option<PathBuf>,
     pub report_path: Option<PathBuf>,
     pub no_create_path: Option<bool>,

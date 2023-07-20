@@ -12,7 +12,11 @@ Use ```cargo prebuilt --help```.
 
 ## File
 
-The config file should be under ```$HOME/.config/cargo-prebuilt/config.toml```.
+The config file should be under ```$CONFIG/cargo-prebuilt/config.toml```.
+
+See [Config Dirs](https://docs.rs/directories/5.0.1/directories/struct.ProjectDirs.html#method.config_dir)
+for a list of paths or run ```cargo prebuilt --gen-config null``` which will
+print out the config path.
 
 The config file is ignored when using the --ci flag.
 

@@ -1,6 +1,6 @@
 [prebuilt]
 target = "$TARGET"        # Target to download for
-index = "hg-pub:$INDEX"   # Index to use
+index = "gh-pub:$INDEX"   # Index to use
 auth = "NULL"             # Index auth token
 path = "/prebuilt/bin"    # Absolute path to where the binaries will be installed
 report_path = "/prebuilt" # Absolute path to where the reports will be put

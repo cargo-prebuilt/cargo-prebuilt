@@ -8,7 +8,7 @@
   "version": "$VERSION",
   "event_version": "1",
   "event": "info_verify",
-  "data": "$BOOLEAN",
+  "data": "true"
 }
 ```
 
@@ -20,7 +20,7 @@
   "version": "$VERSION",
   "event_version": "1",
   "event": "hashes_verify",
-  "data": "$BOOLEAN",
+  "data": "true"
 }
 ```
 
@@ -32,7 +32,7 @@
   "version": "$VERSION",
   "event_version": "1",
   "event": "target",
-  "data": "$TARGET",
+  "data": "$TARGET"
 }
 ```
 
@@ -44,6 +44,6 @@
   "version": "$VERSION",
   "event_version": "1",
   "event": "bin_installed",
-  "data": "$PATH",
+  "data": "$PATH"
 }
 ```

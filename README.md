@@ -96,7 +96,9 @@ See [Events](EVENTS.md).
 
 Reports are generated when a crate is built in the index.
 
-They are stored under $HOME/.prebuilt/reports/CRATE/VERSION by default.
+They are stored under ```$DATA/cargo-prebuilt/reports/$CRATE/$VERSION``` by default.
+
+See [Data Dirs](https://docs.rs/directories/5.0.1/directories/struct.ProjectDirs.html#method.data_dir).
 
 Use ```--report-path``` to change where they are stored.
 

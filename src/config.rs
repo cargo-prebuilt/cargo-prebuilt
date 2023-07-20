@@ -1,10 +1,11 @@
 use crate::{
     color::{self, err_color_print, PossibleColor},
     data::{ConfigFileKeysV1, ConfigFilePrebuiltV1, ConfigFileV1, ReportType, SigKeys},
-    DEFAULT_INDEX, TARGET,
+    APPLICATION, DEFAULT_INDEX, ORG, QUALIFIER, TARGET,
 };
 use bpaf::*;
-use home::{cargo_home, home_dir};
+use directories::ProjectDirs;
+use home::cargo_home;
 use indexmap::IndexSet;
 use std::{
     collections::HashMap,
@@ -14,9 +15,7 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
-static CONFIG_PATH_PRE: &str = ".config/cargo-prebuilt";
-static CONFIG_PATH_TOML: &str = "config.toml";
-static CONFIG_PATH: &str = ".config/cargo-prebuilt/config.toml";
+static CONFIG_FILE: &str = "config.toml";
 
 #[derive(Clone, Debug)]
 pub struct Config {
@@ -92,13 +91,13 @@ fn parse_args() -> Arguments {
 
     let report_path = long("report-path")
         .env("PREBUILT_REPORT_PATH")
-        .help("Path to the folder where the reports will be put. (Default: $HOME/.prebuilt)")
+        .help("Path to the folder where the reports will be put.")
         .argument::<PathBuf>("REPORT_PATH")
         .optional();
 
     let ci = long("ci")
         .env("PREBUILT_CI")
-        .help("Do not download reports, create a .prebuilt directory, check for a config file, or allow safe mode.")
+        .help("Do not download reports, check for a config file, and ignore safe mode.")
         .switch();
 
     let no_create_path = long("no-create-path")
@@ -159,7 +158,7 @@ fn parse_args() -> Arguments {
         .switch();
 
     let gen_config = long("gen-config")
-        .help("Generate/Overwrite a base config at $HOME/.config/cargo-prebuilt/config.toml. (This still requires PKGS to be filled, but they will be ignored.)")
+        .help("Generate/Overwrite a base config at $CONFIG/cargo-prebuilt/config.toml. (This still requires PKGS to be filled, but they will be ignored.)")
         .switch();
 
     let parser = construct!(Arguments {
@@ -188,9 +187,11 @@ fn parse_args() -> Arguments {
 }
 
 fn fill_from_file(args: &mut Arguments, sig_keys: &mut SigKeys) {
-    match home_dir() {
-        Some(mut conf) => {
-            conf.push(CONFIG_PATH);
+    match ProjectDirs::from(QUALIFIER, ORG, APPLICATION) {
+        Some(project) => {
+            let mut conf = PathBuf::from(project.config_dir());
+            conf.push(CONFIG_FILE);
+
             if conf.exists() {
                 let mut file = File::open(conf).expect("Could not open config file.");
                 let mut str = String::new();
@@ -250,7 +251,7 @@ fn fill_from_file(args: &mut Arguments, sig_keys: &mut SigKeys) {
                 }
             }
         }
-        None => eprintln!("Could not find home directory! Config file will be ignored."),
+        None => eprintln!("Could not find config directory! Config file will be ignored."),
     }
 }
 
@@ -280,11 +281,14 @@ fn convert(args: Arguments, mut sigs: SigKeys) -> Config {
 
     let report_path = match args.report_path {
         Some(val) => val,
-        None => {
-            let mut prebuilt_home = home_dir().expect("Could not find home directory, please set HOME or use PREBUILT_REPORT_PATH or --report-path");
-            prebuilt_home.push(".prebuilt");
-            prebuilt_home
-        }
+        None => match ProjectDirs::from(QUALIFIER, ORG, APPLICATION) {
+            Some(project) => {
+                let mut data = PathBuf::from(project.data_dir());
+                data.push("reports");
+                data
+            }
+            None => panic!("Could not get report path, try setting $HOME."),
+        },
     };
 
     let ci = args.ci;
@@ -366,6 +370,9 @@ pub fn get() -> Config {
         dbg!(&args);
     }
 
+    // TODO: Set index based on key name here.
+    // Use info from file
+
     convert(args, keys)
 }
 
@@ -376,12 +383,13 @@ fn generate(args: &Arguments) {
         err_color_print("Generating", PossibleColor::BrightPurple)
     );
 
-    match home_dir() {
-        Some(mut conf) => {
-            conf.push(CONFIG_PATH_PRE);
+    match ProjectDirs::from(QUALIFIER, ORG, APPLICATION) {
+        Some(project) => {
+            let mut conf = PathBuf::from(project.config_dir());
             create_dir_all(&conf).expect("Could not create paths for config file.");
+            conf.push(CONFIG_FILE);
+            eprintln!("Config Path: {conf:?}");
 
-            conf.push(CONFIG_PATH_TOML);
             let mut file = OpenOptions::new()
                 .read(true)
                 .write(true)
@@ -510,8 +518,8 @@ fn generate(args: &Arguments) {
                 .expect("Could not write to config file.");
         }
         None => panic!(
-            "{} get home directory! Try setting $HOME.",
-            color::err_color_print("Could not", color::PossibleColor::BrightRed)
+            "{} get config directory! Try setting $HOME.",
+            err_color_print("Could not", color::PossibleColor::BrightRed)
         ),
     }
 
