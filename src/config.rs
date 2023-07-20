@@ -37,6 +37,7 @@ pub struct Config {
 #[derive(Clone, Debug)]
 struct Arguments {
     target: Option<String>,
+    index_key: Option<String>,
     index: Option<String>,
     auth: Option<String>,
     path: Option<PathBuf>,
@@ -69,6 +70,12 @@ fn parse_args() -> Arguments {
         .env("PREBUILT_TARGET")
         .help("Target of the binary to download. (Defaults to target of cargo-prebuilt)")
         .argument::<String>("TARGET")
+        .optional();
+
+    let index_key = long("index-key")
+        .env("PREBUILT_INDEX_KEY")
+        .help("Index to use, pulling from config file. Overrides --index.")
+        .argument::<String>("INDEX_KEY")
         .optional();
 
     let index = long("index")
@@ -163,6 +170,7 @@ fn parse_args() -> Arguments {
 
     let parser = construct!(Arguments {
         target,
+        index_key,
         index,
         auth,
         path,
@@ -202,7 +210,13 @@ fn fill_from_file(args: &mut Arguments, sig_keys: &mut SigKeys) {
                 match config {
                     Ok(config) => {
                         if let Some(mut keys) = config.key {
-                            for (_, v) in keys.iter_mut() {
+                            for (k, v) in keys.iter_mut() {
+                                if let Some(i_key) = &args.index_key {
+                                    if i_key.eq(k) {
+                                        args.index = Some(v.index.clone());
+                                    }
+                                }
+
                                 if sig_keys.contains_key(&(v.index)) {
                                     sig_keys
                                         .get_mut(&(v.index))
@@ -372,6 +386,14 @@ pub fn get() -> Config {
 
     // TODO: Set index based on key name here.
     // Use info from file
+    // if let Some(key) = &args.index_key {
+    //     match keys.get(key) {
+    //         Some(_) => {
+    //
+    //         }
+    //         None => panic!("Could not find index key in config file. (Make sure --ci is not being used)")
+    //     }
+    // }
 
     convert(args, keys)
 }
