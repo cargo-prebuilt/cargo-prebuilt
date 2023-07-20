@@ -1,13 +1,13 @@
 use std::{collections::HashMap, path::PathBuf};
 
 use indexmap::IndexSet;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use super::HashType;
 
 pub type SigKeys = HashMap<String, Vec<String>>;
 
-#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum ReportType {
     #[serde(rename = "license")]
     LicenseDL,
@@ -43,14 +43,14 @@ impl TryFrom<&str> for ReportType {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ConfigFileV1 {
     pub prebuilt: Option<ConfigFilePrebuiltV1>,
     pub key: Option<HashMap<String, ConfigFileKeysV1>>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ConfigFilePrebuiltV1 {
     pub target: Option<String>,
@@ -61,12 +61,13 @@ pub struct ConfigFilePrebuiltV1 {
     pub no_create_path: Option<bool>,
     pub reports: Option<IndexSet<ReportType>>,
     pub color: Option<bool>,
+    pub no_color: Option<bool>,
     pub hashes: Option<IndexSet<HashType>>,
     pub no_verify: Option<bool>,
     pub safe: Option<bool>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ConfigFileKeysV1 {
     pub index: String,

@@ -25,7 +25,8 @@ path = "$PATH"              # Absolute path to where the binaries will be instal
 report_path = "$PATH"       # Absolute path to where the reports will be put
 no_create_path = true|false # Do not create paths that do not exist
 reports = ["$REPORT_TYPE"]  # Reports to download
-color = true|false          # Should CLI colors be on or not
+color = true|false          # Should CLI be on
+no_color = true|false       # Should CLI colors be off
 no_verify = true|false      # Do not verify signatures (See [key.$ANYTHING])
 safe = true|false           # Prevent the overwriting of binaires (Except when --ci is used)
 

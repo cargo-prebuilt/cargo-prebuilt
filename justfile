@@ -4,8 +4,7 @@ default:
 pwd := `pwd`
 
 run +ARGS:
-    cargo build
-    target/debug/cargo-prebuilt {{ARGS}}
+    cargo run --no-default-features --features default-rustls -- {{ARGS}}
 
 fmt:
     cargo +nightly fmt
