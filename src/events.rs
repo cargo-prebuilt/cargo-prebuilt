@@ -27,3 +27,9 @@ pub fn binary_installed(id: &str, version: &str, config: &Config, path: &Path) {
         println!("{{\"crate\":\"{id}\",\"version\":\"{version}\",\"event_version\":\"{EVENT_VERSION}\",\"event\":\"bin_installed\",\"data\":{path:?}}}");
     }
 }
+
+pub fn installed(id: &str, version: &str, config: &Config) {
+    if config.out {
+        println!("{{\"crate\":\"{id}\",\"version\":\"{version}\",\"event_version\":\"{EVENT_VERSION}\",\"event\":\"installed\",\"data\":\"{id}@{version}\"}}");
+    }
+}

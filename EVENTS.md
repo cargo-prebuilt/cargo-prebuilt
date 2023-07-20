@@ -47,3 +47,15 @@
   "data": "$PATH"
 }
 ```
+
+### Installed
+
+```json
+{
+  "crate": "$CRATE",
+  "version": "$VERSION",
+  "event_version": "1",
+  "event": "installed",
+  "data": "$CRATE@$VERSION"
+}
+```

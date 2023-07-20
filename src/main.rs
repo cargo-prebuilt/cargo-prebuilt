@@ -175,6 +175,7 @@ fn main() -> Result<(), String> {
             "{} {id}@{version}.",
             err_color_print("Installed", PossibleColor::BrightGreen)
         );
+        events::installed(id, &version, &config);
 
         // Prepare for next crate.
         fetcher.reset();
