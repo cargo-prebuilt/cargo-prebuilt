@@ -250,23 +250,23 @@ fn fill_from_file(args: &mut Arguments, sig_keys: &mut SigKeys) {
                 if let Some(prebuilt) = config.prebuilt {
                     // TODO: Way to not clone?
                     macro_rules! file_convert {
-                                ($($x:ident), *) => {
-                                    {
-                                        $(args.$x = args.$x.clone().or(prebuilt.$x);)*
-                                    }
-                                };
+                        ($($x:ident), *) => {
+                            {
+                                $(args.$x = args.$x.clone().or(prebuilt.$x);)*
                             }
+                        };
+                    }
                     macro_rules! file_convert_switch {
-                                ($($x:ident), *) => {
-                                    {
-                                        $(if !args.$x {
-                                            if let Some(opt) = prebuilt.$x {
-                                                args.$x = opt;
-                                            }
-                                        })*
+                        ($($x:ident), *) => {
+                            {
+                                $(if !args.$x {
+                                    if let Some(opt) = prebuilt.$x {
+                                        args.$x = opt;
                                     }
-                                };
+                                })*
                             }
+                        };
+                    }
 
                     file_convert![target, index, auth, path, report_path, reports];
                     file_convert_switch![no_create_path, no_verify, safe, out, color, no_color];
@@ -276,7 +276,7 @@ fn fill_from_file(args: &mut Arguments, sig_keys: &mut SigKeys) {
         }
     }
 
-    eprintln!("Could not find config directory! Config file will be ignored.");
+    eprintln!("WARN: Could not find config, it will be ignored.");
 }
 
 fn convert(args: Arguments, mut sigs: SigKeys) -> Config {

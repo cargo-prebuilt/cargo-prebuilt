@@ -30,7 +30,7 @@
 - Remove need for atty dependency.
 - Add -s/--safe flag to prevent overwriting of binaries.
 - Do not allow path separators in tar archives.
-- Check binaires extracted from tar archive to make sure they are the correct ones.
+- Check binaries extracted from tar archive to make sure they are the correct ones.
 - Allow adding to the config using the cmd line using --gen-config. (#76) (#77)
 - Add --out flag that prints out json events. (#75)
 - Follow directory standards. (#79)

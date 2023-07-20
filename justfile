@@ -6,6 +6,12 @@ pwd := `pwd`
 run +ARGS:
     cargo run --no-default-features --features default-rustls -- {{ARGS}}
 
+runr +ARGS:
+    cargo run --no-default-features --features default-rustls --release -- {{ARGS}}
+
+runq +ARGS:
+    cargo run --no-default-features --features default-rustls --profile=quick -- {{ARGS}}
+
 fmt:
     cargo +nightly fmt
 
