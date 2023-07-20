@@ -3,8 +3,10 @@ name: Rust Checks
 on:
   push:
     branches: [ main ]
+    paths: [ .github/workflows/checks.yml, keys/**, src/**, test/**, build.rs, Cargo.lock, Cargo.toml, Cross.toml, rustfmt.toml ]
   pull_request:
     branches: [ main ]
+    paths: [ .github/workflows/checks.yml, keys/**, src/**, test/**, build.rs, Cargo.lock, Cargo.toml, Cross.toml, rustfmt.toml ]
   workflow_dispatch:
 
 env:
@@ -14,13 +16,6 @@ env:
   CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse
 
 jobs:
-  typos:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Check spelling
-        uses: crate-ci/typos@master
-
   fmt-check:
     runs-on: ubuntu-latest
     steps:

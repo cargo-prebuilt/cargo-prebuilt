@@ -3,8 +3,10 @@ name: Rust Build and Test
 on:
   push:
     branches: [ main ]
+    paths: [ .github/workflows/build.yml, keys/**, src/**, test/**, build.rs, Cargo.lock, Cargo.toml, Cross.toml ]
   pull_request:
     branches: [ main ]
+    paths: [ .github/workflows/build.yml, keys/**, src/**, test/**, build.rs, Cargo.lock, Cargo.toml, Cross.toml ]
   workflow_dispatch:
 
 env:
