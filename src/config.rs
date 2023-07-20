@@ -31,6 +31,7 @@ pub struct Config {
     pub sigs: Vec<String>,
     pub no_verify: bool,
     pub safe: bool,
+    pub out: bool,
     pub pkgs: IndexSet<String>,
 }
 
@@ -47,6 +48,7 @@ struct Arguments {
     pub_key: Option<String>,
     no_verify: bool,
     safe: bool,
+    out: bool,
     color: bool,
     no_color: bool,
     gen_config: bool,
@@ -141,6 +143,11 @@ fn parse_args() -> Arguments {
         .help("Do not overwrite binaries that already exist.")
         .switch();
 
+    let out = long("out")
+        .env("PREBUILT_OUT")
+        .help("Output events.")
+        .switch();
+
     let color = long("color")
         .env("FORCE_COLOR")
         .help("Force color to be turned on.")
@@ -167,6 +174,7 @@ fn parse_args() -> Arguments {
         pub_key,
         no_verify,
         safe,
+        out,
         color,
         no_color,
         gen_config,
@@ -228,7 +236,14 @@ fn fill_from_file(args: &mut Arguments, sig_keys: &mut SigKeys) {
                             }
 
                             file_convert![target, index, auth, path, report_path, reports];
-                            file_convert_switch![no_create_path, no_verify, safe, color, no_color];
+                            file_convert_switch![
+                                no_create_path,
+                                no_verify,
+                                safe,
+                                out,
+                                color,
+                                no_color
+                            ];
                         }
                     }
                     Err(err) => eprintln!("Failed to parse config file.\n{err}"),
@@ -273,7 +288,6 @@ fn convert(args: Arguments, mut sigs: SigKeys) -> Config {
     };
 
     let ci = args.ci;
-
     let no_create_path = args.no_create_path;
 
     let reports = match args.reports {
@@ -282,8 +296,8 @@ fn convert(args: Arguments, mut sigs: SigKeys) -> Config {
     };
 
     let no_verify = args.no_verify;
-
     let safe = args.safe;
+    let out = args.out;
 
     let sigs = sigs.remove(&index).unwrap_or_else(|| {
         if no_verify {
@@ -293,7 +307,6 @@ fn convert(args: Arguments, mut sigs: SigKeys) -> Config {
         Vec::new()
     });
 
-    dbg!((args.color, args.no_color));
     match (args.color, args.no_color) {
         (true, false) => color::set_override(true),
         (_, true) => color::set_override(false),
@@ -314,6 +327,7 @@ fn convert(args: Arguments, mut sigs: SigKeys) -> Config {
         sigs,
         no_verify,
         safe,
+        out,
         pkgs,
     }
 }
@@ -404,7 +418,6 @@ fn generate(args: &Arguments) {
                         pub_key: pub_key.clone(),
                     },
                 );
-
                 eprintln!(
                     "{} an index.",
                     err_color_print("Added", PossibleColor::BrightMagenta)
@@ -421,7 +434,6 @@ fn generate(args: &Arguments) {
                             err_color_print("Added", PossibleColor::BrightMagenta)
                         );
                     }
-
                     // Report Path writing
                     if let Some(item) = &args.report_path {
                         prebuilt.report_path = Some(item.to_path_buf());
@@ -430,7 +442,6 @@ fn generate(args: &Arguments) {
                             err_color_print("Added", PossibleColor::BrightMagenta)
                         );
                     }
-
                     // No Create Path writing
                     if args.no_create_path {
                         prebuilt.no_create_path = Some(true);
@@ -439,7 +450,6 @@ fn generate(args: &Arguments) {
                             err_color_print("Added", PossibleColor::BrightMagenta)
                         );
                     }
-
                     // Reports writing
                     if let Some(item) = &args.reports {
                         prebuilt.reports = Some(item.clone());
@@ -448,7 +458,6 @@ fn generate(args: &Arguments) {
                             err_color_print("Added", PossibleColor::BrightMagenta)
                         );
                     }
-
                     // No Verify writing
                     if args.no_verify {
                         prebuilt.no_verify = Some(true);
@@ -457,7 +466,6 @@ fn generate(args: &Arguments) {
                             err_color_print("Added", PossibleColor::BrightMagenta)
                         );
                     }
-
                     // Safe writing
                     if args.safe {
                         prebuilt.safe = Some(true);
@@ -466,7 +474,14 @@ fn generate(args: &Arguments) {
                             err_color_print("Added", PossibleColor::BrightMagenta)
                         );
                     }
-
+                    // Out writing
+                    if args.out {
+                        prebuilt.out = Some(true);
+                        eprintln!(
+                            "{} print events.",
+                            err_color_print("Added", PossibleColor::BrightMagenta)
+                        );
+                    }
                     // Color
                     if args.color {
                         prebuilt.color = Some(true);

@@ -7,6 +7,7 @@ use crate::{
     color::{err_color_print, PossibleColor},
     config::Config,
     data::{HashType, Hashes, HashesFile, HashesFileImm, InfoFile, InfoFileImm, ReportType},
+    events,
     interact::{self, Interact, InteractError},
 };
 use ureq::Agent;
@@ -79,7 +80,8 @@ impl Fetcher {
         #[cfg(feature = "sig")]
         if !config.no_verify {
             if let Some(sig_file) = info.files.sig_info.clone() {
-                self.verify_file("info.json", config, &sig_file, raw_info_file);
+                let v = self.verify_file("info.json", config, &sig_file, raw_info_file);
+                events::info_verify(id, version, config, v);
             }
             else {
                 eprintln!(
@@ -146,7 +148,8 @@ impl Fetcher {
         #[cfg(feature = "sig")]
         if !config.no_verify {
             if let Some(sig_file) = info.files.sig_hash.clone() {
-                self.verify_file(&info.files.hash, config, &sig_file, raw_hashes_file);
+                let v = self.verify_file(&info.files.hash, config, &sig_file, raw_hashes_file);
+                events::hashes_verify(id, version, config, v);
             }
             else {
                 eprintln!(
@@ -337,7 +340,7 @@ impl Fetcher {
     }
 
     #[cfg(feature = "sig")]
-    fn verify_file(&self, file: &str, config: &Config, sig_file: &str, raw_file: &str) {
+    fn verify_file(&self, file: &str, config: &Config, sig_file: &str, raw_file: &str) -> bool {
         use minisign_verify::{PublicKey, Signature};
 
         let id = self
@@ -376,6 +379,8 @@ impl Fetcher {
                 err_color_print("Verified", PossibleColor::BrightBlue)
             );
         }
+
+        verified
     }
 
     fn verify_archive(&self, config: &Config, hashes: &HashesFileImm, bytes: &[u8]) {

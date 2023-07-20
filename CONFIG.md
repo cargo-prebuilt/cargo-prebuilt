@@ -29,6 +29,7 @@ color = true|false          # Should CLI be on
 no_color = true|false       # Should CLI colors be off
 no_verify = true|false      # Do not verify signatures (See [key.$ANYTHING])
 safe = true|false           # Prevent the overwriting of binaires (Except when --ci is used)
+out = true|false            # Print out event info (See EVENTS.md)
 
 [key.$ANYTHING]             # Add a public verifying key for an index
 index = "$INDEX"            # Index to add key for

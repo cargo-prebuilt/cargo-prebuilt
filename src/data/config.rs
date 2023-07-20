@@ -65,6 +65,7 @@ pub struct ConfigFilePrebuiltV1 {
     pub hashes: Option<IndexSet<HashType>>,
     pub no_verify: Option<bool>,
     pub safe: Option<bool>,
+    pub out: Option<bool>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

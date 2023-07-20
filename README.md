@@ -86,6 +86,12 @@ Remove ```indexes``` feature included by default, then add the features you want
 ### use mimalloc
 ```cargo install cargo-prebuilt --features mimalloc```
 
+## Events
+
+To output events use ```--out```.
+
+See [Events](EVENTS.md).
+
 ## Reports
 
 Reports are generated when a crate is built in the index.

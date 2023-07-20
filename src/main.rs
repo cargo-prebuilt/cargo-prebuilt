@@ -1,6 +1,7 @@
 mod color;
 mod config;
 mod data;
+mod events;
 mod get;
 mod interact;
 
@@ -73,6 +74,8 @@ fn main() -> Result<(), String> {
 
         // Get version that fetcher is using
         let version = fetcher.get_version();
+
+        events::target(id, &version, &config);
 
         // Download and hash tar
         let tar_bytes = fetcher.download(&config);
@@ -150,8 +153,7 @@ fn main() -> Result<(), String> {
                         err_color_print("Installed", PossibleColor::BrightPurple)
                     );
 
-                    // Print paths to stdout too, maybe so others can parse?
-                    println!("{abs:?}");
+                    events::binary_installed(id, &version, &config, abs.as_path());
                 }
             }
             Err(_) => {
