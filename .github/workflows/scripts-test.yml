@@ -13,6 +13,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Run install script
-        run: ./install-cargo-prebuilt.sh
+        run: ./scripts/install-cargo-prebuilt.sh
       - name: Run cargo-prebuilt
         run: cargo prebuilt --version
