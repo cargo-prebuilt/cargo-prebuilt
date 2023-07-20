@@ -1,0 +1,18 @@
+name: Test Scripts
+
+on:
+    push:
+        branches: [ main ]
+    pull_request:
+        branches: [ main ]
+    workflow_dispatch:
+
+jobs:
+  test-install-script:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run install script
+        run: ./install-cargo-prebuilt.sh
+      - name: Run cargo-prebuilt
+        run: cargo prebuilt --version

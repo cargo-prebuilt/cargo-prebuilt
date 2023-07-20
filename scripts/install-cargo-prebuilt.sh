@@ -1,6 +1,7 @@
 #!/bin/bash
 
-### Accepts in params (env vars) INSTALL_PATH, LIBC, ARCH, OS_TYPE, FORCE.
+### Accepts in params (env vars) VERSION, INSTALL_PATH, LIBC, ARCH, OS_TYPE, FORCE.
+### VERSION: Version of cargo-prebuilt to install. (Defaults to latest)
 ### INSTALL_PATH: Path to where cargo-prebuilt should be installed.
 ### LIBC: Which libc flavor to use. (gnu or musl) (Does nothing on macos)
 ### MINISIGN: If true, minisign will be used to verify the download. (Requires minisign to be installed)
@@ -18,10 +19,13 @@ if cargo-prebuilt --version ; then
 fi
 
 # Start
-URL="https://github.com/cargo-prebuilt/cargo-prebuilt/releases/latest/download/"
+L_URL="https://github.com/cargo-prebuilt/cargo-prebuilt/releases/latest/download/"
+V_URL="https://github.com/cargo-prebuilt/cargo-prebuilt/releases/download/v"
 
 TEMP_DIR="$(mktemp -d)"
 pushd "$TEMP_DIR"
+
+: ${VERSION:="latest"}
 
 : ${ARCH:="$(uname -m)"}
 : ${OS_TYPE:="$(uname -s)"}
@@ -98,6 +102,14 @@ echo "Determined target: $TARGET_STRING"
 TAR="$TARGET_STRING.tar.gz"
 SIG="$TAR.minisig"
 
+# Determine url
+URL=""
+if [ "$VERSION" == "latest" ]; then
+    URL+="$L_URL"
+else
+    URL+="$V_URL$VERSION/"
+fi
+
 # Bootstrap cargo-prebuilt
 TAR_URL="$URL""$TAR"
 SIG_URL="$URL""$SIG"
@@ -126,7 +138,12 @@ if [ ! -z ${INSTALL_PATH+x} ]; then
     ARGS+="--path=$INSTALL_PATH"
 fi
 
-./cargo-prebuilt $ARGS cargo-prebuilt
+END_VERSION=""
+if [ "$VERSION" != "latest" ]; then
+    END_VERSION+="@$VERSION"
+fi
+
+./cargo-prebuilt $ARGS cargo-prebuilt"$END_VERSION"
 
 popd
 rm -rf "$TEMP_DIR"

@@ -1,8 +1,4 @@
 name: Rust Build and Test
-### Name: Rust Build and Test
-### Author: harmless-tech
-### Version: audit-1.0.0
-### Git Repo: https://github.com/harmless-tech/rust-github-actions
 
 on:
   push:
