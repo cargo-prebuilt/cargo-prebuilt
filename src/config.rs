@@ -1,5 +1,5 @@
 use crate::{
-    color,
+    color::{self, err_color_print, PossibleColor},
     data::{ConfigFileKeysV1, ConfigFilePrebuiltV1, ConfigFileV1, ReportType, SigKeys},
     DEFAULT_INDEX, TARGET,
 };
@@ -359,7 +359,7 @@ fn generate(args: &Arguments) {
     color::set_override(true);
     eprintln!(
         "{} config, this will ignore package args.",
-        color::err_color_print("Generating", color::PossibleColor::BrightPurple)
+        err_color_print("Generating", PossibleColor::BrightPurple)
     );
 
     match home_dir() {
@@ -394,28 +394,21 @@ fn generate(args: &Arguments) {
                     .as_secs()
             );
             if let (Some(index), Some(pub_key)) = (&args.index, &args.pub_key) {
-                match &mut config.key {
-                    Some(map) => {
-                        map.insert(
-                            rand,
-                            ConfigFileKeysV1 {
-                                index: index.clone(),
-                                pub_key: pub_key.clone(),
-                            },
-                        );
-                    }
-                    None => {
-                        let mut map = HashMap::with_capacity(1);
-                        map.insert(
-                            rand,
-                            ConfigFileKeysV1 {
-                                index: index.clone(),
-                                pub_key: pub_key.clone(),
-                            },
-                        );
-                        config.key = Some(map);
-                    }
+                if config.key.is_none() {
+                    config.key = Some(HashMap::with_capacity(1));
                 }
+                config.key.as_mut().unwrap().insert(
+                    rand,
+                    ConfigFileKeysV1 {
+                        index: index.clone(),
+                        pub_key: pub_key.clone(),
+                    },
+                );
+
+                eprintln!(
+                    "{} an index.",
+                    err_color_print("Added", PossibleColor::BrightMagenta)
+                );
             }
 
             match &mut config.prebuilt {
@@ -423,39 +416,71 @@ fn generate(args: &Arguments) {
                     // Path writing
                     if let Some(item) = &args.path {
                         prebuilt.path = Some(item.to_path_buf());
+                        eprintln!(
+                            "{} a path.",
+                            err_color_print("Added", PossibleColor::BrightMagenta)
+                        );
                     }
 
                     // Report Path writing
                     if let Some(item) = &args.report_path {
                         prebuilt.report_path = Some(item.to_path_buf());
+                        eprintln!(
+                            "{} a report path.",
+                            err_color_print("Added", PossibleColor::BrightMagenta)
+                        );
                     }
 
                     // No Create Path writing
                     if args.no_create_path {
                         prebuilt.no_create_path = Some(true);
+                        eprintln!(
+                            "{} no create path.",
+                            err_color_print("Added", PossibleColor::BrightMagenta)
+                        );
                     }
 
                     // Reports writing
                     if let Some(item) = &args.reports {
                         prebuilt.reports = Some(item.clone());
+                        eprintln!(
+                            "{} reports.",
+                            err_color_print("Added", PossibleColor::BrightMagenta)
+                        );
                     }
 
                     // No Verify writing
                     if args.no_verify {
                         prebuilt.no_verify = Some(true);
+                        eprintln!(
+                            "{} no verify.",
+                            err_color_print("Added", PossibleColor::BrightMagenta)
+                        );
                     }
 
                     // Safe writing
                     if args.safe {
                         prebuilt.safe = Some(true);
+                        eprintln!(
+                            "{} safe mode.",
+                            err_color_print("Added", PossibleColor::BrightMagenta)
+                        );
                     }
 
                     // Color
                     if args.color {
                         prebuilt.color = Some(true);
+                        eprintln!(
+                            "{} color.",
+                            err_color_print("Added", PossibleColor::BrightMagenta)
+                        );
                     }
                     if args.no_color {
                         prebuilt.no_color = Some(true);
+                        eprintln!(
+                            "{} no color.",
+                            err_color_print("Added", PossibleColor::BrightMagenta)
+                        );
                     }
                 }
                 None => panic!("How you get here?"),
