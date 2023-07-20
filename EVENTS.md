@@ -7,7 +7,7 @@
   "crate": "$CRATE",
   "version": "$VERSION",
   "event_version": "1",
-  "event": "info_verify",
+  "event": "info_verified",
   "data": "true"
 }
 ```
@@ -19,7 +19,7 @@
   "crate": "$CRATE",
   "version": "$VERSION",
   "event_version": "1",
-  "event": "hashes_verify",
+  "event": "hashes_verified",
   "data": "true"
 }
 ```

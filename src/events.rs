@@ -6,13 +6,13 @@ const EVENT_VERSION: u8 = 1;
 
 pub fn info_verify(id: &str, version: &str, config: &Config, verified: bool) {
     if config.out {
-        println!("{{\"crate\":\"{id}\",\"version\":\"{version}\",\"event_version\":\"{EVENT_VERSION}\",\"event\":\"info_verify\",\"data\":\"{verified}\"}}");
+        println!("{{\"crate\":\"{id}\",\"version\":\"{version}\",\"event_version\":\"{EVENT_VERSION}\",\"event\":\"info_verified\",\"data\":\"{verified}\"}}");
     }
 }
 
 pub fn hashes_verify(id: &str, version: &str, config: &Config, verified: bool) {
     if config.out {
-        println!("{{\"crate\":\"{id}\",\"version\":\"{version}\",\"event_version\":\"{EVENT_VERSION}\",\"event\":\"hashes_verify\",\"data\":\"{verified}\"}}");
+        println!("{{\"crate\":\"{id}\",\"version\":\"{version}\",\"event_version\":\"{EVENT_VERSION}\",\"event\":\"hashes_verified\",\"data\":\"{verified}\"}}");
     }
 }
 

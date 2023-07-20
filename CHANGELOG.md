@@ -34,6 +34,8 @@
 - Allow adding to the config using the cmd line using --gen-config. (#76) (#77)
 - Add --out flag that prints out json events. (#75)
 - Follow directory standards. (#79)
+- Add --index-key which will select an index based on its entry in the config file. (#78)
+- Add --config to allow selection of a config file anywhere. (#80)
 
 ## [0.5.3](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.5.3)
 
