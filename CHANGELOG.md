@@ -16,12 +16,12 @@
 - Better config handling.
 - Added support for sha3_256, sha3_512, and sha512.
 - GitHub release builds now use native-tls instead of vendored openssl.
-- Some 32-bit platforms were dropped from support. ([#46](#46))
+- Some 32-bit platforms were dropped from support. (#46)
 - Added minisign key verifying for info.json and hashes.json.
 - Verify by default and allow opt out.
 - Uses abort for panics.
-- File install locations are outputted into stdout. ([#45](#45))
-- Switch to gen2 index. ([#43](#43))
+- File install locations are outputted into stdout. (#45)
+- Switch to gen2 index. (#43)
 - Reports can no longer be printed to stdout.
 - Permissions are now explicitly set to 755 on unix platforms.
 - To opt in or out of colors use the env vars FORCE_COLOR/NO_COLOR.
@@ -31,11 +31,11 @@
 - Add -s/--safe flag to prevent overwriting of binaries.
 - Do not allow path separators in tar archives.
 - Check binaries extracted from tar archive to make sure they are the correct ones.
-- Allow adding to the config using the cmd line using --gen-config. ([#76](#76)) ([#77](#77))
-- Add --out flag that prints out json events. ([#75](#75))
-- Follow directory standards. ([#79](#79))
-- Add --index-key which will select an index based on its entry in the config file. ([#78](#78))
-- Add --config to allow selection of a config file anywhere. ([#80](#80))
+- Allow adding to the config using the cmd line using --gen-config. (#76) (#77)
+- Add --out flag that prints out json events. (#75)
+- Follow directory standards. (#79)
+- Add --index-key which will select an index based on its entry in the config file. (#78)
+- Add --config to allow selection of a config file anywhere. (#80)
 
 ## [0.5.3](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.5.3)
 

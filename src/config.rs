@@ -248,11 +248,12 @@ fn fill_from_file(args: &mut Arguments, sig_keys: &mut SigKeys) {
                 }
 
                 if let Some(prebuilt) = config.prebuilt {
-                    // TODO: Way to not clone?
                     macro_rules! file_convert {
                         ($($x:ident), *) => {
                             {
-                                $(args.$x = args.$x.clone().or(prebuilt.$x);)*
+                                $(if args.$x.is_none() {
+                                    args.$x = prebuilt.$x;
+                                })*
                             }
                         };
                     }
@@ -274,6 +275,10 @@ fn fill_from_file(args: &mut Arguments, sig_keys: &mut SigKeys) {
             }
             Err(err) => eprintln!("Failed to parse config file.\n{err}"),
         }
+    }
+
+    if args.config.is_some() {
+        panic!("Could not find an existing config files. Maybe try to generate one using --gen-config?");
     }
 
     eprintln!("WARN: Could not find config, it will be ignored.");
