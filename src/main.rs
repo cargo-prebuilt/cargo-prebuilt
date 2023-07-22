@@ -66,7 +66,15 @@ fn main() -> Result<(), String> {
         // If there is a version string get it
         if let Some((i, j)) = id.split_once('@') {
             id = i;
-            version = Some(j)
+            version = Some(j);
+        }
+
+        // If --get-latest then get latest version and print out latest event
+        if config.get_latest {
+            fetcher.load(id, None);
+            let version = fetcher.get_version();
+            events::get_latest(id, &version);
+            continue;
         }
 
         // Init fetcher for this crate and get latest version if needed

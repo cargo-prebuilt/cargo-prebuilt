@@ -31,6 +31,7 @@ pub struct Config {
     pub no_verify: bool,
     pub safe: bool,
     pub out: bool,
+    pub get_latest: bool,
     pub pkgs: IndexSet<String>,
 }
 
@@ -53,6 +54,7 @@ struct Arguments {
     color: bool,
     no_color: bool,
     gen_config: bool,
+    get_latest: bool,
     pkgs: IndexSet<String>,
 }
 
@@ -175,6 +177,11 @@ fn parse_args() -> Arguments {
         .help("Generate/Overwrite a base config at $CONFIG/cargo-prebuilt/config.toml. (This still requires PKGS to be filled, but they will be ignored.)")
         .switch();
 
+    let get_latest = long("get-latest")
+        .env("PREBUILT_GET_LATEST")
+        .help("Get latest versions of crates in index and then exit.")
+        .switch();
+
     let parser = construct!(Arguments {
         target,
         index_key,
@@ -193,6 +200,7 @@ fn parse_args() -> Arguments {
         color,
         no_color,
         gen_config,
+        get_latest,
         pkgs,
     });
 
@@ -331,6 +339,7 @@ fn convert(args: Arguments, mut sigs: SigKeys) -> Config {
     let no_verify = args.no_verify;
     let safe = args.safe;
     let out = args.out;
+    let get_latest = args.get_latest;
 
     let sigs = sigs.remove(&index).unwrap_or_else(|| {
         if no_verify {
@@ -360,6 +369,7 @@ fn convert(args: Arguments, mut sigs: SigKeys) -> Config {
         no_verify,
         safe,
         out,
+        get_latest,
         pkgs,
     }
 }

@@ -59,3 +59,15 @@
   "data": "$CRATE@$VERSION"
 }
 ```
+
+### Latest Version (--get-latest)
+
+```json
+{
+  "crate": "$CRATE",
+  "version": "$LATEST_VERSION",
+  "event_version": "1",
+  "event": "latest_version",
+  "data": "$LATEST_VERSION"
+}
+```
