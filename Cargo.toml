@@ -45,7 +45,7 @@ ureq = { version = "2.7.1", default-features = false, features = ["gzip", "brotl
 default = ["native", "vendored-openssl", "default-no-tls"]
 default-native = ["native", "default-no-tls"]
 default-rustls = ["rustls", "default-no-tls"]
-default-no-tls = ["indexes", "security", "color"]
+default-no-tls = ["indexes", "security", "color", "mimalloc"]
 indexes = ["github-public"]
 github-public = []
 github-private = [] # TODO: Under dev
