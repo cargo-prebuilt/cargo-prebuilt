@@ -334,8 +334,7 @@ fn convert(args: Arguments, mut sigs: SigKeys) -> Config {
 
     let sigs = sigs.remove(&index).unwrap_or_else(|| {
         if no_verify {
-            eprintln!("Expected to find public key(s) for index {index}, but there was none.");
-            std::process::exit(403);
+            panic!("Expected to find public key(s) for index {index}, but there was none.");
         }
         Vec::new()
     });
@@ -377,8 +376,7 @@ pub fn get() -> Config {
 
     // Check if sig is used with index.
     if args.pub_key.is_some() && args.index.is_none() {
-        eprintln!("pub_key must be used with index.");
-        std::process::exit(502);
+        panic!("--pub-key must be used with index.");
     }
 
     let mut keys: SigKeys = HashMap::with_capacity(1);

@@ -35,10 +35,7 @@ pub fn create_interact(input: String, _auth: Option<&String>, agent: Agent) -> B
             return Box::new(github_public::GithubPublic::new(agent, url));
         }
         #[cfg(not(feature = "github-public"))]
-        {
-            eprintln!("Using this index ({input}) requires the github-public feature!");
-            std::process::exit(220);
-        }
+        panic!("Using this index ({input}) requires the github-public feature!");
     }
 
     // Github private
@@ -59,14 +56,10 @@ pub fn create_interact(input: String, _auth: Option<&String>, agent: Agent) -> B
             ));
         }
         #[cfg(not(feature = "github-private"))]
-        {
-            eprintln!("Using this index ({input}) requires the github-private feature!");
-            std::process::exit(220);
-        }
+        panic!("Using this index ({input}) requires the github-private feature!");
     }
 
-    eprintln!("This index ({input}) is not supported or malformed.");
-    std::process::exit(221);
+    panic!("This index ({input}) is not supported or malformed.");
 }
 
 pub trait Interact {

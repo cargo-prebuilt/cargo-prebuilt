@@ -84,36 +84,29 @@ impl Fetcher {
                 events::info_verify(id, version, config, v);
             }
             else {
-                eprintln!(
+                panic!(
                     "Could not force sig for index {}. info.json is not signed for {id}@{version}.",
                     config.index
                 );
-                std::process::exit(224);
             }
         }
         #[cfg(not(feature = "sig"))]
         if !config.no_verify {
-            eprintln!(
-                "Could not force sig for index {}. This requires the 'security' and/or 'sig' feature(s). Or you can use the flag '--no-verify'.",
-                    config.index
-                );
-            std::process::exit(225);
+            panic!("Could not force sig for index {}. This requires the 'security' and/or 'sig' feature(s). Or you can use the flag '--no-verify'.", config.index);
         }
 
         // check if target is supported
         if !info.targets.contains(&config.target) {
-            eprintln!(
+            panic!(
                 "{id}@{version} does {} target {}",
                 err_color_print("not support", PossibleColor::BrightRed),
                 config.target
             );
-            std::process::exit(505);
         }
 
         // check if compression is supported
         if !info.archive.compression.eq("gz") {
-            eprintln!("{id}@{version} does not support compression gzip");
-            std::process::exit(505);
+            panic!("{id}@{version} does not support compression gzip");
         }
 
         // check if binary does not exist, if safe mode is on
@@ -123,11 +116,10 @@ impl Fetcher {
                 path.push(bin);
 
                 if path.exists() {
-                    eprintln!(
+                    panic!(
                         "Binary {bin} {} for {id}@{version}",
                         err_color_print("already exists", PossibleColor::BrightRed)
                     );
-                    std::process::exit(409);
                 }
             }
         }
@@ -152,11 +144,10 @@ impl Fetcher {
                 events::hashes_verify(id, version, config, v);
             }
             else {
-                eprintln!(
+                panic!(
                     "Could not force sig for index {}. hashes.json is not signed for {id}@{version}.",
                     config.index
                 );
-                std::process::exit(224);
             }
         }
 
@@ -245,25 +236,13 @@ impl Fetcher {
 
         match self.interact.get_latest(id.as_str()) {
             Ok(s) => s,
-            Err(InteractError::Malformed) => {
-                eprintln!("The version string for {id} is malformed.");
-                std::process::exit(342);
-            }
-            Err(InteractError::HttpCode(404)) => {
-                eprintln!(
-                    "Crate {id} {} in index!",
-                    err_color_print("not found", PossibleColor::BrightRed)
-                );
-                std::process::exit(3);
-            }
-            Err(InteractError::HttpCode(code)) => {
-                eprintln!("Http error {code} for crate {id}.");
-                std::process::exit(4);
-            }
-            Err(err) => {
-                eprintln!("Connection error.\n{err}");
-                std::process::exit(5);
-            }
+            Err(InteractError::Malformed) => panic!("The version string for {id} is malformed."),
+            Err(InteractError::HttpCode(404)) => panic!(
+                "Crate {id} {} in index!",
+                err_color_print("not found", PossibleColor::BrightRed)
+            ),
+            Err(InteractError::HttpCode(code)) => panic!("Http error {code} for crate {id}."),
+            Err(err) => panic!("Connection error.\n{err}"),
         }
     }
 
@@ -282,24 +261,16 @@ impl Fetcher {
         match self.interact.get_str(id, version, file) {
             Ok(s) => s,
             Err(InteractError::Malformed) => {
-                eprintln!("The downloaded string {file} for {id}@{version} is malformed");
-                std::process::exit(343);
+                panic!("The downloaded string {file} for {id}@{version} is malformed")
             }
-            Err(InteractError::HttpCode(404)) => {
-                eprintln!(
-                    "File {file} for {id}@{version} is {}!",
-                    err_color_print("not found", PossibleColor::BrightRed)
-                );
-                std::process::exit(12);
-            }
+            Err(InteractError::HttpCode(404)) => panic!(
+                "File {file} for {id}@{version} is {}!",
+                err_color_print("not found", PossibleColor::BrightRed)
+            ),
             Err(InteractError::HttpCode(code)) => {
-                eprintln!("Http error {code} for {file} for {id}@{version}.");
-                std::process::exit(13);
+                panic!("Http error {code} for {file} for {id}@{version}.")
             }
-            Err(err) => {
-                eprintln!("Connection error.\n{err}");
-                std::process::exit(14);
-            }
+            Err(err) => panic!("Connection error.\n{err}"),
         }
     }
 
@@ -318,24 +289,16 @@ impl Fetcher {
         match self.interact.get_blob(id, version, file) {
             Ok(s) => s,
             Err(InteractError::Malformed) => {
-                eprintln!("The downloaded blob {file} for {id}@{version} is malformed");
-                std::process::exit(343);
+                panic!("The downloaded blob {file} for {id}@{version} is malformed")
             }
-            Err(InteractError::HttpCode(404)) => {
-                eprintln!(
-                    "File {file} for {id}@{version} is {}!",
-                    err_color_print("not found", PossibleColor::BrightRed)
-                );
-                std::process::exit(24);
-            }
+            Err(InteractError::HttpCode(404)) => panic!(
+                "File {file} for {id}@{version} is {}!",
+                err_color_print("not found", PossibleColor::BrightRed)
+            ),
             Err(InteractError::HttpCode(code)) => {
-                eprintln!("Http error {code} for {file} for {id}@{version}.");
-                std::process::exit(25);
+                panic!("Http error {code} for {file} for {id}@{version}.")
             }
-            Err(err) => {
-                eprintln!("Connection error.\n{err}");
-                std::process::exit(26);
-            }
+            Err(err) => panic!("Connection error.\n{err}"),
         }
     }
 
@@ -367,11 +330,10 @@ impl Fetcher {
         }
 
         if !verified {
-            eprintln!(
+            panic!(
                 "{} verify {file} for {id}@{version}.",
                 err_color_print("Could not", PossibleColor::BrightRed)
             );
-            std::process::exit(226);
         }
         else {
             eprintln!(
@@ -424,10 +386,7 @@ impl Fetcher {
     //        if let Some(blob) = hashes.hashes.get(&config.target) {
     //            match &blob.bins.get(bin_name) {
     //                Some(blob) => self.verify_bytes(blob, &format!("{bin_name} binary"), bytes),
-    //                None => {
-    //                    eprintln!("Could not find {bin_name} hash for {id}@{version}.");
-    //                    std::process::exit(229);
-    //                }
+    //                None => panic!("Could not find {bin_name} hash for {id}@{version}."),
     //            }
     //        }
     //    }
@@ -456,8 +415,7 @@ impl Fetcher {
                 let hash = hex::encode(hash);
 
                 if !(hash.eq(sha_hash)) {
-                    eprintln!("sha3_512 hashes do not match for {item}. {sha_hash} != {hash}");
-                    std::process::exit(3512);
+                    panic!("sha3_512 hashes do not match for {item}. {sha_hash} != {hash}");
                 }
 
                 eprintln!(
@@ -475,8 +433,7 @@ impl Fetcher {
                 let hash = hex::encode(hash);
 
                 if !(hash.eq(sha_hash)) {
-                    eprintln!("sha3_256 hashes do not match for {item}. {sha_hash} != {hash}");
-                    std::process::exit(3512);
+                    panic!("sha3_256 hashes do not match for {item}. {sha_hash} != {hash}");
                 }
 
                 eprintln!(
@@ -499,8 +456,7 @@ impl Fetcher {
                 let hash = hex::encode(hash);
 
                 if !(hash.eq(sha_hash)) {
-                    eprintln!("sha512 hashes do not match for {item}. {sha_hash} != {hash}");
-                    std::process::exit(512);
+                    panic!("sha512 hashes do not match for {item}. {sha_hash} != {hash}");
                 }
 
                 eprintln!(
@@ -518,8 +474,7 @@ impl Fetcher {
                 let hash = hex::encode(hash);
 
                 if !(hash.eq(sha_hash)) {
-                    eprintln!("sha256 hashes do not match for {item}. {sha_hash} != {hash}");
-                    std::process::exit(256);
+                    panic!("sha256 hashes do not match for {item}. {sha_hash} != {hash}");
                 }
 
                 eprintln!(
@@ -534,9 +489,6 @@ impl Fetcher {
         eprintln!("Could not verify downloaded {item} for {id}@{version}. This requires the 'security', 'sha3', and/or 'sha2' feature(s).");
 
         #[cfg(any(feature = "sha2", feature = "sha3"))]
-        {
-            eprintln!("Could not verify downloaded {item} for {id}@{version}.");
-            std::process::exit(228);
-        }
+        panic!("Could not verify downloaded {item} for {id}@{version}.");
     }
 }

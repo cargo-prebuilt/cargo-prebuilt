@@ -39,21 +39,17 @@ fn main() -> Result<(), String> {
     should_error();
 
     if !config.no_create_path && create_dir_all(&config.path).is_err() {
-        eprintln!("Could not create the directories {:?}.", config.path);
-        std::process::exit(44);
+        panic!("Could not create the directories {:?}.", config.path);
     }
     else if !Path::new(&config.path).exists() {
-        eprintln!("Directories do not exist! {:?}.", config.path);
-        std::process::exit(45);
+        panic!("Directories do not exist! {:?}.", config.path);
     }
 
     if !config.no_create_path && create_dir_all(&config.report_path).is_err() {
-        eprintln!("Could not create the directories {:?}.", config.report_path);
-        std::process::exit(44);
+        panic!("Could not create the directories {:?}.", config.report_path);
     }
     else if !Path::new(&config.report_path).exists() {
-        eprintln!("Directories do not exist! {:?}.", config.report_path);
-        std::process::exit(45);
+        panic!("Directories do not exist! {:?}.", config.report_path);
     }
 
     // Build ureq agent
@@ -111,30 +107,27 @@ fn main() -> Result<(), String> {
 
                     // Make sure there are no path separators since this will be appended
                     if str_name.contains(std::path::is_separator) {
-                        eprintln!(
+                        panic!(
                             "{} path separator in archive for {id}@{version}",
                             err_color_print("Illegal", PossibleColor::BrightRed)
                         );
-                        std::process::exit(488);
                     }
 
                     if !fetcher.is_bin(&str_name) {
-                        eprintln!(
+                        panic!(
                             "{} binary ({str_name}) in archive for {id}@{version}",
                             err_color_print("Illegal", PossibleColor::BrightRed)
                         );
-                        std::process::exit(499);
                     }
 
                     let mut path = config.path.clone();
                     path.push(bin_path);
 
                     if config.safe && !config.ci && path.exists() {
-                        eprintln!(
+                        panic!(
                             "Binary {str_name} {} for {id}@{version}",
                             err_color_print("already exists", PossibleColor::BrightRed)
                         );
-                        std::process::exit(4091);
                     }
 
                     let mut file =
@@ -160,10 +153,7 @@ fn main() -> Result<(), String> {
                     events::binary_installed(id, &version, &config, abs.as_path());
                 }
             }
-            Err(_) => {
-                eprintln!("Cannot get entries from downloaded tar.");
-                std::process::exit(13);
-            }
+            Err(_) => panic!("Cannot get entries from downloaded tar."),
         }
 
         // Reports
@@ -189,17 +179,11 @@ fn main() -> Result<(), String> {
 fn should_error() {
     // No TLS
     #[cfg(not(any(feature = "native", feature = "rustls")))]
-    {
-        eprintln!("cargo-prebuilt only supports https and was built without the 'native' or 'rustls' feature.");
-        std::process::exit(400);
-    }
+    panic!("cargo-prebuilt only supports https and was built without the 'native' or 'rustls' feature.");
 
     // No Indexes
     #[cfg(not(any(feature = "github-public", feature = "github-private")))]
-    {
-        eprintln!("cargo-prebuilt was not built with any indexes, try the 'indexes' feature.");
-        std::process::exit(222);
-    }
+    panic!("cargo-prebuilt was not built with any indexes, try the 'indexes' feature.");
 }
 
 fn create_agent() -> ureq::Agent {
