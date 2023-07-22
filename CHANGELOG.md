@@ -2,7 +2,7 @@
 
 ## Upcoming
 
-## [0.6.0](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.6.0) (RC)
+## [0.6.0](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.6.0)
 
 - Changed how features work.
 - Errors now use eprintln!().
