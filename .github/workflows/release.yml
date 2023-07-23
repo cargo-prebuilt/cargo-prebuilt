@@ -220,7 +220,7 @@ jobs:
         run: rustup update
       - name: Rust Version
         run: rustc --version
-      - uses: cargo-prebuilt/cargo-prebuilt-action@v1
+      - uses: cargo-prebuilt/cargo-prebuilt-action@v2
         with:
           tools: cargo-hack
       - name: Hack Check (each-feature)
@@ -281,7 +281,7 @@ jobs:
         run: rustup update
       - name: Rust Version
         run: rustc --version
-      - uses: cargo-prebuilt/cargo-prebuilt-action@v1
+      - uses: cargo-prebuilt/cargo-prebuilt-action@v2
         with:
           tools: cargo-binstall
       - name: Install cargo-msrv
@@ -364,7 +364,7 @@ jobs:
         run: rustup update
       - name: Rust Version
         run: rustc --version
-      - uses: cargo-prebuilt/cargo-prebuilt-action@v1
+      - uses: cargo-prebuilt/cargo-prebuilt-action@v2
         with:
           tools: cargo-audit
       - name: Deps Report
@@ -445,7 +445,7 @@ jobs:
         run: rustup update
       - name: Rust Version
         run: rustc --version
-      - uses: cargo-prebuilt/cargo-prebuilt-action@v1
+      - uses: cargo-prebuilt/cargo-prebuilt-action@v2
         with:
           tools: cross,coreutils
       - name: Run tests
@@ -499,7 +499,7 @@ jobs:
         run: rustc --version
       - name: Add Rust target
         run: rustup target add ${{ matrix.target }}
-      - uses: cargo-prebuilt/cargo-prebuilt-action@v1
+      - uses: cargo-prebuilt/cargo-prebuilt-action@v2
         with:
           tools: cargo-auditable,coreutils
       - name: Run tests
@@ -553,7 +553,7 @@ jobs:
         run: rustc --version
       - name: Add Rust target
         run: rustup target add ${{ matrix.target }}
-      - uses: cargo-prebuilt/cargo-prebuilt-action@v1
+      - uses: cargo-prebuilt/cargo-prebuilt-action@v2
         with:
           tools: cargo-auditable,coreutils
       - name: Run tests

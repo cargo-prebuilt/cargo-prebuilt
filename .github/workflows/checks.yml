@@ -108,7 +108,7 @@ jobs:
         run: rustup update
       - name: Rust Version
         run: rustc --version
-      - uses: cargo-prebuilt/cargo-prebuilt-action@v1
+      - uses: cargo-prebuilt/cargo-prebuilt-action@v2
         with:
           tools: cargo-hack
       - name: Hack Check (each-feature)
