@@ -77,9 +77,9 @@ jobs:
         run: rustup update
       - name: Rust Version
         run: rustc --version
-      - uses: cargo-prebuilt/cargo-prebuilt-action@v1
+      - uses: cargo-prebuilt/cargo-prebuilt-action@v2
         with:
-          tools: cargo-audit
+          pkgs: cargo-audit
       - name: Deps Report
         run: |
           echo "### Deps:" >> $GITHUB_STEP_SUMMARY
@@ -162,9 +162,9 @@ jobs:
         run: rustup update
       - name: Rust Version
         run: rustc --version
-      - uses: cargo-prebuilt/cargo-prebuilt-action@v1
+      - uses: cargo-prebuilt/cargo-prebuilt-action@v2
         with:
-          tools: cross
+          pkgs: cross
       - name: Run tests
         if: ${{ matrix.can-test }}
         run: cross test --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
@@ -217,9 +217,9 @@ jobs:
         run: rustc --version
       - name: Add Rust target
         run: rustup target add ${{ matrix.target }}
-      - uses: cargo-prebuilt/cargo-prebuilt-action@v1
+      - uses: cargo-prebuilt/cargo-prebuilt-action@v2
         with:
-          tools: cargo-auditable
+          pkgs: cargo-auditable
       - name: Run tests
         if: ${{ matrix.can-test }}
         run: cargo test --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
@@ -272,9 +272,9 @@ jobs:
         run: rustc --version
       - name: Add Rust target
         run: rustup target add ${{ matrix.target }}
-      - uses: cargo-prebuilt/cargo-prebuilt-action@v1
+      - uses: cargo-prebuilt/cargo-prebuilt-action@v2
         with:
-          tools: cargo-auditable
+          pkgs: cargo-auditable
       - name: Run tests
         if: ${{ matrix.can-test }}
         run: cargo test --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}

@@ -220,9 +220,9 @@ jobs:
         run: rustup update
       - name: Rust Version
         run: rustc --version
-      - uses: cargo-prebuilt/cargo-prebuilt-action@v1
+      - uses: cargo-prebuilt/cargo-prebuilt-action@v2
         with:
-          tools: cargo-hack
+          pkgs: cargo-hack
       - name: Hack Check (each-feature)
         shell: bash
         run: |
@@ -281,9 +281,9 @@ jobs:
         run: rustup update
       - name: Rust Version
         run: rustc --version
-      - uses: cargo-prebuilt/cargo-prebuilt-action@v1
+      - uses: cargo-prebuilt/cargo-prebuilt-action@v2
         with:
-          tools: cargo-binstall
+          pkgs: cargo-binstall
       - name: Install cargo-msrv
         run: cargo binstall --version 0.16.0-beta.14 --no-confirm cargo-msrv
       - name: MSRV Check
@@ -364,9 +364,9 @@ jobs:
         run: rustup update
       - name: Rust Version
         run: rustc --version
-      - uses: cargo-prebuilt/cargo-prebuilt-action@v1
+      - uses: cargo-prebuilt/cargo-prebuilt-action@v2
         with:
-          tools: cargo-audit
+          pkgs: cargo-audit
       - name: Deps Report
         run: |
           test -f Cargo.lock || cargo generate-lockfile --verbose
@@ -445,9 +445,9 @@ jobs:
         run: rustup update
       - name: Rust Version
         run: rustc --version
-      - uses: cargo-prebuilt/cargo-prebuilt-action@v1
+      - uses: cargo-prebuilt/cargo-prebuilt-action@v2
         with:
-          tools: cross,coreutils
+          pkgs: cross,coreutils
       - name: Run tests
         if: ${{ matrix.can-test }}
         run: cross test --verbose --workspace --release --locked --target ${{ matrix.target }} ${{ env.feature-set }}
@@ -499,9 +499,9 @@ jobs:
         run: rustc --version
       - name: Add Rust target
         run: rustup target add ${{ matrix.target }}
-      - uses: cargo-prebuilt/cargo-prebuilt-action@v1
+      - uses: cargo-prebuilt/cargo-prebuilt-action@v2
         with:
-          tools: cargo-auditable,coreutils
+          pkgs: cargo-auditable,coreutils
       - name: Run tests
         if: ${{ matrix.can-test }}
         run: cargo test --verbose --workspace --release --locked --target ${{ matrix.target }} ${{ env.feature-set }}
@@ -553,9 +553,9 @@ jobs:
         run: rustc --version
       - name: Add Rust target
         run: rustup target add ${{ matrix.target }}
-      - uses: cargo-prebuilt/cargo-prebuilt-action@v1
+      - uses: cargo-prebuilt/cargo-prebuilt-action@v2
         with:
-          tools: cargo-auditable,coreutils
+          pkgs: cargo-auditable,coreutils
       - name: Run tests
         if: ${{ matrix.can-test }}
         run: cargo test --verbose --workspace --release --locked --target ${{ matrix.target }} ${{ env.feature-set }}
