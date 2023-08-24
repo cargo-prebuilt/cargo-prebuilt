@@ -21,7 +21,7 @@ include = [
 ]
 
 [dependencies]
-bpaf = { version = "0.9.4", features = ["autocomplete", "batteries"] }
+bpaf = { version = "0.9.5", features = ["autocomplete", "batteries"] }
 directories = "5.0.1"
 flate2 = "1.0.27"
 hex = "0.4.3"
