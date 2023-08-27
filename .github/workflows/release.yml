@@ -1,8 +1,4 @@
 name: Rust Build, Test, and Release
-### Name: Rust Build, Test, and Release
-### Author: harmless-tech
-### Version: audit-1.0.0
-### Git Repo: https://github.com/harmless-tech/rust-github-actions
 
 on:
   push:
@@ -411,14 +407,6 @@ jobs:
           - target: powerpc64le-unknown-linux-gnu
             can-test: true
           - target: s390x-unknown-linux-gnu
-            can-test: true
-          - target: mips64-unknown-linux-gnuabi64
-            can-test: true
-          - target: mips64-unknown-linux-muslabi64
-            can-test: true
-          - target: mips64el-unknown-linux-gnuabi64
-            can-test: true
-          - target: mips64el-unknown-linux-muslabi64
             can-test: true
           - target: armv7-unknown-linux-gnueabihf
             can-test: true
