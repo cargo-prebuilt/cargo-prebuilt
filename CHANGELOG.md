@@ -2,6 +2,10 @@
 
 ## Upcoming
 
+## [0.6.1](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.6.1)
+
+- Bump deps.
+
 ## [0.6.0](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.6.0)
 
 - Changed how features work.
