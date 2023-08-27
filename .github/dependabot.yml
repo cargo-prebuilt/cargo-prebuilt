@@ -4,8 +4,16 @@ updates:
     directory: /
     schedule:
       interval: daily
+    groups:
+      ga:
+        patterns:
+          - "*"
   
   - package-ecosystem: cargo
     directory: /
     schedule:
       interval: daily
+    groups:
+      cargo:
+        patterns:
+          - "*"
