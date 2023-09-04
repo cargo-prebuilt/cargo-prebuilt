@@ -21,7 +21,7 @@ jobs:
       prerelease: ${{ steps.regex-tag.outputs.match == '' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: KyoriPowered/action-regex-match@v3
         id: regex-tag
         with:
@@ -32,7 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [ release, check-fmt, clippy, cross, apple-darwin, pc-windows-msvc ]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Get deps from cache
         uses: actions/cache@v3
         with:
@@ -56,7 +56,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [ release, check-fmt, clippy, cross, apple-darwin, pc-windows-msvc ]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v3
       - name: Merge hashes
         shell: bash
@@ -109,7 +109,7 @@ jobs:
       CARGO_TERM_COLOR: never
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install nightly
         run: rustup toolchain install nightly --allow-downgrade -c rustfmt
       - name: Rustfmt Check
@@ -143,7 +143,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     needs: [ setup ]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Change file endings in Cargo.lock
         if: ${{ contains( matrix.os, 'windows' ) }}
         shell: pwsh
@@ -197,7 +197,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     needs: [ setup ]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Change file endings in Cargo.lock
         if: ${{ contains( matrix.os, 'windows' ) }}
         shell: pwsh
@@ -258,7 +258,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     needs: [ setup ]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Change file endings in Cargo.lock
         if: ${{ contains( matrix.os, 'windows' ) }}
         shell: pwsh
@@ -303,7 +303,7 @@ jobs:
   setup:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/cache@v3
         id: cache
         with:
@@ -340,7 +340,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [ setup ]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/cache@v3
         id: cache
         with:
@@ -418,7 +418,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [ setup, check-fmt, clippy, cargo-hack, cargo-msrv ]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Get deps from cache
         uses: actions/cache@v3
         with:
@@ -470,7 +470,7 @@ jobs:
     runs-on: macos-latest
     needs: [ setup, check-fmt, clippy, cargo-hack, cargo-msrv ]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Get deps from cache
         uses: actions/cache@v3
         with:
@@ -524,7 +524,7 @@ jobs:
     runs-on: windows-latest
     needs: [ setup, check-fmt, clippy, cargo-hack, cargo-msrv ]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Get deps from cache
         uses: actions/cache@v3
         with:
