@@ -21,7 +21,7 @@ jobs:
       prerelease: ${{ steps.regex-tag.outputs.match == '' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: KyoriPowered/action-regex-match@v3
         id: regex-tag
         with:
@@ -32,7 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [ release, check-fmt, clippy, cross, apple-darwin, pc-windows-msvc ]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Get deps from cache
         uses: actions/cache@v3
         with:
@@ -56,7 +56,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [ release, check-fmt, clippy, cross, apple-darwin, pc-windows-msvc ]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v3
       - name: Merge hashes
         shell: bash
@@ -109,7 +109,7 @@ jobs:
       CARGO_TERM_COLOR: never
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install nightly
         run: rustup toolchain install nightly --allow-downgrade -c rustfmt
       - name: Rustfmt Check
@@ -143,7 +143,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     needs: [ setup ]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Change file endings in Cargo.lock
         if: ${{ contains( matrix.os, 'windows' ) }}
         shell: pwsh
@@ -197,7 +197,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     needs: [ setup ]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Change file endings in Cargo.lock
         if: ${{ contains( matrix.os, 'windows' ) }}
         shell: pwsh
@@ -216,7 +216,7 @@ jobs:
         run: rustup update
       - name: Rust Version
         run: rustc --version
-      - uses: cargo-prebuilt/cargo-prebuilt-action@v2
+      - uses: cargo-prebuilt/cargo-prebuilt-action@v3
         with:
           pkgs: cargo-hack
       - name: Hack Check (each-feature)
@@ -258,7 +258,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     needs: [ setup ]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Change file endings in Cargo.lock
         if: ${{ contains( matrix.os, 'windows' ) }}
         shell: pwsh
@@ -277,7 +277,7 @@ jobs:
         run: rustup update
       - name: Rust Version
         run: rustc --version
-      - uses: cargo-prebuilt/cargo-prebuilt-action@v2
+      - uses: cargo-prebuilt/cargo-prebuilt-action@v3
         with:
           pkgs: cargo-binstall
       - name: Install cargo-msrv
@@ -303,7 +303,7 @@ jobs:
   setup:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/cache@v3
         id: cache
         with:
@@ -340,7 +340,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [ setup ]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/cache@v3
         id: cache
         with:
@@ -360,7 +360,7 @@ jobs:
         run: rustup update
       - name: Rust Version
         run: rustc --version
-      - uses: cargo-prebuilt/cargo-prebuilt-action@v2
+      - uses: cargo-prebuilt/cargo-prebuilt-action@v3
         with:
           pkgs: cargo-audit
       - name: Deps Report
@@ -418,7 +418,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [ setup, check-fmt, clippy, cargo-hack, cargo-msrv ]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Get deps from cache
         uses: actions/cache@v3
         with:
@@ -433,7 +433,7 @@ jobs:
         run: rustup update
       - name: Rust Version
         run: rustc --version
-      - uses: cargo-prebuilt/cargo-prebuilt-action@v2
+      - uses: cargo-prebuilt/cargo-prebuilt-action@v3
         with:
           pkgs: cross,coreutils
       - name: Run tests
@@ -470,7 +470,7 @@ jobs:
     runs-on: macos-latest
     needs: [ setup, check-fmt, clippy, cargo-hack, cargo-msrv ]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Get deps from cache
         uses: actions/cache@v3
         with:
@@ -487,7 +487,7 @@ jobs:
         run: rustc --version
       - name: Add Rust target
         run: rustup target add ${{ matrix.target }}
-      - uses: cargo-prebuilt/cargo-prebuilt-action@v2
+      - uses: cargo-prebuilt/cargo-prebuilt-action@v3
         with:
           pkgs: cargo-auditable,coreutils
       - name: Run tests
@@ -524,7 +524,7 @@ jobs:
     runs-on: windows-latest
     needs: [ setup, check-fmt, clippy, cargo-hack, cargo-msrv ]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Get deps from cache
         uses: actions/cache@v3
         with:
@@ -541,7 +541,7 @@ jobs:
         run: rustc --version
       - name: Add Rust target
         run: rustup target add ${{ matrix.target }}
-      - uses: cargo-prebuilt/cargo-prebuilt-action@v2
+      - uses: cargo-prebuilt/cargo-prebuilt-action@v3
         with:
           pkgs: cargo-auditable,coreutils
       - name: Run tests

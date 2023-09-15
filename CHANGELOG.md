@@ -2,6 +2,11 @@
 
 ## Upcoming
 
+## (Upcoming) [0.6.2](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.6.2)
+
+- Use vendored openssl 3 instead of openssl 1.1.1.
+- Bump deps.
+
 ## [0.6.1](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.6.1)
 
 - Bump deps.
