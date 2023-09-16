@@ -7,7 +7,8 @@
 - Use vendored openssl 3 instead of openssl 1.1.1.
 - Bump deps.
 - Fix warning message improperly appearing when there is a config.
-- Add --require-config (-r) flag
+- Add --require-config (-r) flag.
+- Bump MSRV from Rust 1.63+ to Rust 1.66+.
 
 ## [0.6.1](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.6.1)
 

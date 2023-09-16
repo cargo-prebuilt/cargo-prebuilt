@@ -186,7 +186,7 @@ fn parse_args() -> Arguments {
     let require_config = short('r')
         .long("require-config")
         .env("PREBUILT_REQUIRE_CONFIG")
-        .help("Require a config file to be used.")
+        .help("Require a config file to be used. (Does not work with --ci)")
         .switch();
 
     let parser = construct!(Arguments {
