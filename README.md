@@ -25,7 +25,7 @@ To download a version of a crate: ```cargo prebuilt CRATE_NAME@VERSION```
 
 To download multiple crates with versions: ```cargo prebuilt CRATE_1@V1,CRATE_2,CRATE_3@V3,...```
 
-Need help? Try: ```cargo prebuilt --help``` or see [Config Info](CONFIG.md)
+Need help? Try: ```cargo prebuilt --help``` or see [Config Info](docs/CONFIG.md)
 
 ## Installation
 
@@ -90,7 +90,7 @@ Remove ```indexes``` feature included by default, then add the features you want
 
 To output events use ```--out```.
 
-See [Events](EVENTS.md).
+See [Events](docs/EVENTS.md).
 
 ## Reports
 
@@ -117,7 +117,7 @@ Your url should be formatted like ```github.com/cargo-prebuilt/index```. cargo-p
 
 - ```export PREBUILT_INDEX=gh-pub:$URL```
 - ```cargo prebuilt --index=gh-pub:$URL CRATES```
-- [config.toml](CONFIG.md) 
+- [config.toml](docs/CONFIG.md) 
     ```toml
     [key.index]
     index = "gh-pub:$URL"

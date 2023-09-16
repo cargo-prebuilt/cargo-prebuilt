@@ -3,7 +3,7 @@ name: Markdown Checks
 on:
     push:
         branches: [ main ]
-        paths: [ .github/workflows/markdown-checks.yml, .typos.toml, "*.md" ]
+        paths: [ .github/workflows/markdown-checks.yml, .typos.toml, docs/**, "*.md" ]
     pull_request:
         branches: [ main ]
         paths: [ .github/workflows/markdown-checks.yml, .typos.toml, "*.md" ]
