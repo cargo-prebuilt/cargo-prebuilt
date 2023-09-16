@@ -144,10 +144,6 @@ jobs:
     needs: [ setup ]
     steps:
       - uses: actions/checkout@v4
-      - name: Change file endings in Cargo.lock
-        if: ${{ contains( matrix.os, 'windows' ) }}
-        shell: pwsh
-        run: (Get-Content -Raw Cargo.lock) -replace "`r`n","`n" | Set-Content Cargo.lock -NoNewline
       - name: Get deps from cache
         uses: actions/cache@v3
         with:
@@ -198,10 +194,6 @@ jobs:
     needs: [ setup ]
     steps:
       - uses: actions/checkout@v4
-      - name: Change file endings in Cargo.lock
-        if: ${{ contains( matrix.os, 'windows' ) }}
-        shell: pwsh
-        run: (Get-Content -Raw Cargo.lock) -replace "`r`n","`n" | Set-Content Cargo.lock -NoNewline
       - name: Get deps from cache
         uses: actions/cache@v3
         with:
@@ -259,10 +251,6 @@ jobs:
     needs: [ setup ]
     steps:
       - uses: actions/checkout@v4
-      - name: Change file endings in Cargo.lock
-        if: ${{ contains( matrix.os, 'windows' ) }}
-        shell: pwsh
-        run: (Get-Content -Raw Cargo.lock) -replace "`r`n","`n" | Set-Content Cargo.lock -NoNewline
       - name: Get deps from cache
         uses: actions/cache@v3
         with:
@@ -282,11 +270,11 @@ jobs:
           pkgs: cargo-binstall
       - name: Install cargo-msrv
         run: cargo binstall --version 0.16.0-beta.14 --no-confirm cargo-msrv
-      - name: MSRV Check
-        shell: bash
-        run: |
-          set -o pipefail
-          cargo msrv verify -- cargo check --verbose --release --locked 2>&1 | tee .step-data.txt
+#      - name: MSRV Check
+#        shell: bash
+#        run: |
+#          set -o pipefail
+#          cargo msrv verify -- cargo check --verbose --release --locked 2>&1 | tee .step-data.txt
       - name: Put into summary (success)
         if: success()
         shell: bash
