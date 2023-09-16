@@ -284,12 +284,13 @@ fn fill_from_file(args: &mut Arguments, sig_keys: &mut SigKeys) {
             Err(err) => eprintln!("Failed to parse config file.\n{err}"),
         }
     }
+    else {
+        eprintln!("WARN: Could not find config, it will be ignored.");
+    }
 
     if args.config.is_some() {
         panic!("Could not find an existing config files. Maybe try to generate one using --gen-config?");
     }
-
-    eprintln!("WARN: Could not find config, it will be ignored.");
 }
 
 fn convert(args: Arguments, mut sigs: SigKeys) -> Config {
