@@ -55,6 +55,7 @@ struct Arguments {
     no_color: bool,
     gen_config: bool,
     get_latest: bool,
+    require_config: bool,
     pkgs: IndexSet<String>,
 }
 
@@ -182,6 +183,12 @@ fn parse_args() -> Arguments {
         .help("Get latest versions of crates in index and then exit.")
         .switch();
 
+    let require_config = short('r')
+        .long("require-config")
+        .env("PREBUILT_REQUIRE_CONFIG")
+        .help("Require a config file to be used.")
+        .switch();
+
     let parser = construct!(Arguments {
         target,
         index_key,
@@ -201,6 +208,7 @@ fn parse_args() -> Arguments {
         no_color,
         gen_config,
         get_latest,
+        require_config,
         pkgs,
     });
 
@@ -227,7 +235,7 @@ fn fill_from_file(args: &mut Arguments, sig_keys: &mut SigKeys) {
     };
 
     if conf.exists() {
-        let mut file = File::open(conf).expect("Could not open config file.");
+        let mut file = File::open(&conf).expect("Could not open config file.");
         let mut str = String::new();
         file.read_to_string(&mut str)
             .expect("Could not read config file.");
@@ -290,6 +298,12 @@ fn fill_from_file(args: &mut Arguments, sig_keys: &mut SigKeys) {
 
     if args.config.is_some() {
         panic!("Could not find an existing config files. Maybe try to generate one using --gen-config?");
+    }
+
+    if args.require_config {
+        panic!(
+            "Config file required, but not found at {conf:?}. Did you mean to use --config=$PATH?"
+        );
     }
 }
 

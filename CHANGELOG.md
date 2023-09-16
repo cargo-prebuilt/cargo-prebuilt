@@ -7,6 +7,7 @@
 - Use vendored openssl 3 instead of openssl 1.1.1.
 - Bump deps.
 - Fix warning message improperly appearing when there is a config.
+- Add --require-config (-r) flag
 
 ## [0.6.1](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.6.1)
 
