@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: KyoriPowered/action-regex-match@v3
+      - uses: KyoriPowered/action-regex-match@v4
         id: regex-tag
         with:
           text: ${{ github.ref }}
