@@ -1,4 +1,5 @@
 name: Rust Build and Test
+### https://github.com/harmless-tech/rust-github-actions
 
 on:
   push:
@@ -13,88 +14,8 @@ env:
   bin-name: cargo-prebuilt
   feature-set: '--no-default-features --features default-native'
   CARGO_TERM_COLOR: always
-  CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse
 
 jobs:
-  setup:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/cache@v3
-        id: cache
-        with:
-          path: |
-            .cargo-store
-          key: deps-cache-${{ hashFiles('**/Cargo.lock') }}
-          enableCrossOsArchive: true
-      - name: Create Folders
-        if: ${{ !steps.cache.outputs.cache-hit }}
-        run: |
-          mkdir -p ~/.cargo/registry/index
-          mkdir -p ~/.cargo/registry/cache
-          mkdir -p ~/.cargo/git/db
-          mkdir -p ./.cargo-store
-      - name: Update Rust
-        if: ${{ !steps.cache.outputs.cache-hit }}
-        run: rustup update
-      - name: Rust Version
-        if: ${{ !steps.cache.outputs.cache-hit }}
-        run: rustc --version
-      - name: Download Deps
-        if: ${{ !steps.cache.outputs.cache-hit }}
-        run: cargo fetch --verbose --locked
-      - name: Store Deps
-        if: ${{ !steps.cache.outputs.cache-hit }}
-        run: |
-          mkdir -p ./.cargo-store/registry
-          mkdir -p ./.cargo-store/git
-          cp -r ~/.cargo/registry/index ./.cargo-store/registry
-          cp -r ~/.cargo/registry/cache ./.cargo-store/registry
-          cp -r ~/.cargo/git/db ./.cargo-store/git
-
-  reports:
-    runs-on: ubuntu-latest
-    needs: [ setup ]
-    steps:
-      - uses: actions/checkout@v4
-      - name: Get deps from cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            .cargo-store
-          key: deps-cache-${{ hashFiles('**/Cargo.lock') }}
-          enableCrossOsArchive: true
-          fail-on-cache-miss: true
-      - name: Move deps
-        run: mv ./.cargo-store/* ~/.cargo
-      - name: Cache Advisory DB
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/advisory-db
-          key: cache-advisory-db
-      - name: Update Rust
-        run: rustup update
-      - name: Rust Version
-        run: rustc --version
-      - uses: cargo-prebuilt/cargo-prebuilt-action@v3
-        with:
-          pkgs: cargo-audit
-      - name: Deps Report
-        run: |
-          echo "### Deps:" >> $GITHUB_STEP_SUMMARY
-          echo "Generated on: $(date --utc)" >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          cargo tree --verbose -e normal,build --locked >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-      - name: Audit Report
-        run: |
-          echo "### Audit:" >> $GITHUB_STEP_SUMMARY
-          echo "Generated on: $(date --utc)" >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          cargo audit >> $GITHUB_STEP_SUMMARY || true
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-
   cross:
     strategy:
       fail-fast: false
@@ -132,31 +53,17 @@ jobs:
             can-test: true
             ending: .exe
     runs-on: ubuntu-latest
-    needs: [ setup ]
     steps:
       - uses: actions/checkout@v4
-      - name: Get deps from cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            .cargo-store
-          key: deps-cache-${{ hashFiles('**/Cargo.lock') }}
-          enableCrossOsArchive: true
-          fail-on-cache-miss: true
-      - name: Move deps
-        run: mv ./.cargo-store/* ~/.cargo
-      - uses: actions/cache@v3
-        with:
-          path: |
-            target
-          key: ${{ runner.os }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}
-      - name: Update Rust
-        run: rustup update
-      - name: Rust Version
-        run: rustc --version
+      - name: Update Rust and add target
+        run: |
+          rustup update
+          rustc --version
+          rustup target add ${{ matrix.target }}
       - uses: cargo-prebuilt/cargo-prebuilt-action@v3
         with:
           pkgs: cross
+      - uses: Swatinem/rust-cache@v2
       - name: Run tests
         if: ${{ matrix.can-test }}
         run: cross test --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
@@ -185,33 +92,17 @@ jobs:
           - target: aarch64-apple-darwin
             can-test: false
     runs-on: macos-latest
-    needs: [ setup ]
     steps:
       - uses: actions/checkout@v4
-      - name: Get deps from cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            .cargo-store
-          key: deps-cache-${{ hashFiles('**/Cargo.lock') }}
-          enableCrossOsArchive: true
-          fail-on-cache-miss: true
-      - name: Move deps
-        run: mv ./.cargo-store/* ~/.cargo
-      - uses: actions/cache@v3
-        with:
-          path: |
-            target
-          key: ${{ runner.os }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}
-      - name: Update Rust
-        run: rustup update
-      - name: Rust Version
-        run: rustc --version
-      - name: Add Rust target
-        run: rustup target add ${{ matrix.target }}
+      - name: Update Rust and add target
+        run: |
+          rustup update
+          rustc --version
+          rustup target add ${{ matrix.target }}
       - uses: cargo-prebuilt/cargo-prebuilt-action@v3
         with:
           pkgs: cargo-auditable
+      - uses: Swatinem/rust-cache@v2
       - name: Run tests
         if: ${{ matrix.can-test }}
         run: cargo test --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
@@ -240,33 +131,17 @@ jobs:
           - target: aarch64-pc-windows-msvc
             can-test: false
     runs-on: windows-latest
-    needs: [ setup ]
     steps:
       - uses: actions/checkout@v4
-      - name: Get deps from cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            .cargo-store
-          key: deps-cache-${{ hashFiles('**/Cargo.lock') }}
-          enableCrossOsArchive: true
-          fail-on-cache-miss: true
-      - name: Move deps
-        run: mv ./.cargo-store/* ~/.cargo
-      - uses: actions/cache@v3
-        with:
-          path: |
-            target
-          key: ${{ runner.os }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}
-      - name: Update Rust
-        run: rustup update
-      - name: Rust Version
-        run: rustc --version
-      - name: Add Rust target
-        run: rustup target add ${{ matrix.target }}
+      - name: Update Rust and add target
+        run: |
+          rustup update
+          rustc --version
+          rustup target add ${{ matrix.target }}
       - uses: cargo-prebuilt/cargo-prebuilt-action@v3
         with:
           pkgs: cargo-auditable
+      - uses: Swatinem/rust-cache@v2
       - name: Run tests
         if: ${{ matrix.can-test }}
         run: cargo test --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
