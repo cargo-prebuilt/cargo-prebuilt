@@ -1,6 +1,6 @@
 use crate::{
     color::{self, err_color_print, PossibleColor},
-    data::{ConfigFileKeysV1, ConfigFilePrebuiltV1, ConfigFileV1, ReportType, SigKeys},
+    data::{ConfigFileIndexesV1, ConfigFilePrebuiltV1, ConfigFileV1, ReportType, SigKeys},
     APPLICATION, DEFAULT_INDEX, ORG, QUALIFIER, TARGET,
 };
 use bpaf::*;
@@ -243,22 +243,37 @@ fn fill_from_file(args: &mut Arguments, sig_keys: &mut SigKeys) {
         let config: Result<ConfigFileV1, toml::de::Error> = toml::from_str(&str);
         match config {
             Ok(config) => {
-                if let Some(mut keys) = config.key {
-                    for (k, v) in keys.iter_mut() {
+                if let Some(mut ins) = config.key {
+                    let mut found_auth = false;
+                    for (k, v) in ins.iter_mut() {
                         if let Some(i_key) = &args.index_key {
                             if i_key.eq(k) {
                                 args.index = Some(v.index.clone());
                             }
                         }
 
-                        if sig_keys.contains_key(&(v.index)) {
-                            sig_keys
-                                .get_mut(&(v.index))
-                                .unwrap()
-                                .push(v.pub_key.clone());
+                        if let Some(pk) = &v.pub_key {
+                            match sig_keys.get_mut(pk) {
+                                Some(keys) => {
+                                    keys.push(pk.clone());
+                                }
+                                None => {
+                                    sig_keys.insert(v.index.clone(), vec![pk.clone()]);
+                                }
+                            }
                         }
-                        else {
-                            sig_keys.insert(v.index.clone(), vec![v.pub_key.clone()]);
+
+                        // TODO: This will break. This module needs to be refactored badly.
+                        if let Some(a) = &v.auth {
+                            if found_auth {
+                                panic!("Multiple auth tokens were found in the config file for index {:?}.", args.index);
+                            }
+
+                            found_auth = true;
+                            match args.auth {
+                                Some(_) => {}
+                                None => args.auth = Some(a.clone()),
+                            }
                         }
                     }
                 }
@@ -285,7 +300,7 @@ fn fill_from_file(args: &mut Arguments, sig_keys: &mut SigKeys) {
                         };
                     }
 
-                    file_convert![target, index, auth, path, report_path, reports];
+                    file_convert![target, index, path, report_path, reports];
                     file_convert_switch![no_create_path, no_verify, safe, out, color, no_color];
                 }
             }
@@ -474,18 +489,56 @@ fn generate(args: &Arguments) {
             .as_secs()
     );
     if let (Some(index), Some(pub_key)) = (&args.index, &args.pub_key) {
-        if config.key.is_none() {
-            config.key = Some(HashMap::with_capacity(1));
+        let i = ConfigFileIndexesV1 {
+            index: index.clone(),
+            pub_key: Some(pub_key.clone()),
+            auth: None,
+        };
+        match config.key.as_mut() {
+            Some(hm) => {
+                hm.insert(rand.clone(), i);
+            }
+            None => {
+                let mut hm = HashMap::with_capacity(1);
+                hm.insert(rand.clone(), i);
+                config.key = Some(hm);
+            }
         }
-        config.key.as_mut().unwrap().insert(
-            rand,
-            ConfigFileKeysV1 {
-                index: index.clone(),
-                pub_key: pub_key.clone(),
-            },
-        );
         eprintln!(
-            "{} an index.",
+            "{} an index ({index}) with a public key.",
+            err_color_print("Added", PossibleColor::BrightMagenta)
+        );
+    }
+    if let (Some(index), Some(auth)) = (&args.index, &args.auth) {
+        match config.key.as_mut() {
+            Some(hm) => match hm.get_mut(&rand) {
+                Some(i) => i.auth = Some(auth.clone()),
+                None => {
+                    hm.insert(
+                        rand.clone(),
+                        ConfigFileIndexesV1 {
+                            index: index.clone(),
+                            pub_key: None,
+                            auth: Some(auth.clone()),
+                        },
+                    );
+                }
+            },
+            None => {
+                let mut hm = HashMap::with_capacity(1);
+                hm.insert(
+                    rand.clone(),
+                    ConfigFileIndexesV1 {
+                        index: index.clone(),
+                        pub_key: None,
+                        auth: Some(auth.clone()),
+                    },
+                );
+                config.key = Some(hm);
+            }
+        }
+        eprintln!(
+            "{} an index ({index}) with an auth.",
             err_color_print("Added", PossibleColor::BrightMagenta)
         );
     }

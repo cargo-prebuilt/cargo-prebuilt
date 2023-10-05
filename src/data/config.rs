@@ -47,7 +47,7 @@ impl TryFrom<&str> for ReportType {
 #[serde(deny_unknown_fields)]
 pub struct ConfigFileV1 {
     pub prebuilt: Option<ConfigFilePrebuiltV1>,
-    pub key: Option<HashMap<String, ConfigFileKeysV1>>,
+    pub key: Option<HashMap<String, ConfigFileIndexesV1>>,
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
@@ -55,7 +55,6 @@ pub struct ConfigFileV1 {
 pub struct ConfigFilePrebuiltV1 {
     pub target: Option<String>,
     pub index: Option<String>,
-    pub auth: Option<String>,
     pub path: Option<PathBuf>,
     pub report_path: Option<PathBuf>,
     pub no_create_path: Option<bool>,
@@ -70,9 +69,10 @@ pub struct ConfigFilePrebuiltV1 {
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct ConfigFileKeysV1 {
+pub struct ConfigFileIndexesV1 {
     pub index: String,
-    pub pub_key: String,
+    pub pub_key: Option<String>,
+    pub auth: Option<String>, // TODO: Should be stored in base64? Maybe encrypt?
 }
 
 #[cfg(test)]

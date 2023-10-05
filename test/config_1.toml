@@ -1,7 +1,6 @@
 [prebuilt]
 target = "$TARGET"        # Target to download for
 index = "gh-pub:$INDEX"   # Index to use
-auth = "NULL"             # Index auth token
 path = "/prebuilt/bin"    # Absolute path to where the binaries will be installed
 report_path = "/prebuilt" # Absolute path to where the reports will be put
 no_create_path = false    # Do not create paths that do not exist
@@ -19,3 +18,4 @@ out = true
 [key.test]             # Add a public verifying key for an index
 index = "$INDEX"            # Index to add key for
 pub_key = "$PUBLIC_GPG_KEY" # Public verifying key for index
+auth = "NULL"               # Index auth token

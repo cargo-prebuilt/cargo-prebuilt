@@ -2,6 +2,8 @@
 
 ## Upcoming
 
+- Changed config file to include auth on a per repo basis.
+
 ## [0.6.2](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.6.2)
 
 - Use vendored openssl 3 instead of openssl 1.1.1.
