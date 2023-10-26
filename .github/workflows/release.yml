@@ -30,6 +30,7 @@ jobs:
           regex: '^refs\/tags\/v\d+\.\d+\.\d+$'
 
   publish-crates-io:
+    if: ${{ ! contains(github.ref, '-dev') }}
     runs-on: ubuntu-latest
     needs: [ release, check-fmt, clippy, ink-cross, cross, apple-darwin, pc-windows-msvc ]
     steps:
