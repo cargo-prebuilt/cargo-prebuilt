@@ -9,7 +9,7 @@ license = "MIT"
 #homepage = ""
 repository = "https://github.com/cargo-prebuilt/cargo-prebuilt"
 keywords = ["cargo", "cargo-subcommand", "binary"]
-rust-version = "1.66"
+rust-version = "1.67"
 include = [
     "keys/",
     "src/",
