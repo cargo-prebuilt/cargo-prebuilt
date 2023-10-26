@@ -4,10 +4,10 @@ name: Rust Checks
 on:
   push:
     branches: [ main ]
-    paths: [ .github/workflows/checks.yml, keys/**, src/**, test/**, build.rs, Cargo.lock, Cargo.toml, Cross.toml, rustfmt.toml ]
+    paths: [ .github/workflows/checks.yml, keys/**, src/**, test/**, build.rs, Cargo.lock, Cargo.toml, Cross.toml, deny.toml, rustfmt.toml ]
   pull_request:
     branches: [ main ]
-    paths: [ .github/workflows/checks.yml, keys/**, src/**, test/**, build.rs, Cargo.lock, Cargo.toml, Cross.toml, rustfmt.toml ]
+    paths: [ .github/workflows/checks.yml, keys/**, src/**, test/**, build.rs, Cargo.lock, Cargo.toml, Cross.toml, deny.toml, rustfmt.toml ]
   workflow_dispatch:
 
 env:
@@ -47,7 +47,7 @@ jobs:
           rustc --version
       - uses: cargo-prebuilt/cargo-prebuilt-action@v3
         with:
-          pkgs: cargo-audit
+          pkgs: cargo-audit,cargo-deny
       - uses: Swatinem/rust-cache@v2
       - name: Cache Advisory DB
         uses: actions/cache@v3
@@ -140,6 +140,35 @@ jobs:
         run: |
           set -o pipefail
           cargo hack check --feature-powerset ${{ env.hack-group }} --no-dev-deps --verbose --workspace --locked 2>&1 | tee .step-data.txt
+      - name: Put into summary (success)
+        if: success()
+        shell: bash
+        run: echo "Success" >> $GITHUB_STEP_SUMMARY
+      - name: Put into summary (failure)
+        if: failure()
+        shell: bash
+        run: |
+          echo "Failed!" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`shell" >> $GITHUB_STEP_SUMMARY
+          cat .step-data.txt >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+  cargo-deny:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Update Rust
+        run: |
+          rustup update
+          rustc --version
+      - uses: cargo-prebuilt/cargo-prebuilt-action@v3
+        with:
+          pkgs: cargo-deny
+      - name: Cargo Deny
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo deny check 2>&1 | tee .step-data.txt
       - name: Put into summary (success)
         if: success()
         shell: bash

@@ -38,6 +38,15 @@ docker-alpine:
     rust:alpine \
     sh
 
+deny:
+    docker run -t --rm --pull=always \
+    -e CARGO_TARGET_DIR=/ptarget \
+    --mount type=bind,source={{pwd}},target=/prebuilt \
+    --mount type=bind,source=$HOME/.cargo/registry,target=/usr/local/cargo/registry \
+    -w /prebuilt \
+    rust:latest \
+    bash -c 'cargo run -- cargo-deny && cargo-deny check'
+
 hack:
     docker run -t --rm --pull=always \
     -e CARGO_TARGET_DIR=/ptarget \
