@@ -16,19 +16,66 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  ink-cross:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: aarch64-unknown-linux-gnu
+            can-test: false
+          - target: aarch64-unknown-linux-musl
+            can-test: false
+          - target: armv7-unknown-linux-gnueabihf
+            can-test: false
+          - target: armv7-unknown-linux-musleabihf
+            can-test: false
+          - target: powerpc64le-unknown-linux-gnu
+            can-test: false
+          - target: riscv64gc-unknown-linux-gnu
+            can-test: false
+          - target: s390x-unknown-linux-gnu
+            can-test: false
+          - target: x86_64-unknown-linux-gnu
+            can-test: true
+          - target: x86_64-unknown-linux-musl
+            can-test: true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Swatinem/rust-cache@v2
+      - name: Run tests
+        if: ${{ matrix.can-test }}
+        run: |
+          docker run --rm \
+          --userns host --user $(id -u):$(id -g) \
+          -v ./:/project \
+          ghcr.io/cargo-prebuilt/ink-cross:stable-${{ matrix.target }} \
+          test --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
+      - name: Build with ink cross
+        run: |
+          docker run --rm \
+          --userns host --user $(id -u):$(id -g) \
+          -v ./:/project \
+          ghcr.io/cargo-prebuilt/ink-cross:stable-${{ matrix.target }} \
+          build --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
+      - name: Run cargo-prebuilt
+        if: ${{ matrix.can-test }}
+        run: |
+          target/${{ matrix.target }}/debug/${{ env.bin-name }} just
+          just --version
+          target/${{ matrix.target }}/debug/${{ env.bin-name }} --color just
+      - name: Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: target-${{ matrix.target }}
+          path: |
+            target/${{ matrix.target }}/debug/${{ env.bin-name }}
+
   cross:
     strategy:
       fail-fast: false
       matrix:
         include:
-          - target: x86_64-unknown-linux-gnu
-            can-test: true
-          - target: x86_64-unknown-linux-musl
-            can-test: true
-          - target: aarch64-unknown-linux-gnu
-            can-test: true
-          - target: aarch64-unknown-linux-musl
-            can-test: true
           - target: x86_64-unknown-freebsd
             can-test: false
           - target: x86_64-unknown-netbsd
@@ -37,17 +84,7 @@ jobs:
             can-test: false
           - target: x86_64-sun-solaris
             can-test: false
-          - target: riscv64gc-unknown-linux-gnu
-            can-test: true
           - target: powerpc64-unknown-linux-gnu
-            can-test: true
-          - target: powerpc64le-unknown-linux-gnu
-            can-test: true
-          - target: s390x-unknown-linux-gnu
-            can-test: true
-          - target: armv7-unknown-linux-gnueabihf
-            can-test: true
-          - target: armv7-unknown-linux-musleabihf
             can-test: true
           - target: x86_64-pc-windows-gnu
             can-test: true
@@ -69,12 +106,6 @@ jobs:
         run: cross test --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
       - name: Build
         run: cross build --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
-      - name: Run cargo-prebuilt
-        if: ${{ contains(matrix.target, 'x86_64-unknown-linux-') }}
-        run: |
-          target/${{ matrix.target }}/debug/${{ env.bin-name }} just
-          just --version
-          target/${{ matrix.target }}/debug/${{ env.bin-name }} --color just
       - name: Artifact
         uses: actions/upload-artifact@v3
         with:

@@ -55,3 +55,12 @@ msrv:
     -w /prebuilt \
     rust:latest \
     bash -c 'cargo install cargo-msrv --version 0.16.0-beta.14 --profile=dev && cargo msrv -- cargo check --verbose --locked'
+
+msrv-verify:
+    docker run -t --rm --pull=always \
+    -e CARGO_TARGET_DIR=/ptarget \
+    --mount type=bind,source={{pwd}},target=/prebuilt \
+    --mount type=bind,source=$HOME/.cargo/registry,target=/usr/local/cargo/registry \
+    -w /prebuilt \
+    rust:latest \
+    bash -c 'cargo install cargo-msrv --version 0.16.0-beta.14 --profile=dev && cargo msrv verify -- cargo check --verbose --release --locked'
