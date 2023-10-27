@@ -154,7 +154,7 @@ impl Fetcher {
         // tar
         eprintln!(
             "{} {id}@{version} for target {}.",
-            err_color_print("Downloading", PossibleColor::BrightBlue),
+            err_color_print("Downloading", PossibleColor::BrightYellow),
             &config.target
         );
         let tar_bytes = self.fetch_blob(&format!("{}.{}", config.target, info.archive.ext));
@@ -338,7 +338,7 @@ impl Fetcher {
         else {
             eprintln!(
                 "{} {file} for {id}@{version} with minisign.",
-                err_color_print("Verified", PossibleColor::BrightBlue)
+                err_color_print("Verified", PossibleColor::BrightBlack)
             );
         }
 
@@ -420,7 +420,7 @@ impl Fetcher {
 
                 eprintln!(
                     "{} {item} for {id}@{version} with sha3_512.",
-                    err_color_print("Verified", PossibleColor::BrightBlue)
+                    err_color_print("Verified", PossibleColor::BrightBlack)
                 );
                 return;
             }
@@ -438,7 +438,7 @@ impl Fetcher {
 
                 eprintln!(
                     "{} {item} for {id}@{version} with sha3_256.",
-                    err_color_print("Verified", PossibleColor::BrightBlue)
+                    err_color_print("Verified", PossibleColor::BrightBlack)
                 );
                 return;
             }
@@ -461,7 +461,7 @@ impl Fetcher {
 
                 eprintln!(
                     "{} {item} for {id}@{version} with sha512.",
-                    err_color_print("Verified", PossibleColor::BrightBlue)
+                    err_color_print("Verified", PossibleColor::BrightBlack)
                 );
                 return;
             }
@@ -479,7 +479,7 @@ impl Fetcher {
 
                 eprintln!(
                     "{} {item} for {id}@{version} with sha256.",
-                    err_color_print("Verified", PossibleColor::BrightBlue)
+                    err_color_print("Verified", PossibleColor::BrightBlack)
                 );
                 return;
             }

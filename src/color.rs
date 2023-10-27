@@ -2,12 +2,14 @@
 use std::sync::atomic::{AtomicBool, Ordering};
 
 pub enum PossibleColor {
+    BrightBlack,
     BrightBlue,
     BrightCyan,
     BrightGreen,
     BrightMagenta,
     BrightPurple,
     BrightRed,
+    BrightYellow,
     Green,
 }
 
@@ -43,12 +45,14 @@ pub fn err_color_print(str: &str, color: PossibleColor) -> String {
     }
 
     match color {
+        PossibleColor::BrightBlack => str.bright_black().to_string(),
         PossibleColor::BrightBlue => str.bright_blue().to_string(),
         PossibleColor::BrightCyan => str.bright_cyan().to_string(),
         PossibleColor::BrightGreen => str.bright_green().to_string(),
         PossibleColor::BrightMagenta => str.bright_magenta().to_string(),
         PossibleColor::BrightPurple => str.bright_purple().to_string(),
         PossibleColor::BrightRed => str.bright_red().to_string(),
+        PossibleColor::BrightYellow => str.bright_yellow().to_string(),
         PossibleColor::Green => str.green().to_string(),
     }
 }

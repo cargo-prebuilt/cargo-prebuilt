@@ -1,4 +1,7 @@
-use std::{collections::HashMap, path::PathBuf};
+use std::{
+    collections::{HashMap, HashSet},
+    path::PathBuf,
+};
 
 use indexmap::IndexSet;
 use serde::{Deserialize, Serialize};
@@ -69,7 +72,7 @@ pub struct ConfigFilePrebuilt {
 #[serde(deny_unknown_fields)]
 pub struct ConfigFileIndexes {
     pub index: String,
-    pub pub_key: Option<Vec<String>>,
+    pub pub_key: Option<HashSet<String>>,
     pub auth: Option<String>, // TODO: Should be stored in base64? Maybe encrypt?
 }
 
