@@ -5,8 +5,6 @@ use serde::{Deserialize, Serialize};
 
 use super::HashType;
 
-pub type SigKeys = HashMap<String, Vec<String>>;
-
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum ReportType {
     #[serde(rename = "license")]
@@ -45,16 +43,16 @@ impl TryFrom<&str> for ReportType {
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct ConfigFileV1 {
-    pub prebuilt: Option<ConfigFilePrebuiltV1>,
-    pub key: Option<HashMap<String, ConfigFileIndexesV1>>,
+pub struct ConfigFile {
+    pub prebuilt: Option<ConfigFilePrebuilt>,
+    pub index: Option<HashMap<String, ConfigFileIndexes>>,
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct ConfigFilePrebuiltV1 {
+pub struct ConfigFilePrebuilt {
     pub target: Option<String>,
-    pub index: Option<String>,
+    pub index_key: Option<String>,
     pub path: Option<PathBuf>,
     pub report_path: Option<PathBuf>,
     pub no_create_path: Option<bool>,
@@ -69,31 +67,31 @@ pub struct ConfigFilePrebuiltV1 {
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct ConfigFileIndexesV1 {
+pub struct ConfigFileIndexes {
     pub index: String,
-    pub pub_key: Option<String>,
+    pub pub_key: Option<Vec<String>>,
     pub auth: Option<String>, // TODO: Should be stored in base64? Maybe encrypt?
 }
 
 #[cfg(test)]
 mod test {
-    use super::ConfigFileV1;
+    use super::ConfigFile;
 
     #[test]
     fn test_deser1() {
         let toml = include_str!("../../test/config_1.toml");
-        let _: ConfigFileV1 = toml::from_str(toml).unwrap();
+        let _: ConfigFile = toml::from_str(toml).unwrap();
     }
 
     #[test]
     fn test_deser2() {
         let toml = include_str!("../../test/config_2.toml");
-        let _: ConfigFileV1 = toml::from_str(toml).unwrap();
+        let _: ConfigFile = toml::from_str(toml).unwrap();
     }
 
     #[test]
     fn test_deser3() {
         let toml = "";
-        let _: ConfigFileV1 = toml::from_str(toml).unwrap();
+        let _: ConfigFile = toml::from_str(toml).unwrap();
     }
 }

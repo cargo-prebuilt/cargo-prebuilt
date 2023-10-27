@@ -1,21 +1,21 @@
 [prebuilt]
-target = "$TARGET"        # Target to download for
-index = "gh-pub:$INDEX"   # Index to use
-path = "/prebuilt/bin"    # Absolute path to where the binaries will be installed
-report_path = "/prebuilt" # Absolute path to where the reports will be put
-no_create_path = false    # Do not create paths that do not exist
-reports = [               # Reports to download
+target = "$TARGET"
+index_key = "$IKEY" # In this example it would be 'KEY'
+path = "/prebuilt/bin"
+report_path = "/prebuilt"
+no_create_path = false
+reports = [
     "license",
     "deps",
     "audit",
 ]
-color = true              # Should CLI colors be on or not
-no_color = true              # Should CLI colors be on or not
+color = true
+no_color = true
 no_verify = true
 safe = true
 out = true
 
-[key.test]             # Add a public verifying key for an index
-index = "$INDEX"            # Index to add key for
-pub_key = "$PUBLIC_GPG_KEY" # Public verifying key for index
-auth = "NULL"               # Index auth token
+[index.KEY]
+index = "$INDEX"
+pub_key = ["$PUBLIC_KEY"] # Indexes can have multiple public keys (Optional)
+auth = "$TOKEN_OR_IGNORE"
