@@ -20,6 +20,8 @@ print out the config path.
 
 The config file is ignored when using the --ci flag.
 
+Config files are not stable between any versions.
+
 ```toml
 [prebuilt]
 target = "$TARGET"          # Target to download for
