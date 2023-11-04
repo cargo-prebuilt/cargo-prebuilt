@@ -923,6 +923,8 @@ dependencies = [
  "rustls",
  "rustls-native-certs",
  "rustls-webpki",
+ "serde",
+ "serde_json",
  "url",
  "webpki-roots",
 ]

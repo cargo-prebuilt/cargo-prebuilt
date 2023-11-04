@@ -227,7 +227,7 @@ impl Fetcher {
         }
     }
 
-    fn fetch_latest(&self) -> String {
+    fn fetch_latest(&mut self) -> String {
         let id = self
             .data
             .id

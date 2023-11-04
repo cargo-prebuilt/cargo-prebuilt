@@ -19,8 +19,7 @@ pub enum InteractError {
     // Unknown,
 }
 
-// TODO: Remove _ from auth.
-pub fn create_interact(input: String, _auth: Option<&String>, agent: Agent) -> Box<dyn Interact> {
+pub fn create_interact(input: String, auth: Option<&String>, agent: Agent) -> Box<dyn Interact> {
     // Github public
     if input.starts_with("gh-pub:") {
         #[cfg(feature = "github-public")]
@@ -51,7 +50,7 @@ pub fn create_interact(input: String, _auth: Option<&String>, agent: Agent) -> B
             );
             return Box::new(github_private::GithubPrivate::new(
                 agent,
-                _auth.expect("Need auth token for private index.").clone(),
+                auth.expect("Need auth token for private index.").clone(),
                 url,
             ));
         }
@@ -63,7 +62,7 @@ pub fn create_interact(input: String, _auth: Option<&String>, agent: Agent) -> B
 }
 
 pub trait Interact {
-    fn get_latest(&self, id: &str) -> Result<String, InteractError>;
+    fn get_latest(&mut self, id: &str) -> Result<String, InteractError>;
     fn get_str(&self, id: &str, version: &str, file_name: &str) -> Result<String, InteractError>;
     fn get_blob(&self, id: &str, version: &str, file_name: &str) -> Result<Vec<u8>, InteractError>;
 }
