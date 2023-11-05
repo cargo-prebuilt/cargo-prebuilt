@@ -67,7 +67,7 @@ Remove ```security``` feature included by default, then add the features you wan
 
 Remove ```indexes``` feature included by default, then add the features you want below:
 - [github-public](#github-public)
-- [github-private](#github-private) (Not supported yet)
+- [github-private](#github-private)
 - [gitlab-public](#gitlab-public) (Not supported yet)
 - [gitlab-private](#gitlab-private) (Not supported yet)
 - [forgejo-public](#forgejo-public) (Not supported yet)
@@ -111,7 +111,7 @@ Report types (--reports):
 
 #### GitHub public
 
-[Template](https://github.com/cargo-prebuilt/gh-pub-index)
+[Template](https://github.com/cargo-prebuilt/gh-pub-index) (Usually out of date compared to the main index)
 
 Your url should be formatted like ```github.com/cargo-prebuilt/index```. cargo-prebuilt requires https.
 
@@ -121,8 +121,24 @@ Your url should be formatted like ```github.com/cargo-prebuilt/index```. cargo-p
     ```toml
     [key.index]
     index = "gh-pub:$URL"
+    pub_key = []
     ```
 
 #### GitHub private
 
-Under development
+Currently in beta!!!
+
+Your url should be formatted like ```github.com/cargo-prebuilt/index```. Cargo-prebuilt requires https.
+
+This index requires an auth token with: Repo permission -> Contents -> Read-only.
+[Generate a token](https://github.com/settings/personal-access-tokens/new)
+
+- ```export PREBUILT_INDEX=gh-pri:$URL```
+- ```cargo prebuilt --index=gh-pri:$URL CRATES```
+- [config.toml](docs/CONFIG.md)
+    ```toml
+    [key.index]
+    index = "gh-pri:$URL"
+    pub_key = []
+    auth = ""
+    ```
