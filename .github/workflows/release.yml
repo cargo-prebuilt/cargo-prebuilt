@@ -53,6 +53,7 @@ jobs:
       - name: Merge hashes
         shell: bash
         run: |
+          set -euxo pipefail
           echo -n "" > hashes.sha256
           for D in target-*; do
             if [ -d "${D}" ]; then
@@ -65,6 +66,7 @@ jobs:
       - name: Sign archives
         shell: bash
         run: |
+          set -euxo pipefail
           eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
           brew install minisign
           echo -n "$SIGNING_KEY" | base64 --decode > ~/.minisign_secret.key
