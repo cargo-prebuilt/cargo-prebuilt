@@ -32,6 +32,7 @@ static TARGET: &str = env!("TARGET");
 
 fn main() -> Result<(), String> {
     let config = config::get();
+    let config = &config;
     #[cfg(debug_assertions)]
     dbg!(&config);
 
@@ -56,7 +57,7 @@ fn main() -> Result<(), String> {
     let agent = create_agent();
 
     // Create Fetcher which is used to fetch items from index.
-    let mut fetcher = Fetcher::new(&config, agent);
+    let mut fetcher = Fetcher::new(config, agent);
 
     // Get pkgs
     for pkg in config.pkgs.iter() {
@@ -71,22 +72,22 @@ fn main() -> Result<(), String> {
 
         // If --get-latest then get latest version and print out latest event
         if config.get_latest {
-            fetcher.load(id, None);
-            let version = fetcher.get_version();
-            events::get_latest(id, &version);
+            events::get_latest(id, &fetcher.get_latest(id));
             continue;
         }
 
-        // Init fetcher for this crate and get latest version if needed
-        fetcher.load(id, version);
-
         // Get version that fetcher is using
-        let version = fetcher.get_version();
+        let version = match version {
+            Some(v) => v.to_string(),
+            None => fetcher.get_latest(id),
+        };
+        let version = &version;
 
-        events::target(id, &version, &config);
+        events::target(id, version, config);
 
         // Download and hash tar
-        let tar_bytes = fetcher.download(&config);
+        let (info, _hashes, tar_bytes) = fetcher.download(id, version, config);
+        let info = &info;
 
         // Extract Tar
         let reader = std::io::Cursor::new(tar_bytes);
@@ -121,7 +122,7 @@ fn main() -> Result<(), String> {
                         );
                     }
 
-                    if !fetcher.is_bin(&str_name) {
+                    if !fetcher.is_bin(info, &str_name) {
                         panic!(
                             "{} binary ({str_name}) in archive for {id}@{version}",
                             err_color_print("Illegal", PossibleColor::BrightRed)
@@ -158,7 +159,7 @@ fn main() -> Result<(), String> {
                         err_color_print("Installed", PossibleColor::BrightPurple)
                     );
 
-                    events::binary_installed(id, &version, &config, abs.as_path());
+                    events::binary_installed(id, version, config, abs.as_path());
                 }
             }
             Err(_) => panic!("Cannot get entries from downloaded tar."),
@@ -166,17 +167,14 @@ fn main() -> Result<(), String> {
 
         // Reports
         if !config.ci {
-            fetcher.reports(&config);
+            fetcher.reports(id, version, info, config);
         }
 
         eprintln!(
             "{} {id}@{version}.",
             err_color_print("Installed", PossibleColor::BrightGreen)
         );
-        events::installed(id, &version, &config);
-
-        // Prepare for next crate.
-        fetcher.reset();
+        events::installed(id, version, config);
     }
 
     eprintln!("{}", err_color_print("Done!", PossibleColor::Green));

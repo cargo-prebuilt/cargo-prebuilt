@@ -2,6 +2,8 @@
 
 ## Upcoming
 
+- Internally removed a lot of expects for better relieablity.
+
 ## [0.6.3](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.6.3)
 
 - Changed config file to include auth on a per repo basis.

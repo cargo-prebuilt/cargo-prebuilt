@@ -12,66 +12,32 @@ use crate::{
 };
 use ureq::Agent;
 
-#[derive(Debug, Default)]
-struct Data {
-    id: Option<String>,
-    version: Option<String>,
-    info: Option<InfoFileImm>,
-    hashes: Option<HashesFileImm>,
-}
-
 pub struct Fetcher {
     interact: Box<dyn Interact>,
-    data: Data,
 }
 impl Fetcher {
     pub fn new(config: &Config, agent: Agent) -> Self {
         let interact = interact::create_interact(config.index.clone(), config.auth.as_ref(), agent);
-        Self {
-            interact,
-            data: Default::default(),
-        }
+        Self { interact }
     }
 
-    pub fn reset(&mut self) {
-        self.data = Default::default();
+    pub fn get_latest(&mut self, id: &str) -> String {
+        self.fetch_latest(id)
     }
 
-    pub fn get_version(&self) -> String {
-        self.data
-            .version
-            .as_ref()
-            .expect("Failed to get version, but it should have been guaranteed.")
-            .to_string()
-    }
-
-    pub fn load(&mut self, id: &str, version: Option<&str>) {
-        self.data.id = Some(id.to_string());
-        self.data.version = match version {
-            Some(v) => Some(v.to_string()),
-            None => Some(self.fetch_latest()),
-        };
-    }
-
-    pub fn download(&mut self, config: &Config) -> Vec<u8> {
-        let id = self
-            .data
-            .id
-            .as_ref()
-            .expect("Failed to get id, but it should have been guaranteed.");
-        let version = self
-            .data
-            .version
-            .as_ref()
-            .expect("Failed to get version, but it should have been guaranteed.");
-
+    pub fn download(
+        &mut self,
+        id: &str,
+        version: &str,
+        config: &Config,
+    ) -> (InfoFileImm, HashesFileImm, Vec<u8>) {
         eprintln!(
             "{} info for {id}@{version}.",
             err_color_print("Fetching", PossibleColor::BrightBlue),
         );
 
         // info.json
-        let raw_info_file = &self.fetch_str("info.json");
+        let raw_info_file = &self.fetch_str(id, version, "info.json");
         let info: InfoFile = serde_json::from_str(raw_info_file)
             .unwrap_or_else(|_| panic!("info.json is malformed for {id}@{version}"));
         let info: InfoFileImm = info.into();
@@ -80,7 +46,8 @@ impl Fetcher {
         #[cfg(feature = "sig")]
         if !config.no_verify {
             if let Some(sig_file) = info.files.sig_info.clone() {
-                let v = self.verify_file("info.json", config, &sig_file, raw_info_file);
+                let v =
+                    self.verify_file(id, version, "info.json", config, &sig_file, raw_info_file);
                 events::info_verify(id, version, config, v);
             }
             else {
@@ -131,7 +98,7 @@ impl Fetcher {
         );
 
         // hashes.json
-        let raw_hashes_file = &self.fetch_str(&info.files.hash);
+        let raw_hashes_file = &self.fetch_str(id, version, &info.files.hash);
         let hashes: HashesFile = serde_json::from_str(raw_hashes_file)
             .unwrap_or_else(|_| panic!("{} is malformed for {id}@{version}", info.files.hash));
         let hashes: HashesFileImm = hashes.into();
@@ -140,7 +107,14 @@ impl Fetcher {
         #[cfg(feature = "sig")]
         if !config.no_verify {
             if let Some(sig_file) = info.files.sig_hash.clone() {
-                let v = self.verify_file(&info.files.hash, config, &sig_file, raw_hashes_file);
+                let v = self.verify_file(
+                    id,
+                    version,
+                    &info.files.hash,
+                    config,
+                    &sig_file,
+                    raw_hashes_file,
+                );
                 events::hashes_verify(id, version, config, v);
             }
             else {
@@ -157,20 +131,24 @@ impl Fetcher {
             err_color_print("Downloading", PossibleColor::BrightYellow),
             &config.target
         );
-        let tar_bytes = self.fetch_blob(&format!("{}.{}", config.target, info.archive.ext));
+        let tar_bytes = self.fetch_blob(
+            id,
+            version,
+            &format!("{}.{}", config.target, info.archive.ext),
+        );
 
         // test hashes
-        self.verify_archive(config, &hashes, &tar_bytes);
+        self.verify_archive(id, version, config, &hashes, &tar_bytes);
 
-        // store info for reports later if allowed
-        self.data.info = Some(info);
-        // store hashes for binaries later
-        self.data.hashes = Some(hashes);
-
-        tar_bytes
+        (info, hashes, tar_bytes)
     }
 
-    pub fn reports(&mut self, config: &Config) {
+    pub fn is_bin(&self, info: &InfoFileImm, bin_name: &str) -> bool {
+        let bin_name = bin_name.replace(".exe", "");
+        info.bins.contains(&bin_name)
+    }
+
+    pub fn reports(&mut self, id: &str, version: &str, info: &InfoFileImm, config: &Config) {
         if config.reports.is_empty() {
             return;
         }
@@ -180,22 +158,6 @@ impl Fetcher {
             err_color_print("Getting", PossibleColor::BrightBlue)
         );
 
-        let id = self
-            .data
-            .id
-            .as_ref()
-            .expect("Failed to get id, but it should have been guaranteed.");
-        let version = self
-            .data
-            .version
-            .as_ref()
-            .expect("Failed to get version, but it should have been guaranteed.");
-        let info = self
-            .data
-            .info
-            .as_ref()
-            .expect("Failed to get info, but it should have been guaranteed.");
-
         for report in config.reports.iter() {
             let report_name = match report {
                 ReportType::LicenseDL => info.files.license.clone(),
@@ -203,7 +165,7 @@ impl Fetcher {
                 ReportType::AuditDL => info.files.audit.clone(),
             };
 
-            let raw_str = &self.fetch_str(&report_name);
+            let raw_str = &self.fetch_str(id, version, &report_name);
 
             let mut dir = config.report_path.clone();
             dir.push(format!("{id}/{version}"));
@@ -227,14 +189,8 @@ impl Fetcher {
         }
     }
 
-    fn fetch_latest(&mut self) -> String {
-        let id = self
-            .data
-            .id
-            .as_ref()
-            .expect("Failed to get id, but it should have been guaranteed.");
-
-        match self.interact.get_latest(id.as_str()) {
+    fn fetch_latest(&mut self, id: &str) -> String {
+        match self.interact.get_latest(id) {
             Ok(s) => s,
             Err(InteractError::Malformed) => panic!("The version string for {id} is malformed."),
             Err(InteractError::HttpCode(404)) => panic!(
@@ -246,18 +202,7 @@ impl Fetcher {
         }
     }
 
-    fn fetch_str(&self, file: &str) -> String {
-        let id = self
-            .data
-            .id
-            .as_ref()
-            .expect("Failed to get id, but it should have been guaranteed.");
-        let version = self
-            .data
-            .version
-            .as_ref()
-            .expect("Failed to get version, but it should have been guaranteed.");
-
+    fn fetch_str(&self, id: &str, version: &str, file: &str) -> String {
         match self.interact.get_str(id, version, file) {
             Ok(s) => s,
             Err(InteractError::Malformed) => {
@@ -274,18 +219,7 @@ impl Fetcher {
         }
     }
 
-    fn fetch_blob(&self, file: &str) -> Vec<u8> {
-        let id = self
-            .data
-            .id
-            .as_ref()
-            .expect("Failed to get id, but it should have been guaranteed.");
-        let version = self
-            .data
-            .version
-            .as_ref()
-            .expect("Failed to get version, but it should have been guaranteed.");
-
+    fn fetch_blob(&self, id: &str, version: &str, file: &str) -> Vec<u8> {
         match self.interact.get_blob(id, version, file) {
             Ok(s) => s,
             Err(InteractError::Malformed) => {
@@ -303,21 +237,18 @@ impl Fetcher {
     }
 
     #[cfg(feature = "sig")]
-    fn verify_file(&self, file: &str, config: &Config, sig_file: &str, raw_file: &str) -> bool {
+    fn verify_file(
+        &self,
+        id: &str,
+        version: &str,
+        file: &str,
+        config: &Config,
+        sig_file: &str,
+        raw_file: &str,
+    ) -> bool {
         use minisign_verify::{PublicKey, Signature};
 
-        let id = self
-            .data
-            .id
-            .as_ref()
-            .expect("Failed to get id, but it should have been guaranteed.");
-        let version = self
-            .data
-            .version
-            .as_ref()
-            .expect("Failed to get version, but it should have been guaranteed.");
-
-        let sig = &self.fetch_str(sig_file);
+        let sig = &self.fetch_str(id, version, sig_file);
         let signature = Signature::decode(sig).expect("Signature was malformed.");
 
         let mut verified = false;
@@ -345,64 +276,27 @@ impl Fetcher {
         verified
     }
 
-    fn verify_archive(&self, config: &Config, hashes: &HashesFileImm, bytes: &[u8]) {
+    fn verify_archive(
+        &self,
+        id: &str,
+        version: &str,
+        config: &Config,
+        hashes: &HashesFileImm,
+        bytes: &[u8],
+    ) {
         if let Some(blob) = hashes.hashes.get(&config.target) {
             let hashes = &blob.archive;
-            self.verify_bytes(hashes, &format!("{} archive", &config.target), bytes)
+            self.verify_bytes(
+                id,
+                version,
+                hashes,
+                &format!("{} archive", &config.target),
+                bytes,
+            )
         }
     }
 
-    pub fn is_bin(&self, bin_name: &str) -> bool {
-        let info = self
-            .data
-            .info
-            .as_ref()
-            .expect("Failed to get hashes, but it should have been guaranteed.");
-
-        let bin_name = bin_name.replace(".exe", "");
-
-        info.bins.contains(&bin_name)
-    }
-
-    // TODO: Use for update hashing.
-    // No need to verify bins, since archive hash should do this for us.
-    //    pub fn verify_bin(&self, config: &Config, bin_name: &str, bytes: &[u8]) {
-    //        let id = self
-    //            .data
-    //            .id
-    //            .as_ref()
-    //            .expect("Failed to get id, but it should have been guaranteed.");
-    //        let version = self
-    //            .data
-    //            .version
-    //            .as_ref()
-    //            .expect("Failed to get version, but it should have been guaranteed.");
-    //        let hashes = self
-    //            .data
-    //            .hashes
-    //            .as_ref()
-    //            .expect("Failed to get hashes, but it should have been guaranteed.");
-    //
-    //        if let Some(blob) = hashes.hashes.get(&config.target) {
-    //            match &blob.bins.get(bin_name) {
-    //                Some(blob) => self.verify_bytes(blob, &format!("{bin_name} binary"), bytes),
-    //                None => panic!("Could not find {bin_name} hash for {id}@{version}."),
-    //            }
-    //        }
-    //    }
-
-    fn verify_bytes(&self, hashes: &Hashes, item: &str, bytes: &[u8]) {
-        let id = self
-            .data
-            .id
-            .as_ref()
-            .expect("Failed to get id, but it should have been guaranteed.");
-        let version = self
-            .data
-            .version
-            .as_ref()
-            .expect("Failed to get version, but it should have been guaranteed.");
-
+    fn verify_bytes(&self, id: &str, version: &str, hashes: &Hashes, item: &str, bytes: &[u8]) {
         #[cfg(feature = "sha3")]
         {
             use sha3::{Digest, Sha3_256, Sha3_512};
@@ -491,4 +385,31 @@ impl Fetcher {
         #[cfg(any(feature = "sha2", feature = "sha3"))]
         panic!("Could not verify downloaded {item} for {id}@{version}.");
     }
+
+    // TODO: Use for update hashing.
+    // No need to verify bins, since archive hash should do this for us.
+    //    pub fn verify_bin(&self, config: &Config, bin_name: &str, bytes: &[u8]) {
+    //        let id = self
+    //            .data
+    //            .id
+    //            .as_ref()
+    //            .expect("Failed to get id, but it should have been guaranteed.");
+    //        let version = self
+    //            .data
+    //            .version
+    //            .as_ref()
+    //            .expect("Failed to get version, but it should have been guaranteed.");
+    //        let hashes = self
+    //            .data
+    //            .hashes
+    //            .as_ref()
+    //            .expect("Failed to get hashes, but it should have been guaranteed.");
+    //
+    //        if let Some(blob) = hashes.hashes.get(&config.target) {
+    //            match &blob.bins.get(bin_name) {
+    //                Some(blob) => self.verify_bytes(blob, &format!("{bin_name} binary"), bytes),
+    //                None => panic!("Could not find {bin_name} hash for {id}@{version}."),
+    //            }
+    //        }
+    //    }
 }
