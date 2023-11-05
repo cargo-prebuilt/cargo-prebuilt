@@ -4,6 +4,7 @@
 
 - Internally removed a lot of panics for better reliability.
 - CLI color change.
+- Panic on empty public keys when --no-verify is not used.
 
 ## [0.6.3](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.6.3)
 
