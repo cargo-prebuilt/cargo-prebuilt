@@ -269,7 +269,7 @@ impl Fetcher {
         else {
             eprintln!(
                 "{} {file} for {id}@{version} with minisign.",
-                err_color_print("Verified", PossibleColor::BrightBlack)
+                err_color_print("Verified", PossibleColor::BrightWhite)
             );
         }
 
@@ -314,7 +314,7 @@ impl Fetcher {
 
                 eprintln!(
                     "{} {item} for {id}@{version} with sha3_512.",
-                    err_color_print("Verified", PossibleColor::BrightBlack)
+                    err_color_print("Verified", PossibleColor::BrightWhite)
                 );
                 return;
             }
@@ -332,7 +332,7 @@ impl Fetcher {
 
                 eprintln!(
                     "{} {item} for {id}@{version} with sha3_256.",
-                    err_color_print("Verified", PossibleColor::BrightBlack)
+                    err_color_print("Verified", PossibleColor::BrightWhite)
                 );
                 return;
             }
@@ -355,7 +355,7 @@ impl Fetcher {
 
                 eprintln!(
                     "{} {item} for {id}@{version} with sha512.",
-                    err_color_print("Verified", PossibleColor::BrightBlack)
+                    err_color_print("Verified", PossibleColor::BrightWhite)
                 );
                 return;
             }
@@ -373,7 +373,7 @@ impl Fetcher {
 
                 eprintln!(
                     "{} {item} for {id}@{version} with sha256.",
-                    err_color_print("Verified", PossibleColor::BrightBlack)
+                    err_color_print("Verified", PossibleColor::BrightWhite)
                 );
                 return;
             }

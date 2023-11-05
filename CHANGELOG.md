@@ -2,7 +2,8 @@
 
 ## Upcoming
 
-- Internally removed a lot of expects for better relieablity.
+- Internally removed a lot of panics for better reliability.
+- CLI color change.
 
 ## [0.6.3](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.6.3)
 
@@ -16,7 +17,7 @@
 
 - Use vendored openssl 3 instead of openssl 1.1.1.
 - Bump deps.
-- Fix warning message improperly appearing when there is a config.
+- Fix a warning message improperly appearing when there is a config.
 - Add --require-config (-r) flag.
 - Bump MSRV from Rust 1.63+ to Rust 1.66+.
 
@@ -34,7 +35,7 @@
 - Bump MSRV from Rust 1.63+ to Rust 1.65+.
 - version flag (--version) now uses bpaf's built in method.
 - .prebuilt folder is now by default put in the home directory, but can be overridden.
-- config.toml now more useful. (See [CONFIG](CONFIG.md))
+- config.toml is now more useful. (See [CONFIG](CONFIG.md))
 - Better config handling.
 - Added support for sha3_256, sha3_512, and sha512.
 - GitHub release builds now use native-tls instead of vendored openssl.
@@ -49,7 +50,7 @@
 - To opt in or out of colors use the env vars FORCE_COLOR/NO_COLOR.
 - Releases are signed using minisign.
 - Color feature is now linked to owo-colors and supports-color.
-- Remove need for atty dependency.
+- Remove a need for atty dependency.
 - Add -s/--safe flag to prevent overwriting of binaries.
 - Do not allow path separators in tar archives.
 - Check binaries extracted from tar archive to make sure they are the correct ones.
