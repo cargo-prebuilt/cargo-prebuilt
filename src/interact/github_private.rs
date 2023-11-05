@@ -3,7 +3,17 @@ use serde::{de::DeserializeOwned, Deserialize};
 use std::collections::HashMap;
 use ureq::{Agent, Error};
 
-#[allow(unused)] // TODO: REMOVE
+#[derive(Clone, Debug, Deserialize)]
+struct Release {
+    assets: Vec<ReleaseAssets>,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+struct ReleaseAssets {
+    url: String,
+    name: String,
+}
+
 pub struct GithubPrivate {
     agent: Agent,
     auth_token: String,
@@ -73,6 +83,41 @@ impl GithubPrivate {
             Err(_) => Err(InteractError::ConnectionError),
         };
     }
+
+    fn get_str_file(
+        &self,
+        assets: &Vec<ReleaseAssets>,
+        file: &str,
+    ) -> Result<String, InteractError> {
+        let mut val = None;
+        for i in assets {
+            if i.name.eq(file) {
+                let latest = self.call(&i.url)?;
+                val = Some(latest);
+                break;
+            }
+        }
+
+        match val {
+            Some(str) => Ok(str),
+            None => Err(InteractError::HttpCode(404)),
+        }
+    }
+
+    fn get_release(&mut self, id: &str, version: &str) -> Result<Release, InteractError> {
+        let key = format!("{id}/--/{version}");
+        match self.index.get(&key) {
+            Some(item) => Ok(item.clone()),
+            None => {
+                let rel = self.api_call(&format!(
+                    "{}/repos/{}/{}/releases/tags/{id}-{version}",
+                    self.u_url, self.u_owner, self.u_repo
+                ))?;
+                let _ = self.index.insert(key.clone(), rel);
+                Ok(self.index.get(&key).unwrap().clone())
+            }
+        }
+    }
 }
 impl Interact for GithubPrivate {
     fn get_latest(&mut self, id: &str) -> Result<String, InteractError> {
@@ -89,56 +134,60 @@ impl Interact for GithubPrivate {
             .as_ref()
             .expect("Should have stable index!");
 
-        let mut val = None;
-        for i in &si.assets {
-            if i.name.eq(id) {
-                let latest = self.call(&i.url)?;
-                val = Some(latest);
-                break;
-            }
-        }
-
-        match val {
-            Some(str) => Ok(str),
-            None => Err(InteractError::HttpCode(404)),
-        }
+        self.get_str_file(&si.assets, id)
     }
 
-    // TODO: This and blob need to be mutable since they might change the state of 'index'
-    #[allow(unused)] // TODO: REMOVE
     fn get_str(
         &mut self,
         id: &str,
         version: &str,
         file_name: &str,
     ) -> Result<String, InteractError> {
-        todo!()
+        let release = self.get_release(id, version)?;
+        self.get_str_file(&release.assets, file_name)
     }
 
-    #[allow(unused)] // TODO: REMOVE
     fn get_blob(
         &mut self,
         id: &str,
         version: &str,
         file_name: &str,
     ) -> Result<Vec<u8>, InteractError> {
-        todo!()
+        let release = self.get_release(id, version)?;
+
+        let mut val = None;
+        for i in &release.assets {
+            if i.name.eq(file_name) {
+                let mut bytes = Vec::new();
+                match self
+                    .agent
+                    .get(&i.url)
+                    .set("Accept", "application/octet-stream")
+                    .set(
+                        "Authorization",
+                        format!("Bearer {}", self.auth_token).as_str(),
+                    )
+                    .call()
+                {
+                    Ok(response) => {
+                        //TODO: Allow limiting of size.
+                        response
+                            .into_reader()
+                            .read_to_end(&mut bytes)
+                            .map_err(|_| InteractError::Malformed)?;
+                    }
+                    Err(Error::Status(code, _)) => return Err(InteractError::HttpCode(code)),
+                    Err(_) => return Err(InteractError::ConnectionError),
+                }
+
+                val = Some(bytes);
+                break;
+            }
+        }
+
+        match val {
+            Some(bytes) => Ok(bytes),
+            None => Err(InteractError::HttpCode(404)),
+        }
     }
-}
-
-#[allow(unused)] // TODO: REMOVE
-#[derive(Debug, Deserialize)]
-struct Release {
-    tag_name: String,
-    assets: Vec<ReleaseAssets>,
-}
-
-#[allow(unused)] // TODO: REMOVE
-#[derive(Debug, Deserialize)]
-struct ReleaseAssets {
-    url: String,
-    browser_download_url: String,
-    name: String,
-    state: String,
-    size: u64,
 }

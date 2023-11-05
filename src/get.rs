@@ -249,7 +249,11 @@ impl Fetcher {
         use minisign_verify::{PublicKey, Signature};
 
         if config.sigs.is_empty() {
-            panic!("{} for index '{}'. Please add one with --pub-key or use --no-verify.", err_color_print("No public key(s)", PossibleColor::BrightRed), config.index);
+            panic!(
+                "{} for index '{}'. Please add one with --pub-key or use --no-verify.",
+                err_color_print("No public key(s)", PossibleColor::BrightRed),
+                config.index
+            );
         }
 
         let sig = &self.fetch_str(id, version, sig_file);
