@@ -106,12 +106,22 @@ impl Interact for GithubPrivate {
 
     // TODO: This and blob need to be mutable since they might change the state of 'index'
     #[allow(unused)] // TODO: REMOVE
-    fn get_str(&self, id: &str, version: &str, file_name: &str) -> Result<String, InteractError> {
+    fn get_str(
+        &mut self,
+        id: &str,
+        version: &str,
+        file_name: &str,
+    ) -> Result<String, InteractError> {
         todo!()
     }
 
     #[allow(unused)] // TODO: REMOVE
-    fn get_blob(&self, id: &str, version: &str, file_name: &str) -> Result<Vec<u8>, InteractError> {
+    fn get_blob(
+        &mut self,
+        id: &str,
+        version: &str,
+        file_name: &str,
+    ) -> Result<Vec<u8>, InteractError> {
         todo!()
     }
 }

@@ -32,12 +32,22 @@ impl Interact for GithubPublic {
         self.call(&url)
     }
 
-    fn get_str(&self, id: &str, version: &str, file_name: &str) -> Result<String, InteractError> {
+    fn get_str(
+        &mut self,
+        id: &str,
+        version: &str,
+        file_name: &str,
+    ) -> Result<String, InteractError> {
         let url = self.url(id, version, file_name);
         self.call(&url)
     }
 
-    fn get_blob(&self, id: &str, version: &str, file_name: &str) -> Result<Vec<u8>, InteractError> {
+    fn get_blob(
+        &mut self,
+        id: &str,
+        version: &str,
+        file_name: &str,
+    ) -> Result<Vec<u8>, InteractError> {
         let url = self.url(id, version, file_name);
         let mut bytes = Vec::new();
         match self.agent.get(&url).call() {

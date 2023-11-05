@@ -63,6 +63,16 @@ pub fn create_interact(input: String, auth: Option<&String>, agent: Agent) -> Bo
 
 pub trait Interact {
     fn get_latest(&mut self, id: &str) -> Result<String, InteractError>;
-    fn get_str(&self, id: &str, version: &str, file_name: &str) -> Result<String, InteractError>;
-    fn get_blob(&self, id: &str, version: &str, file_name: &str) -> Result<Vec<u8>, InteractError>;
+    fn get_str(
+        &mut self,
+        id: &str,
+        version: &str,
+        file_name: &str,
+    ) -> Result<String, InteractError>;
+    fn get_blob(
+        &mut self,
+        id: &str,
+        version: &str,
+        file_name: &str,
+    ) -> Result<Vec<u8>, InteractError>;
 }

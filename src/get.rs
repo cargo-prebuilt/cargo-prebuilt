@@ -202,7 +202,7 @@ impl Fetcher {
         }
     }
 
-    fn fetch_str(&self, id: &str, version: &str, file: &str) -> String {
+    fn fetch_str(&mut self, id: &str, version: &str, file: &str) -> String {
         match self.interact.get_str(id, version, file) {
             Ok(s) => s,
             Err(InteractError::Malformed) => {
@@ -219,7 +219,7 @@ impl Fetcher {
         }
     }
 
-    fn fetch_blob(&self, id: &str, version: &str, file: &str) -> Vec<u8> {
+    fn fetch_blob(&mut self, id: &str, version: &str, file: &str) -> Vec<u8> {
         match self.interact.get_blob(id, version, file) {
             Ok(s) => s,
             Err(InteractError::Malformed) => {
@@ -238,7 +238,7 @@ impl Fetcher {
 
     #[cfg(feature = "sig")]
     fn verify_file(
-        &self,
+        &mut self,
         id: &str,
         version: &str,
         file: &str,
