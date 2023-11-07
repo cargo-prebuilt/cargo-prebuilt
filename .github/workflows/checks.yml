@@ -89,6 +89,8 @@ jobs:
           rustup update
           rustc --version
       - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}
       - name: Clippy Check
         shell: bash
         run: |
@@ -130,6 +132,8 @@ jobs:
         with:
           pkgs: cargo-hack
       - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}
       - name: Hack Check (each-feature)
         shell: bash
         run: |
