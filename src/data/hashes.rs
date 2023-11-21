@@ -64,9 +64,11 @@ pub struct HashesFileImm {
 impl From<HashesFile> for HashesFileImm {
     fn from(value: HashesFile) -> Self {
         match value {
-            HashesFile::V1(hashes) => Self {
-                hashes: hashes.hashes,
-            },
+            HashesFile::V1(hashes) => {
+                Self {
+                    hashes: hashes.hashes,
+                }
+            }
         }
     }
 }

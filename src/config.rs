@@ -77,11 +77,12 @@ fn parse_args() -> Arguments {
         .argument::<String>("TARGET")
         .optional();
 
-    let index_key = long("index-key")
-        .env("PREBUILT_INDEX_KEY")
-        .help("Index to use, pulling from config file. Overrides --index.")
-        .argument::<String>("INDEX_KEY")
-        .optional();
+    let index_key =
+        long("index-key")
+            .env("PREBUILT_INDEX_KEY")
+            .help("Index to use, pulling from config file. Overrides --index.")
+            .argument::<String>("INDEX_KEY")
+            .optional();
 
     let index = long("index")
         .env("PREBUILT_INDEX")
@@ -200,28 +201,29 @@ fn parse_args() -> Arguments {
         .help("Require a config file to be used. (Does not work with --ci)")
         .switch();
 
-    let parser = construct!(Arguments {
-        target,
-        index_key,
-        index,
-        auth,
-        config,
-        path,
-        report_path,
-        ci,
-        no_create_path,
-        reports,
-        pub_key,
-        no_verify,
-        safe,
-        out,
-        color,
-        no_color,
-        gen_config,
-        get_latest,
-        require_config,
-        pkgs,
-    });
+    let parser =
+        construct!(Arguments {
+            target,
+            index_key,
+            index,
+            auth,
+            config,
+            path,
+            report_path,
+            ci,
+            no_create_path,
+            reports,
+            pub_key,
+            no_verify,
+            safe,
+            out,
+            color,
+            no_color,
+            gen_config,
+            get_latest,
+            require_config,
+            pkgs,
+        });
 
     cargo_helper("prebuilt", parser)
         .to_options()
@@ -497,16 +499,17 @@ fn generate(args: &Arguments) -> ! {
     // Index writing
     match (&args.index, &args.index_key) {
         (Some(index), ik) => {
-            let key = match ik {
-                Some(ik) => ik.clone(),
-                None => format!(
-                    "gen_{}",
-                    SystemTime::now()
-                        .duration_since(UNIX_EPOCH)
-                        .expect("Failed to generate a random id for index addition.")
-                        .as_secs()
-                ),
-            };
+            let key =
+                match ik {
+                    Some(ik) => ik.clone(),
+                    None => format!(
+                        "gen_{}",
+                        SystemTime::now()
+                            .duration_since(UNIX_EPOCH)
+                            .expect("Failed to generate a random id for index addition.")
+                            .as_secs()
+                    ),
+                };
 
             match config.index.as_mut() {
                 Some(map) => {

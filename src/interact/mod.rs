@@ -7,17 +7,24 @@ mod github_private;
 #[cfg(feature = "github-public")]
 mod github_public;
 
-#[derive(thiserror::Error, Debug)]
+#[derive(Debug)]
 pub enum InteractError {
-    #[error("The received string is malformed.")]
     Malformed,
-    #[error("Http code `{0}`")]
     HttpCode(u16),
-    #[error("Connection error")]
     ConnectionError,
     // #[error("Unknown error")]
     // Unknown,
 }
+impl std::fmt::Display for InteractError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            InteractError::Malformed => write!(f, "The received string is malformed."),
+            InteractError::HttpCode(code) => write!(f, "Http code {code}"),
+            InteractError::ConnectionError => write!(f, "Connection error"),
+        }
+    }
+}
+impl std::error::Error for InteractError {}
 
 pub fn create_interact(input: String, auth: Option<&String>, agent: Agent) -> Box<dyn Interact> {
     // Github public
