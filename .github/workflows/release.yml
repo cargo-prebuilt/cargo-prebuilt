@@ -367,7 +367,7 @@ jobs:
           --userns host --user $(id -u):$(id -g) \
           -v ./:/project \
           ghcr.io/cargo-prebuilt/ink-cross:stable-${{ matrix.target }} \
-          build --verbose --workspace --release --locked --target ${{ matrix.target }} ${{ env.feature-set }}
+          auditable build --verbose --workspace --release --locked --target ${{ matrix.target }} ${{ env.feature-set }}
       - name: Run cargo-prebuilt
         if: ${{ matrix.can-test }}
         run: |
