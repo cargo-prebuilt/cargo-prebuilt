@@ -49,7 +49,7 @@ jobs:
     needs: [ release, check-fmt, clippy, ink-cross, cross, apple-darwin, pc-windows-msvc ]
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
       - name: Merge hashes
         shell: bash
         run: |
@@ -378,7 +378,7 @@ jobs:
       - name: Hash
         run: echo "$(coreutils sha256sum ${{ matrix.target }}.tar.gz)" > ${{ matrix.target }}.sha256
       - name: Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: target-${{ matrix.target }}
           path: |
@@ -427,7 +427,7 @@ jobs:
       - name: Hash
         run: echo "$(coreutils sha256sum ${{ matrix.target }}.tar.gz)" > ${{ matrix.target }}.sha256
       - name: Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: target-${{ matrix.target }}
           path: |
@@ -472,7 +472,7 @@ jobs:
       - name: Hash
         run: echo "$(coreutils sha256sum ${{ matrix.target }}.tar.gz)" > ${{ matrix.target }}.sha256
       - name: Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: target-${{ matrix.target }}
           path: |
@@ -520,7 +520,7 @@ jobs:
       - name: Hash
         run: echo "$(coreutils sha256sum ${{ matrix.target }}.zip)" > ${{ matrix.target }}.sha256
       - name: Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: target-${{ matrix.target }}
           path: |
