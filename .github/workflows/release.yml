@@ -396,13 +396,8 @@ jobs:
             can-test: false
           - target: x86_64-unknown-illumos
             can-test: false
-          - target: x86_64-sun-solaris
-            can-test: false
           - target: powerpc64-unknown-linux-gnu
             can-test: true
-          - target: x86_64-pc-windows-gnu
-            can-test: true
-            ending: .exe
     runs-on: ubuntu-latest
     needs: [ check-fmt, clippy, cargo-hack, cargo-msrv, cargo-deny ]
     steps:
@@ -423,7 +418,7 @@ jobs:
       - name: Build
         run: cross build --verbose --workspace --release --locked --target ${{ matrix.target }} ${{ env.feature-set }}
       - name: Tar
-        run: tar czvf ${{ matrix.target }}.tar.gz -C ./target/${{ matrix.target }}/release ${{ env.bin-name }}${{ matrix.ending }}
+        run: tar czvf ${{ matrix.target }}.tar.gz -C ./target/${{ matrix.target }}/release ${{ env.bin-name }}
       - name: Hash
         run: echo "$(coreutils sha256sum ${{ matrix.target }}.tar.gz)" > ${{ matrix.target }}.sha256
       - name: Artifact

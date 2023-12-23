@@ -84,13 +84,8 @@ jobs:
             can-test: false
           - target: x86_64-unknown-illumos
             can-test: false
-          - target: x86_64-sun-solaris
-            can-test: false
           - target: powerpc64-unknown-linux-gnu
             can-test: true
-          - target: x86_64-pc-windows-gnu
-            can-test: true
-            ending: .exe
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -115,7 +110,7 @@ jobs:
         with:
           name: target-${{ matrix.target }}
           path: |
-            target/${{ matrix.target }}/debug/${{ env.bin-name }}${{ matrix.ending }}
+            target/${{ matrix.target }}/debug/${{ env.bin-name }}
 
   apple-darwin:
     strategy:
