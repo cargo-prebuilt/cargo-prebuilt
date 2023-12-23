@@ -67,7 +67,7 @@ jobs:
           just --version
           target/${{ matrix.target }}/debug/${{ env.bin-name }} --color just
       - name: Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: target-${{ matrix.target }}
           path: |
@@ -84,13 +84,8 @@ jobs:
             can-test: false
           - target: x86_64-unknown-illumos
             can-test: false
-          - target: x86_64-sun-solaris
-            can-test: false
           - target: powerpc64-unknown-linux-gnu
             can-test: true
-          - target: x86_64-pc-windows-gnu
-            can-test: true
-            ending: .exe
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -111,11 +106,11 @@ jobs:
       - name: Build
         run: cross build --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
       - name: Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: target-${{ matrix.target }}
           path: |
-            target/${{ matrix.target }}/debug/${{ env.bin-name }}${{ matrix.ending }}
+            target/${{ matrix.target }}/debug/${{ env.bin-name }}
 
   apple-darwin:
     strategy:
@@ -152,7 +147,7 @@ jobs:
           just --version
           target/${{ matrix.target }}/debug/${{ env.bin-name }} --color just
       - name: Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: target-${{ matrix.target }}
           path: |
@@ -192,7 +187,7 @@ jobs:
           target/${{ matrix.target }}/debug/${{ env.bin-name }}.exe just
           just --version
       - name: Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: target-${{ matrix.target }}
           path: |
