@@ -72,7 +72,7 @@ dependencies = [
 
 [[package]]
 name = "cargo-prebuilt"
-version = "0.6.5-dev"
+version = "0.6.5"
 dependencies = [
  "bpaf",
  "directories",

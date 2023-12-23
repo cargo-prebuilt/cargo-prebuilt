@@ -2,6 +2,8 @@
 
 ## Upcoming
 
+## [0.6.5](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.6.5)
+
 - Drop sun solaris and windows gnu builds.
 - Update to owo-colors 4.
 - Update home.
