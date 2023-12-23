@@ -7,6 +7,7 @@
 - Drop sun solaris and windows gnu builds.
 - Update to owo-colors 4.
 - Update home.
+- Bump MSRV from Rust 1.67+ to Rust 1.70+.
 
 ## [0.6.4](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.6.4)
 
