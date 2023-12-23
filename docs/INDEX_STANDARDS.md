@@ -31,7 +31,7 @@ Pull from https://github.com/cargo-prebuilt/index/blob/main/API.md.
   },
   "targets": [
     "TARGET",
-    "TARGET?"
+    "TARGET?" ### TODO: Allow target to be mapped to another file name?
   ]
 }
 ```

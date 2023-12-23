@@ -5,6 +5,11 @@
 [![Crates.io](https://img.shields.io/crates/v/cargo-prebuilt)](https://crates.io/crates/cargo-prebuilt)
 [![rustc-msrv](https://img.shields.io/badge/rustc-1.70%2B-blue?logo=rust)](https://www.rust-lang.org/tools/install)
 
+> [!CAUTION]
+> This is a full rewrite of cargo-prebuilt and changes many things about it.
+>
+> All documentation is out of date!
+
 Download prebuilt binaries of some crate.io crates.
 
 See supported targets and a list of prebuilt crates [here](https://github.com/cargo-prebuilt/index#readme).
