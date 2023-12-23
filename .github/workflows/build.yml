@@ -50,6 +50,7 @@ jobs:
         run: |
           docker run --rm \
           --userns host --user $(id -u):$(id -g) \
+          -v $HOME/.cargo/registry:/usr/local/cargo/registry \
           -v ./:/project \
           ghcr.io/cargo-prebuilt/ink-cross:stable-${{ matrix.target }} \
           test --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
@@ -57,6 +58,7 @@ jobs:
         run: |
           docker run --rm \
           --userns host --user $(id -u):$(id -g) \
+          -v $HOME/.cargo/registry:/usr/local/cargo/registry \
           -v ./:/project \
           ghcr.io/cargo-prebuilt/ink-cross:stable-${{ matrix.target }} \
           auditable build --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
