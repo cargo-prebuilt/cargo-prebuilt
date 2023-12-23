@@ -1,10 +1,11 @@
 #!/bin/bash
 
-### Accepts in params (env vars) VERSION, INSTALL_PATH, LIBC, ARCH, OS_TYPE, FORCE.
+### Accepts in params (env vars) VERSION, INSTALL_PATH, LIBC, ARCH, OS_TYPE, FORCE, R_TARGET.
 ### VERSION: Version of cargo-prebuilt to install. (Defaults to latest)
 ### INSTALL_PATH: Path to where cargo-prebuilt should be installed.
 ### LIBC: Which libc flavor to use. (gnu or musl) (Does nothing on macos)
 ### MINISIGN: If true, minisign will be used to verify the download. (Requires minisign to be installed)
+### R_TARGET: The target type of cargo-prebuilt you want to download.
 
 set -euxo pipefail
 
@@ -136,6 +137,10 @@ tar -xzvf "$TAR"
 ARGS=""
 if [ ! -z ${INSTALL_PATH+x} ]; then
     ARGS+="--path=$INSTALL_PATH"
+fi
+
+if [ ! -z ${R_TARGET+x} ]; then
+    ARGS+="--target=$R_TARGET"
 fi
 
 END_VERSION=""

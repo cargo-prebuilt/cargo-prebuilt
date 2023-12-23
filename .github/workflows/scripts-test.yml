@@ -10,11 +10,21 @@ on:
     workflow_dispatch:
 
 jobs:
-  test-install-script:
+  test-install-script-1:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Run install script
         run: ./scripts/install-cargo-prebuilt.sh
       - name: Run cargo-prebuilt
-        run: cargo prebuilt --version
+        run: |
+          cargo prebuilt --version
+          cargo prebuilt just
+  test-install-script-2:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run install script
+        run: R_TARGET="aarch64-pc-windows-msvc" ./scripts/install-cargo-prebuilt.sh
+      - name: Find cargo-prebuilt
+        run: which cargo-prebuilt
