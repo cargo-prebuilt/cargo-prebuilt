@@ -27,4 +27,4 @@ jobs:
       - name: Run install script
         run: R_TARGET="aarch64-pc-windows-msvc" ./scripts/install-cargo-prebuilt.sh
       - name: Find cargo-prebuilt
-        run: which cargo-prebuilt
+        run: which cargo-prebuilt.exe
