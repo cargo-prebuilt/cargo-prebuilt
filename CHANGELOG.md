@@ -2,6 +2,10 @@
 
 ## Upcoming
 
+- Drop sun solaris and windows gnu builds.
+- Update to owo-colors 4.
+- Update home.
+
 ## [0.6.4](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.6.4)
 
 - Internally removed a lot of panics for better reliability.

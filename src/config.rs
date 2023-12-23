@@ -230,9 +230,11 @@ fn parse_args() -> Arguments {
 }
 
 fn fill_from_file(args: &mut Arguments) {
-    let conf = match args.config.clone() {
-        Some(p) => p,
-        None => match ProjectDirs::from(QUALIFIER, ORG, APPLICATION) {
+    let conf = if let Some(p) = args.config.clone() {
+        p
+    }
+    else if args.config.is_none() {
+        match ProjectDirs::from(QUALIFIER, ORG, APPLICATION) {
             Some(project) => {
                 let mut conf = PathBuf::from(project.config_dir());
                 conf.push(CONFIG_FILE);
@@ -242,7 +244,10 @@ fn fill_from_file(args: &mut Arguments) {
                 eprintln!("Could not find default config directory! Config file will be ignored.");
                 return;
             }
-        },
+        }
+    }
+    else {
+        unreachable!()
     };
 
     if conf.exists() {
@@ -336,48 +341,37 @@ fn fill_from_file(args: &mut Arguments) {
 }
 
 fn convert(args: Arguments) -> Config {
-    let target = match args.target {
-        Some(val) => val,
-        None => TARGET.to_owned(),
-    };
+    let target = args.target.unwrap_or_else(|| TARGET.to_owned());
 
-    let index = match args.index {
-        Some(val) => val,
-        None => DEFAULT_INDEX.to_string(),
-    };
+    let index = args.index.unwrap_or_else(|| DEFAULT_INDEX.to_string());
 
     let auth = args.auth;
 
-    let path = match args.path {
-        Some(val) => val,
-        None => {
-            let mut cargo_home = cargo_home().expect("Could not find cargo home directory. Please set $CARGO_HOME, or use $PREBUILT_PATH or --path");
-            if !cargo_home.ends_with("bin") {
-                cargo_home.push("bin");
-            }
-            cargo_home
+    let path = args.path.unwrap_or_else(|| {
+        let mut cargo_home = cargo_home().expect("Could not find cargo home directory. Please set $CARGO_HOME, or use $PREBUILT_PATH or --path");
+        if !cargo_home.ends_with("bin") {
+            cargo_home.push("bin");
         }
-    };
+        cargo_home
+    });
 
-    let report_path = match args.report_path {
-        Some(val) => val,
-        None => match ProjectDirs::from(QUALIFIER, ORG, APPLICATION) {
-            Some(project) => {
-                let mut data = PathBuf::from(project.data_dir());
-                data.push("reports");
-                data
-            }
-            None => panic!("Could not get report path, try setting $XDG_DATA_HOME or $HOME."),
-        },
-    };
+    let report_path =
+        args.report_path
+            .unwrap_or_else(|| match ProjectDirs::from(QUALIFIER, ORG, APPLICATION) {
+                Some(project) => {
+                    let mut data = PathBuf::from(project.data_dir());
+                    data.push("reports");
+                    data
+                }
+                None => panic!("Could not get report path, try setting $XDG_DATA_HOME or $HOME."),
+            });
 
     let ci = args.ci;
     let no_create_path = args.no_create_path;
 
-    let reports = match args.reports {
-        Some(val) => val,
-        None => IndexSet::from([ReportType::LicenseDL]),
-    };
+    let reports = args
+        .reports
+        .unwrap_or_else(|| IndexSet::from([ReportType::LicenseDL]));
 
     let no_verify = args.no_verify;
     let safe = args.safe;
@@ -389,7 +383,7 @@ fn convert(args: Arguments) -> Config {
     match (args.color, args.no_color) {
         (true, false) => color::set_override(true),
         (_, true) => color::set_override(false),
-        _ => color::from_stream(),
+        _ => {}
     }
 
     let pkgs = args.pkgs;
@@ -461,9 +455,8 @@ fn generate(args: &Arguments) -> ! {
         err_color_print("Generating", PossibleColor::BrightPurple)
     );
 
-    let conf = match args.config.clone() {
-        Some(p) => p,
-        None => match ProjectDirs::from(QUALIFIER, ORG, APPLICATION) {
+    let conf = args.config.clone().unwrap_or_else(|| {
+        match ProjectDirs::from(QUALIFIER, ORG, APPLICATION) {
             Some(project) => {
                 let mut conf = PathBuf::from(project.config_dir());
                 create_dir_all(&conf).expect("Could not create paths for config file.");
@@ -474,8 +467,8 @@ fn generate(args: &Arguments) -> ! {
                 "{} get config directory! Try using --config or $PREBUILT_CONFIG.",
                 err_color_print("Could not", color::PossibleColor::BrightRed)
             ),
-        },
-    };
+        }
+    });
     eprintln!("Config Path: {conf:?}");
 
     let mut file = OpenOptions::new()

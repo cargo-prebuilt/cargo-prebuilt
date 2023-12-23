@@ -316,7 +316,7 @@ impl Fetcher {
                 let hash: Vec<u8> = hasher.finalize().to_vec();
                 let hash = hex::encode(hash);
 
-                if !(hash.eq(sha_hash)) {
+                if !hash.eq(sha_hash) {
                     panic!("sha3_512 hashes do not match for {item}. {sha_hash} != {hash}");
                 }
 
@@ -334,7 +334,7 @@ impl Fetcher {
                 let hash: Vec<u8> = hasher.finalize().to_vec();
                 let hash = hex::encode(hash);
 
-                if !(hash.eq(sha_hash)) {
+                if !hash.eq(sha_hash) {
                     panic!("sha3_256 hashes do not match for {item}. {sha_hash} != {hash}");
                 }
 
@@ -357,7 +357,7 @@ impl Fetcher {
                 let hash: Vec<u8> = hasher.finalize().to_vec();
                 let hash = hex::encode(hash);
 
-                if !(hash.eq(sha_hash)) {
+                if !hash.eq(sha_hash) {
                     panic!("sha512 hashes do not match for {item}. {sha_hash} != {hash}");
                 }
 
@@ -375,7 +375,7 @@ impl Fetcher {
                 let hash: Vec<u8> = hasher.finalize().to_vec();
                 let hash = hex::encode(hash);
 
-                if !(hash.eq(sha_hash)) {
+                if !hash.eq(sha_hash) {
                     panic!("sha256 hashes do not match for {item}. {sha_hash} != {hash}");
                 }
 

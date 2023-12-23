@@ -1,6 +1,3 @@
-#[cfg(feature = "color")]
-use std::sync::atomic::{AtomicBool, Ordering};
-
 pub enum PossibleColor {
     BrightBlue,
     BrightCyan,
@@ -13,47 +10,46 @@ pub enum PossibleColor {
     Green,
 }
 
-#[cfg(feature = "color")]
-static COLOR_SUPPORT_ERR: AtomicBool = AtomicBool::new(false);
-
-pub fn from_stream() {
-    #[cfg(feature = "color")]
-    {
-        match supports_color::on(supports_color::Stream::Stderr) {
-            Some(_) => COLOR_SUPPORT_ERR.store(true, Ordering::Relaxed),
-            None => COLOR_SUPPORT_ERR.store(false, Ordering::Relaxed),
-        }
-    }
-}
-
 pub fn set_override(color: bool) {
     #[cfg(feature = "color")]
     {
-        COLOR_SUPPORT_ERR.store(color, Ordering::Relaxed)
+        owo_colors::set_override(color);
     }
 
     #[cfg(not(feature = "color"))]
-    let _ = color;
+    {}
 }
 
 #[cfg(feature = "color")]
 pub fn err_color_print(str: &str, color: PossibleColor) -> String {
-    use owo_colors::OwoColorize;
-
-    if !COLOR_SUPPORT_ERR.load(Ordering::Relaxed) {
-        return str.to_string();
-    }
+    use owo_colors::{OwoColorize, Stream::Stderr};
 
     match color {
-        PossibleColor::BrightBlue => str.bright_blue().to_string(),
-        PossibleColor::BrightCyan => str.bright_cyan().to_string(),
-        PossibleColor::BrightGreen => str.bright_green().to_string(),
-        PossibleColor::BrightMagenta => str.bright_magenta().to_string(),
-        PossibleColor::BrightPurple => str.bright_purple().to_string(),
-        PossibleColor::BrightRed => str.bright_red().to_string(),
-        PossibleColor::BrightWhite => str.bright_white().to_string(),
-        PossibleColor::BrightYellow => str.bright_yellow().to_string(),
-        PossibleColor::Green => str.green().to_string(),
+        PossibleColor::BrightBlue => str
+            .if_supports_color(Stderr, |t| t.bright_blue())
+            .to_string(),
+        PossibleColor::BrightCyan => str
+            .if_supports_color(Stderr, |t| t.bright_cyan())
+            .to_string(),
+        PossibleColor::BrightGreen => str
+            .if_supports_color(Stderr, |t| t.bright_green())
+            .to_string(),
+        PossibleColor::BrightMagenta => str
+            .if_supports_color(Stderr, |t| t.bright_magenta())
+            .to_string(),
+        PossibleColor::BrightPurple => str
+            .if_supports_color(Stderr, |t| t.bright_purple())
+            .to_string(),
+        PossibleColor::BrightRed => str
+            .if_supports_color(Stderr, |t| t.bright_red())
+            .to_string(),
+        PossibleColor::BrightWhite => str
+            .if_supports_color(Stderr, |t| t.bright_white())
+            .to_string(),
+        PossibleColor::BrightYellow => str
+            .if_supports_color(Stderr, |t| t.bright_yellow())
+            .to_string(),
+        PossibleColor::Green => str.if_supports_color(Stderr, |t| t.green()).to_string(),
     }
 }
 
