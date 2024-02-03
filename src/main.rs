@@ -23,8 +23,8 @@ use crate::{
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
-static QUALIFIER: &str = "tech.harmless";
-static ORG: &str = "cargo-prebuilt";
+static QUALIFIER: &str = "tech";
+static ORG: &str = "harmless";
 static APPLICATION: &str = "cargo-prebuilt";
 
 static DEFAULT_INDEX: &str = "gh-pub:github.com/cargo-prebuilt/index";
