@@ -58,6 +58,7 @@ struct Arguments {
     pkgs: IndexSet<String>,
 }
 
+// TODO: Consider moving fallback/default values to here.
 fn parse_args() -> Arguments {
     use bpaf::*;
 
@@ -73,7 +74,7 @@ fn parse_args() -> Arguments {
 
     let target = long("target")
         .env("PREBUILT_TARGET")
-        .help("Target of the binary to download. (Defaults to target of cargo-prebuilt)")
+        .help(format!("Target of the binary to download. (Default: {TARGET})").as_str())
         .argument::<String>("TARGET")
         .optional();
 
@@ -97,19 +98,19 @@ fn parse_args() -> Arguments {
 
     let config = long("config")
         .env("PREBUILT_CONFIG")
-        .help("Path to the config file")
+        .help(format!("Path to the config file (Default: See https://github.com/cargo-prebuilt/cargo-prebuilt/blob/v{}/docs/PATHS.md#config)", env!("CARGO_PKG_VERSION")).as_str())
         .argument::<PathBuf>("CONFIG_PATH")
         .optional();
 
     let path = long("path")
         .env("PREBUILT_PATH")
-        .help("Path to the folder where downloaded binaries will be installed. (Default: $CARGO_HOME)")
+        .help("Path to the folder where downloaded binaries will be installed. (Default: $CARGO_HOME/bin)")
         .argument::<PathBuf>("PATH")
         .optional();
 
     let report_path = long("report-path")
         .env("PREBUILT_REPORT_PATH")
-        .help("Path to the folder where the reports will be put.")
+        .help(format!("Path to the folder where the reports will be put (Default: See https://github.com/cargo-prebuilt/cargo-prebuilt/blob/v{}/docs/PATHS.md#reports)", env!("CARGO_PKG_VERSION")).as_str())
         .argument::<PathBuf>("REPORT_PATH")
         .optional();
 
@@ -125,7 +126,7 @@ fn parse_args() -> Arguments {
 
     let reports = long("reports")
         .env("PREBUILT_REPORTS")
-        .help("A CSV list of reports types. (license, deps, audit)")
+        .help(format!("Reports to be downloaded in a CSV format (Default: license) (See: See https://github.com/cargo-prebuilt/cargo-prebuilt/blob/v{}/docs/REPORT_TYPES.md)", env!("CARGO_PKG_VERSION")).as_str())
         .argument::<String>("REPORTS")
         .parse(|s| {
             let mut v = IndexSet::new();
@@ -186,7 +187,7 @@ fn parse_args() -> Arguments {
         .switch();
 
     let gen_config = long("gen-config")
-        .help("Generate/Overwrite a base config at $CONFIG/cargo-prebuilt/config.toml. (This still requires PKGS to be filled, but they will be ignored.)")
+        .help("(DEPRECATED: May generate wrong configs in future versions.) Generate/Overwrite a base config at $CONFIG/cargo-prebuilt/config.toml. (This still requires PKGS to be filled, but they will be ignored.)")
         .switch();
 
     let get_latest = long("get-latest")
@@ -197,8 +198,10 @@ fn parse_args() -> Arguments {
     let require_config = short('r')
         .long("require-config")
         .env("PREBUILT_REQUIRE_CONFIG")
-        .help("Require a config file to be used. (Does not work with --ci)")
+        .help("Require a config file to be used. (--ci will override this)")
         .switch();
+
+    // TODO: sig-with and verify-with
 
     let parser = construct!(Arguments {
         target,

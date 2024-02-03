@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 
 use super::HashType;
 
+// TODO: Add license_event, deps_event, audit_event.
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum ReportType {
     #[serde(rename = "license")]
