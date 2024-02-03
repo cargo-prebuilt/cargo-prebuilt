@@ -2,6 +2,10 @@
 
 ## Upcoming
 
+- Deprecated --gen-config.
+- Updated help messages to also point to docs and be more helpful.
+- Fixed the app qualifier.
+
 ## [0.6.5](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.6.5)
 
 - Drop sun solaris and windows gnu builds.
