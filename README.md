@@ -96,16 +96,13 @@ See [Events](docs/EVENTS.md).
 
 Reports are generated when a crate is built in the index.
 
-They are stored under ```$DATA/cargo-prebuilt/reports/$CRATE/$VERSION``` by default.
+They are stored under ```$REPORTS/$CRATE/$VERSION``` by default.
 
-See [Data Dirs](https://docs.rs/directories/5.0.1/directories/struct.ProjectDirs.html#method.data_dir).
+See [Report Directory ($REPORTS)](docs/PATHS.md#reports).
 
 Use ```--report-path``` to change where they are stored.
 
-Report types (--reports):
-- license: Download license and put it under the prebuilt folder in the installation dir. (Default on)
-- deps: Download deps tree and put it under the prebuilt folder in the installation dir.
-- audit: Download audit and put it under the prebuilt folder in the installation dir.
+[Report Types](docs/REPORT_TYPES.md)
 
 ## Using a custom index
 

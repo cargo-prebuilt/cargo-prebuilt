@@ -22,8 +22,6 @@ Use ```cargo prebuilt --help```.
 > [!WARNING]
 > Config files are not stable between any versions.
 
-The config file should be under ```$CONFIG/cargo-prebuilt/config.toml```.
-
 [Config Directory ($CONFIG)](PATHS.md#config)
 
 ```toml
