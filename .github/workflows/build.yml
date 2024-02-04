@@ -254,42 +254,87 @@ jobs:
           path: |
             target/${{ matrix.target }}/debug/${{ env.bin-name }}
 
-#  pc-windows-msvc:
-#    strategy:
-#      fail-fast: false
-#      matrix:
-#        include:
-#          - target: x86_64-pc-windows-msvc
-#            can-test: true
-#          - target: aarch64-pc-windows-msvc
-#            can-test: false
-#    runs-on: windows-latest
-#    steps:
-#      - uses: actions/checkout@v4
-#      - name: Update Rust and add target
-#        run: |
-#          rustup update
-#          rustc --version
-#          rustup target add ${{ matrix.target }}
-#      - uses: cargo-prebuilt/cargo-prebuilt-action@v3
-#        with:
-#          pkgs: cargo-auditable
-#      - uses: Swatinem/rust-cache@v2
-#        with:
-#          key: ${{ matrix.target }}
-#      - name: Run tests
-#        if: ${{ matrix.can-test }}
-#        run: cargo test --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
-#      - name: Build
-#        run: cargo auditable build --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
+  xwin-pc-windows-msvc:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-pc-windows-msvc
+            can-test: false
+          - target: aarch64-pc-windows-msvc
+            can-test: false
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install clang
+        run: |
+          sudo apt update
+          sudo apt install -y clang
+      - name: Update Rust and add target
+        run: |
+          rustup update
+          rustc --version
+          rustup component add llvm-tools-preview
+          rustup target add ${{ matrix.target }}
+      - uses: cargo-prebuilt/cargo-prebuilt-action@v3
+        with:
+          pkgs: cargo-auditable,cargo-xwin
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: xwin-${{ matrix.target }}
+      - name: Run tests
+        if: ${{ matrix.can-test }}
+        run: cargo test --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
+      - name: Build
+        run: cargo xwin build --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
 #      - name: Run cargo-prebuilt
 #        if: ${{ matrix.can-test }}
 #        run: |
 #          target/${{ matrix.target }}/debug/${{ env.bin-name }}.exe just
 #          just --version
-#      - name: Artifact
-#        uses: actions/upload-artifact@v4
-#        with:
-#          name: target-${{ matrix.target }}
-#          path: |
-#            target/${{ matrix.target }}/debug/${{ env.bin-name }}.exe
+      - name: Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: xwin-target-${{ matrix.target }}
+          path: |
+            target/${{ matrix.target }}/debug/${{ env.bin-name }}.exe
+
+  pc-windows-msvc:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-pc-windows-msvc
+            can-test: true
+          - target: aarch64-pc-windows-msvc
+            can-test: false
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Update Rust and add target
+        run: |
+          rustup update
+          rustc --version
+          rustup target add ${{ matrix.target }}
+      - uses: cargo-prebuilt/cargo-prebuilt-action@v3
+        with:
+          pkgs: cargo-auditable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}
+      - name: Run tests
+        if: ${{ matrix.can-test }}
+        run: cargo test --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
+      - name: Build
+        run: cargo auditable build --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
+      - name: Run cargo-prebuilt
+        if: ${{ matrix.can-test }}
+        run: |
+          target/${{ matrix.target }}/debug/${{ env.bin-name }}.exe just
+          just --version
+      - name: Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: target-${{ matrix.target }}
+          path: |
+            target/${{ matrix.target }}/debug/${{ env.bin-name }}.exe
