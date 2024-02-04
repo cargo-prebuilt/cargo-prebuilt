@@ -211,9 +211,17 @@ jobs:
         include:
           - target: x86_64-apple-darwin
             can-test: false
+            os: macos-14
           - target: aarch64-apple-darwin
             can-test: false
-    runs-on: macos-14
+            os: macos-14
+          - target: x86_64-apple-darwin
+            can-test: false
+            os: macos-latest
+          - target: aarch64-apple-darwin
+            can-test: false
+            os: macos-latest
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - name: Update Rust and add target
@@ -226,6 +234,7 @@ jobs:
           pkgs: cargo-auditable
       - uses: Swatinem/rust-cache@v2
         with:
+          prefix-key: testing-compare
           key: ${{ matrix.target }}
       - name: Run tests
         if: ${{ matrix.can-test }}
