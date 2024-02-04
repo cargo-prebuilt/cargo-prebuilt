@@ -54,8 +54,8 @@ jobs:
           zigbuild --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
       - name: Permission fix
         run: |
-          chown -R "$(id -u):$(id -g)" $HOME/.cargo/registry
-          chown -R "$(id -u):$(id -g)" ./
+          sudo chown -R "$(id -u):$(id -g)" $HOME/.cargo/registry
+          sudo chown -R "$(id -u):$(id -g)" ./
       - name: Run cargo-prebuilt
         if: ${{ matrix.can-test }}
         run: |
