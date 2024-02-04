@@ -17,4 +17,4 @@ if ! cargo-zigbuild --version &> /dev/null; then
     cargo-prebuilt --ci --report-path='/tmp' cargo-zigbuild
 fi
 
-exec cargo +$RUST_VERSION "$@"
+exec cargo "$@"
