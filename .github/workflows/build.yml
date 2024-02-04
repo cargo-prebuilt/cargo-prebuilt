@@ -37,7 +37,6 @@ jobs:
         if: ${{ matrix.can-test }}
         run: |
           docker run --rm \
-          --userns host --user $(id -u):$(id -g) \
           -v $HOME/.cargo/registry:/usr/local/cargo/registry \
           -v ./:/project \
           --entrypoint "./scripts/entrypoint-test-zig.sh" \
@@ -46,7 +45,6 @@ jobs:
       - name: Build with ink cross
         run: |
           docker run --rm \
-          --userns host --user $(id -u):$(id -g) \
           -v $HOME/.cargo/registry:/usr/local/cargo/registry \
           -v ./:/project \
           --entrypoint "./scripts/entrypoint-test-zig.sh" \
