@@ -2,6 +2,8 @@
 
 ## Upcoming
 
+## [0.6.6](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.6.6)
+
 - Deprecate --gen-config.
 - Update help messages to also point to docs and be more helpful.
 - Fix the app qualifier to be `tech.harmless.cargo-prebuilt` instead of `tech.harmless.cargo-prebuilt.cargo-prebuilt`.
