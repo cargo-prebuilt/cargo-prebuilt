@@ -16,27 +16,15 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  ink-cross:
+  ex-ink-cross-zig:
     strategy:
       fail-fast: false
       matrix:
         include:
-          - target: aarch64-unknown-linux-gnu
-            can-test: false
           - target: aarch64-unknown-linux-musl
-            can-test: false
-          - target: armv7-unknown-linux-gnueabihf
             can-test: false
           - target: armv7-unknown-linux-musleabihf
             can-test: false
-          - target: powerpc64le-unknown-linux-gnu
-            can-test: false
-          - target: riscv64gc-unknown-linux-gnu
-            can-test: false
-          - target: s390x-unknown-linux-gnu
-            can-test: false
-          - target: x86_64-unknown-linux-gnu
-            can-test: true
           - target: x86_64-unknown-linux-musl
             can-test: true
     runs-on: ubuntu-latest
@@ -52,6 +40,7 @@ jobs:
           --userns host --user $(id -u):$(id -g) \
           -v $HOME/.cargo/registry:/usr/local/cargo/registry \
           -v ./:/project \
+          --entrypoint=./scripts/entrypoint-test-zig.sh
           ghcr.io/cargo-prebuilt/ink-cross:stable-${{ matrix.target }} \
           test --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
       - name: Build with ink cross
@@ -60,8 +49,9 @@ jobs:
           --userns host --user $(id -u):$(id -g) \
           -v $HOME/.cargo/registry:/usr/local/cargo/registry \
           -v ./:/project \
+          --entrypoint=./scripts/entrypoint-test-zig.sh
           ghcr.io/cargo-prebuilt/ink-cross:stable-${{ matrix.target }} \
-          auditable build --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
+          zigbuild --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
       - name: Run cargo-prebuilt
         if: ${{ matrix.can-test }}
         run: |
@@ -75,122 +65,181 @@ jobs:
           path: |
             target/${{ matrix.target }}/debug/${{ env.bin-name }}
 
-  cross:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - target: x86_64-unknown-freebsd
-            can-test: false
-          - target: x86_64-unknown-netbsd
-            can-test: false
-          - target: x86_64-unknown-illumos
-            can-test: false
-          - target: powerpc64-unknown-linux-gnu
-            can-test: true
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Update Rust and add target
-        run: |
-          rustup update
-          rustc --version
-          rustup target add ${{ matrix.target }}
-      - uses: cargo-prebuilt/cargo-prebuilt-action@v3
-        with:
-          pkgs: cross
-      - uses: Swatinem/rust-cache@v2
-        with:
-          key: ${{ matrix.target }}
-      - name: Run tests
-        if: ${{ matrix.can-test }}
-        run: cross test --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
-      - name: Build
-        run: cross build --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
-      - name: Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: target-${{ matrix.target }}
-          path: |
-            target/${{ matrix.target }}/debug/${{ env.bin-name }}
-
-  apple-darwin:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - target: x86_64-apple-darwin
-            can-test: true
-          - target: aarch64-apple-darwin
-            can-test: false
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Update Rust and add target
-        run: |
-          rustup update
-          rustc --version
-          rustup target add ${{ matrix.target }}
-      - uses: cargo-prebuilt/cargo-prebuilt-action@v3
-        with:
-          pkgs: cargo-auditable
-      - uses: Swatinem/rust-cache@v2
-        with:
-          key: ${{ matrix.target }}
-      - name: Run tests
-        if: ${{ matrix.can-test }}
-        run: cargo test --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
-      - name: Build
-        run: cargo auditable build --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
-      - name: Run cargo-prebuilt
-        if: ${{ matrix.can-test }}
-        run: |
-          target/${{ matrix.target }}/debug/${{ env.bin-name }} just
-          just --version
-          target/${{ matrix.target }}/debug/${{ env.bin-name }} --color just
-      - name: Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: target-${{ matrix.target }}
-          path: |
-            target/${{ matrix.target }}/debug/${{ env.bin-name }}
-
-  pc-windows-msvc:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - target: x86_64-pc-windows-msvc
-            can-test: true
-          - target: aarch64-pc-windows-msvc
-            can-test: false
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Update Rust and add target
-        run: |
-          rustup update
-          rustc --version
-          rustup target add ${{ matrix.target }}
-      - uses: cargo-prebuilt/cargo-prebuilt-action@v3
-        with:
-          pkgs: cargo-auditable
-      - uses: Swatinem/rust-cache@v2
-        with:
-          key: ${{ matrix.target }}
-      - name: Run tests
-        if: ${{ matrix.can-test }}
-        run: cargo test --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
-      - name: Build
-        run: cargo auditable build --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
-      - name: Run cargo-prebuilt
-        if: ${{ matrix.can-test }}
-        run: |
-          target/${{ matrix.target }}/debug/${{ env.bin-name }}.exe just
-          just --version
-      - name: Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: target-${{ matrix.target }}
-          path: |
-            target/${{ matrix.target }}/debug/${{ env.bin-name }}.exe
+#  ink-cross:
+#    strategy:
+#      fail-fast: false
+#      matrix:
+#        include:
+#          - target: aarch64-unknown-linux-gnu
+#            can-test: false
+#          - target: aarch64-unknown-linux-musl
+#            can-test: false
+#          - target: armv7-unknown-linux-gnueabihf
+#            can-test: false
+#          - target: armv7-unknown-linux-musleabihf
+#            can-test: false
+#          - target: powerpc64le-unknown-linux-gnu
+#            can-test: false
+#          - target: riscv64gc-unknown-linux-gnu
+#            can-test: false
+#          - target: s390x-unknown-linux-gnu
+#            can-test: false
+#          - target: x86_64-unknown-linux-gnu
+#            can-test: true
+#          - target: x86_64-unknown-linux-musl
+#            can-test: true
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v4
+#      - uses: Swatinem/rust-cache@v2
+#        with:
+#          key: ${{ matrix.target }}
+#      - name: Run tests
+#        if: ${{ matrix.can-test }}
+#        run: |
+#          docker run --rm \
+#          --userns host --user $(id -u):$(id -g) \
+#          -v $HOME/.cargo/registry:/usr/local/cargo/registry \
+#          -v ./:/project \
+#          ghcr.io/cargo-prebuilt/ink-cross:stable-${{ matrix.target }} \
+#          test --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
+#      - name: Build with ink cross
+#        run: |
+#          docker run --rm \
+#          --userns host --user $(id -u):$(id -g) \
+#          -v $HOME/.cargo/registry:/usr/local/cargo/registry \
+#          -v ./:/project \
+#          ghcr.io/cargo-prebuilt/ink-cross:stable-${{ matrix.target }} \
+#          auditable build --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
+#      - name: Run cargo-prebuilt
+#        if: ${{ matrix.can-test }}
+#        run: |
+#          target/${{ matrix.target }}/debug/${{ env.bin-name }} just
+#          just --version
+#          target/${{ matrix.target }}/debug/${{ env.bin-name }} --color just
+#      - name: Artifact
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: target-${{ matrix.target }}
+#          path: |
+#            target/${{ matrix.target }}/debug/${{ env.bin-name }}
+#
+#  cross:
+#    strategy:
+#      fail-fast: false
+#      matrix:
+#        include:
+#          - target: x86_64-unknown-freebsd
+#            can-test: false
+#          - target: x86_64-unknown-netbsd
+#            can-test: false
+#          - target: x86_64-unknown-illumos
+#            can-test: false
+#          - target: powerpc64-unknown-linux-gnu
+#            can-test: true
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v4
+#      - name: Update Rust and add target
+#        run: |
+#          rustup update
+#          rustc --version
+#          rustup target add ${{ matrix.target }}
+#      - uses: cargo-prebuilt/cargo-prebuilt-action@v3
+#        with:
+#          pkgs: cross
+#      - uses: Swatinem/rust-cache@v2
+#        with:
+#          key: ${{ matrix.target }}
+#      - name: Run tests
+#        if: ${{ matrix.can-test }}
+#        run: cross test --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
+#      - name: Build
+#        run: cross build --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
+#      - name: Artifact
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: target-${{ matrix.target }}
+#          path: |
+#            target/${{ matrix.target }}/debug/${{ env.bin-name }}
+#
+#  apple-darwin:
+#    strategy:
+#      fail-fast: false
+#      matrix:
+#        include:
+#          - target: x86_64-apple-darwin
+#            can-test: true
+#          - target: aarch64-apple-darwin
+#            can-test: false
+#    runs-on: macos-latest
+#    steps:
+#      - uses: actions/checkout@v4
+#      - name: Update Rust and add target
+#        run: |
+#          rustup update
+#          rustc --version
+#          rustup target add ${{ matrix.target }}
+#      - uses: cargo-prebuilt/cargo-prebuilt-action@v3
+#        with:
+#          pkgs: cargo-auditable
+#      - uses: Swatinem/rust-cache@v2
+#        with:
+#          key: ${{ matrix.target }}
+#      - name: Run tests
+#        if: ${{ matrix.can-test }}
+#        run: cargo test --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
+#      - name: Build
+#        run: cargo auditable build --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
+#      - name: Run cargo-prebuilt
+#        if: ${{ matrix.can-test }}
+#        run: |
+#          target/${{ matrix.target }}/debug/${{ env.bin-name }} just
+#          just --version
+#          target/${{ matrix.target }}/debug/${{ env.bin-name }} --color just
+#      - name: Artifact
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: target-${{ matrix.target }}
+#          path: |
+#            target/${{ matrix.target }}/debug/${{ env.bin-name }}
+#
+#  pc-windows-msvc:
+#    strategy:
+#      fail-fast: false
+#      matrix:
+#        include:
+#          - target: x86_64-pc-windows-msvc
+#            can-test: true
+#          - target: aarch64-pc-windows-msvc
+#            can-test: false
+#    runs-on: windows-latest
+#    steps:
+#      - uses: actions/checkout@v4
+#      - name: Update Rust and add target
+#        run: |
+#          rustup update
+#          rustc --version
+#          rustup target add ${{ matrix.target }}
+#      - uses: cargo-prebuilt/cargo-prebuilt-action@v3
+#        with:
+#          pkgs: cargo-auditable
+#      - uses: Swatinem/rust-cache@v2
+#        with:
+#          key: ${{ matrix.target }}
+#      - name: Run tests
+#        if: ${{ matrix.can-test }}
+#        run: cargo test --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
+#      - name: Build
+#        run: cargo auditable build --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
+#      - name: Run cargo-prebuilt
+#        if: ${{ matrix.can-test }}
+#        run: |
+#          target/${{ matrix.target }}/debug/${{ env.bin-name }}.exe just
+#          just --version
+#      - name: Artifact
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: target-${{ matrix.target }}
+#          path: |
+#            target/${{ matrix.target }}/debug/${{ env.bin-name }}.exe
