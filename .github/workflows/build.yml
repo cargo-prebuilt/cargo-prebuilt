@@ -204,47 +204,47 @@ jobs:
 #          path: |
 #            target/${{ matrix.target }}/debug/${{ env.bin-name }}
 #
-#  apple-darwin:
-#    strategy:
-#      fail-fast: false
-#      matrix:
-#        include:
-#          - target: x86_64-apple-darwin
-#            can-test: true
-#          - target: aarch64-apple-darwin
-#            can-test: false
-#    runs-on: macos-latest
-#    steps:
-#      - uses: actions/checkout@v4
-#      - name: Update Rust and add target
-#        run: |
-#          rustup update
-#          rustc --version
-#          rustup target add ${{ matrix.target }}
-#      - uses: cargo-prebuilt/cargo-prebuilt-action@v3
-#        with:
-#          pkgs: cargo-auditable
-#      - uses: Swatinem/rust-cache@v2
-#        with:
-#          key: ${{ matrix.target }}
-#      - name: Run tests
-#        if: ${{ matrix.can-test }}
-#        run: cargo test --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
-#      - name: Build
-#        run: cargo auditable build --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
-#      - name: Run cargo-prebuilt
-#        if: ${{ matrix.can-test }}
-#        run: |
-#          target/${{ matrix.target }}/debug/${{ env.bin-name }} just
-#          just --version
-#          target/${{ matrix.target }}/debug/${{ env.bin-name }} --color just
-#      - name: Artifact
-#        uses: actions/upload-artifact@v4
-#        with:
-#          name: target-${{ matrix.target }}
-#          path: |
-#            target/${{ matrix.target }}/debug/${{ env.bin-name }}
-#
+  apple-darwin:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-apple-darwin
+            can-test: false
+          - target: aarch64-apple-darwin
+            can-test: false
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Update Rust and add target
+        run: |
+          rustup update
+          rustc --version
+          rustup target add ${{ matrix.target }}
+      - uses: cargo-prebuilt/cargo-prebuilt-action@v3
+        with:
+          pkgs: cargo-auditable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}
+      - name: Run tests
+        if: ${{ matrix.can-test }}
+        run: cargo test --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
+      - name: Build
+        run: cargo auditable build --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
+      - name: Run cargo-prebuilt
+        if: ${{ matrix.can-test }}
+        run: |
+          target/${{ matrix.target }}/debug/${{ env.bin-name }} just
+          just --version
+          target/${{ matrix.target }}/debug/${{ env.bin-name }} --color just
+      - name: Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: target-${{ matrix.target }}
+          path: |
+            target/${{ matrix.target }}/debug/${{ env.bin-name }}
+
 #  pc-windows-msvc:
 #    strategy:
 #      fail-fast: false
