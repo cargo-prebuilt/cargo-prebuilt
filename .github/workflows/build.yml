@@ -234,7 +234,7 @@ jobs:
           pkgs: cargo-auditable
       - uses: Swatinem/rust-cache@v2
         with:
-          prefix-key: testing-compare
+          prefix-key: testing-compare-v1
           key: ${{ matrix.target }}
       - name: Run tests
         if: ${{ matrix.can-test }}
