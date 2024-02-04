@@ -71,3 +71,51 @@
   "data": "$LATEST_VERSION"
 }
 ```
+
+### Wrote Report
+
+```json
+{
+  "crate": "$CRATE",
+  "version": "$LATEST_VERSION",
+  "event_version": "1",
+  "event": "wrote_report",
+  "data": "$REPORT_TYPE"
+}
+```
+
+### Print License (license_event) {#print-license}
+
+```json
+{
+  "crate": "$CRATE",
+  "version": "$LATEST_VERSION",
+  "event_version": "1",
+  "event": "print_license",
+  "data": "$TEXT"
+}
+```
+
+### Print Deps (deps_event) {#print-deps}
+
+```json
+{
+  "crate": "$CRATE",
+  "version": "$LATEST_VERSION",
+  "event_version": "1",
+  "event": "print_deps",
+  "data": "$TEXT"
+}
+```
+
+### Print Audit (audit_event) {#print-audit}
+
+```json
+{
+  "crate": "$CRATE",
+  "version": "$LATEST_VERSION",
+  "event_version": "1",
+  "event": "print_audit",
+  "data": "$TEXT"
+}
+```

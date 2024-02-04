@@ -160,31 +160,40 @@ impl Fetcher {
 
         for report in config.reports.iter() {
             let report_name = match report {
-                ReportType::LicenseDL => info.files.license.clone(),
-                ReportType::DepsDL => info.files.deps.clone(),
-                ReportType::AuditDL => info.files.audit.clone(),
+                ReportType::LicenseDL | ReportType::LicenseEvent => info.files.license.clone(),
+                ReportType::DepsDL | ReportType::DepsEvent => info.files.deps.clone(),
+                ReportType::AuditDL | ReportType::AuditEvent => info.files.audit.clone(),
             };
 
             let raw_str = &self.fetch_str(id, version, &report_name);
 
-            let mut dir = config.report_path.clone();
-            dir.push(format!("{id}/{version}"));
-            match create_dir_all(&dir) {
-                Ok(_) => {
-                    dir.push(&report_name);
-                    match File::create(&dir) {
-                        Ok(mut file) => match file.write(raw_str.as_bytes()) {
-                            Ok(_) => {}
-                            Err(_) => {
-                                eprintln!("Could not write to {report_name} file.")
+            match report {
+                ReportType::LicenseDL | ReportType::DepsDL | ReportType::AuditDL => {
+                    let mut dir = config.report_path.clone();
+                    dir.push(format!("{id}/{version}"));
+                    match create_dir_all(&dir) {
+                        Ok(_) => {
+                            dir.push(&report_name);
+                            match File::create(&dir) {
+                                Ok(mut file) => match file.write(raw_str.as_bytes()) {
+                                    Ok(_) => {
+                                        events::wrote_report(id, version, config, report.into())
+                                    }
+                                    Err(_) => {
+                                        eprintln!("Could not write to {report_name} file.")
+                                    }
+                                },
+                                Err(_) => eprintln!("Could not create {report_name} file."),
                             }
-                        },
-                        Err(_) => eprintln!("Could not create {report_name} file."),
+                        }
+                        Err(_) => {
+                            eprintln!("Could not create directories for {report_name}.")
+                        }
                     }
                 }
-                Err(_) => {
-                    eprintln!("Could not create directories for {report_name}.")
-                }
+                ReportType::LicenseEvent => events::print_license(id, version, raw_str),
+                ReportType::DepsEvent => events::print_deps(id, version, raw_str),
+                ReportType::AuditEvent => events::print_audit(id, version, raw_str),
             }
         }
     }

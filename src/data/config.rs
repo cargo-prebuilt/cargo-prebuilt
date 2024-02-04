@@ -8,7 +8,6 @@ use serde::{Deserialize, Serialize};
 
 use super::HashType;
 
-// TODO: Add license_event, deps_event, audit_event.
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum ReportType {
     #[serde(rename = "license")]
@@ -17,6 +16,12 @@ pub enum ReportType {
     DepsDL,
     #[serde(rename = "audit")]
     AuditDL,
+    #[serde(rename = "license_event")]
+    LicenseEvent,
+    #[serde(rename = "deps_event")]
+    DepsEvent,
+    #[serde(rename = "audit_event")]
+    AuditEvent,
 }
 impl From<ReportType> for &str {
     fn from(value: ReportType) -> Self {
@@ -24,6 +29,9 @@ impl From<ReportType> for &str {
             ReportType::LicenseDL => "license",
             ReportType::DepsDL => "deps",
             ReportType::AuditDL => "audit",
+            ReportType::LicenseEvent => "license_event",
+            ReportType::DepsEvent => "deps_event",
+            ReportType::AuditEvent => "audit_event",
         }
     }
 }
@@ -40,6 +48,9 @@ impl TryFrom<&str> for ReportType {
             "license" => Ok(ReportType::LicenseDL),
             "deps" => Ok(ReportType::DepsDL),
             "audit" => Ok(ReportType::AuditDL),
+            "license_event" => Ok(ReportType::LicenseEvent),
+            "deps_event" => Ok(ReportType::DepsEvent),
+            "audit_event" => Ok(ReportType::AuditEvent),
             _ => Err(()),
         }
     }
