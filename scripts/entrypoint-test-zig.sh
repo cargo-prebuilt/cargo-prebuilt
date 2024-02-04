@@ -14,7 +14,7 @@ fi
 
 if ! cargo-zigbuild --version &> /dev/null; then
     echo "Installing cargo-zigbuild..."
-    cargo-prebuilt --ci cargo-zigbuild
+    cargo-prebuilt --ci --report-path='/tmp' cargo-zigbuild
 fi
 
 exec cargo +$RUST_VERSION "$@"
