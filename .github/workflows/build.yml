@@ -213,10 +213,10 @@ jobs:
             can-test: false
             os: macos-14
           - target: aarch64-apple-darwin
-            can-test: false
+            can-test: true
             os: macos-14
           - target: x86_64-apple-darwin
-            can-test: false
+            can-test: true
             os: macos-latest
           - target: aarch64-apple-darwin
             can-test: false
@@ -234,7 +234,7 @@ jobs:
           pkgs: cargo-auditable
       - uses: Swatinem/rust-cache@v2
         with:
-          prefix-key: testing-compare-v1
+          prefix-key: testing-compare-v2
           key: ${{ matrix.target }}
       - name: Run tests
         if: ${{ matrix.can-test }}
