@@ -49,7 +49,7 @@ jobs:
           --userns host --user $(id -u):$(id -g) \
           -v $HOME/.cargo/registry:/usr/local/cargo/registry \
           -v ./:/project \
-          --entrypoint=./scripts/entrypoint-test-zig.sh
+          --entrypoint "./scripts/entrypoint-test-zig.sh" \
           ghcr.io/cargo-prebuilt/ink-cross:stable-${{ matrix.target }} \
           zigbuild --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
       - name: Run cargo-prebuilt
