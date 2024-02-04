@@ -289,9 +289,9 @@ jobs:
           key: xwin-cache
       - name: Run tests
         if: ${{ matrix.can-test }}
-        run: cargo xwin --xwin-cache-dir "./.xwin-cache" test --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
+        run: cargo xwin test --xwin-cache-dir "./.xwin-cache" --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
       - name: Build
-        run: cargo xwin --xwin-cache-dir "./.xwin-cache" build --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
+        run: cargo xwin build --xwin-cache-dir "./.xwin-cache" --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
 #      - name: Run cargo-prebuilt
 #        if: ${{ matrix.can-test }}
 #        run: |
