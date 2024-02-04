@@ -40,17 +40,20 @@ fn main() -> Result<(), String> {
     should_error();
 
     if !config.no_create_path && create_dir_all(&config.path).is_err() {
-        panic!("Could not create the directories {:?}.", config.path);
+        panic!("Could not create the directory '{:?}'.", config.path);
     }
     else if !Path::new(&config.path).exists() {
-        panic!("Directories do not exist! {:?}.", config.path);
+        panic!("Directory does not exist! '{:?}'.", config.path);
     }
 
-    if !config.no_create_path && create_dir_all(&config.report_path).is_err() {
-        panic!("Could not create the directories {:?}.", config.report_path);
-    }
-    else if !Path::new(&config.report_path).exists() {
-        panic!("Directories do not exist! {:?}.", config.report_path);
+    // Only create/check reports path if needed.
+    if !config.ci && !config.reports.is_empty() {
+        if !config.no_create_path && create_dir_all(&config.report_path).is_err() {
+            panic!("Could not create the directory '{:?}'.", config.report_path);
+        }
+        else if !Path::new(&config.report_path).exists() {
+            panic!("Directory does not exist! '{:?}'.", config.report_path);
+        }
     }
 
     // Build ureq agent
