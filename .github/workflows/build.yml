@@ -260,25 +260,25 @@ jobs:
       matrix:
         include:
           - target: x86_64-pc-windows-msvc
-            can-test: false
+            can-test: true
           - target: aarch64-pc-windows-msvc
             can-test: false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install clang
-        run: |
-          sudo apt update
-          sudo apt install -y clang
+      - uses: KyleMayes/install-llvm-action@v1.9.0
+        with:
+          version: 17
+          directory: ~/.llvm
+          env: true
       - name: Update Rust and add target
         run: |
           rustup update
           rustc --version
-          rustup component add llvm-tools-preview
           rustup target add ${{ matrix.target }}
       - uses: cargo-prebuilt/cargo-prebuilt-action@v3
         with:
-          pkgs: cargo-auditable,cargo-xwin
+          pkgs: cargo-xwin
       - uses: Swatinem/rust-cache@v2
         with:
           key: xwin-${{ matrix.target }}
