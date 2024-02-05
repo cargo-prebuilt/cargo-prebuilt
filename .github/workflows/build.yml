@@ -66,8 +66,9 @@ jobs:
           -e CARGO_TARGET_DIR=/tmp/ptesttarget \
           --platform ${{ matrix.docker-arch }} \
           --userns host --user $(id -u):$(id -g) \
-          -v $HOME/.cargo/registry:/usr/local/cargo/registry \
+          --entrypoint /bin/sh \
           -v ./scripts/docker/test-entrypoint.sh:/entrypoint.sh:z,ro \
+          -v $HOME/.cargo/registry:/usr/local/cargo/registry \
           -v ./:/project \
           -w /project \
           rust:latest \
@@ -89,9 +90,9 @@ jobs:
           -v ./:/project \
           -w /project \
           rust:latest \
-          target/${{ matrix.target }}/debug/${{ env.bin-name }} just \
+          target/${{ matrix.target }}/debug/${{ env.bin-name }} --ci just \
           && just --version \
-          && target/${{ matrix.target }}/debug/${{ env.bin-name }} --color just
+          && target/${{ matrix.target }}/debug/${{ env.bin-name }} --ci --color just
       - name: Artifact
         uses: actions/upload-artifact@v4
         with:
