@@ -22,23 +22,37 @@ jobs:
       matrix:
         include:
           - target: aarch64-unknown-linux-gnu
-            can-test: false
+            can-test: true
+            can-run: true
+            docker-arch: linux/arm64
           - target: aarch64-unknown-linux-musl
             can-test: false
+            can-run: true
+            docker-arch: linux/arm64
           - target: armv7-unknown-linux-gnueabihf
-            can-test: false
+            can-test: true
+            can-run: true
+            docker-arch: linux/arm/v7
           - target: armv7-unknown-linux-musleabihf
             can-test: false
+            can-run: true
+            docker-arch: linux/arm/v7
           - target: powerpc64le-unknown-linux-gnu
-            can-test: false
+            can-test: true
+            can-run: true
+            docker-arch: linux/ppc64le
           - target: riscv64gc-unknown-linux-gnu
             can-test: false
           - target: s390x-unknown-linux-gnu
             can-test: false
           - target: x86_64-unknown-linux-gnu
             can-test: true
+            can-run: true
+            docker-arch: linux/amd64
           - target: x86_64-unknown-linux-musl
-            can-test: true
+            can-test: false
+            can-run: true
+            docker-arch: linux/amd64
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -49,11 +63,14 @@ jobs:
         if: ${{ matrix.can-test }}
         run: |
           docker run --rm \
+          -e CARGO_TARGET_DIR=/ptesttarget \
+          --platform ${{ matrix.docker-arch }} \
           --userns host --user $(id -u):$(id -g) \
           -v $HOME/.cargo/registry:/usr/local/cargo/registry \
           -v ./:/project \
-          ghcr.io/cargo-prebuilt/ink-cross:stable-${{ matrix.target }} \
-          test --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
+          -w /project \
+          rust:latest \
+          cargo test --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
       - name: Build with ink cross
         run: |
           docker run --rm \
@@ -65,9 +82,15 @@ jobs:
       - name: Run cargo-prebuilt
         if: ${{ matrix.can-test }}
         run: |
-          target/${{ matrix.target }}/debug/${{ env.bin-name }} just
-          just --version
-          target/${{ matrix.target }}/debug/${{ env.bin-name }} --color just
+          docker run --rm \
+          --platform ${{ matrix.docker-arch }} \
+          --userns host --user $(id -u):$(id -g) \
+          -v ./:/project \
+          -w /project \
+          rust:latest \
+          target/${{ matrix.target }}/debug/${{ env.bin-name }} just \
+          && just --version \
+          && target/${{ matrix.target }}/debug/${{ env.bin-name }} --color just
       - name: Artifact
         uses: actions/upload-artifact@v4
         with:

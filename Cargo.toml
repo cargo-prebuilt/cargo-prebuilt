@@ -1,6 +1,6 @@
 [package]
 name = "cargo-prebuilt"
-version = "0.6.6"
+version = "0.6.7-dev"
 edition = "2021"
 authors = ["harmless-tech"]
 description = "Download prebuilt crate binaries for many different platforms"
@@ -21,7 +21,7 @@ include = [
 ]
 
 [dependencies]
-bpaf = { version = "0.9.9", features = ["autocomplete", "batteries"] }
+bpaf = { version = "0.9.9", features = ["autocomplete", "batteries", "derive"] }
 directories = "5.0.1"
 flate2 = "1.0.28"
 hex = "0.4.3"
