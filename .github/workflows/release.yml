@@ -509,7 +509,7 @@ jobs:
           just --version
       - name: Zip
         run: |
-          cd target/${{ matrix.target }}/debug
+          cd target/${{ matrix.target }}/release
           7z a -tzip ../../../${{ matrix.target }}.zip ${{ env.bin-name }}.exe
       - name: Hash
         run: echo "$(coreutils sha256sum ${{ matrix.target }}.zip)" > ${{ matrix.target }}.sha256
