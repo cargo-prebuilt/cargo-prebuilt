@@ -508,10 +508,9 @@ jobs:
           target/${{ matrix.target }}/release/${{ env.bin-name }}.exe just
           just --version
       - name: Zip
-        uses: vimtor/action-zip@v1.1
-        with:
-          files: ./target/${{ matrix.target }}/release/${{ env.bin-name }}.exe
-          dest: ${{ matrix.target }}.zip
+        run: |
+          cd target/${{ matrix.target }}/debug
+          7z a -tzip ../../../${{ matrix.target }}.zip ${{ env.bin-name }}.exe
       - name: Hash
         run: echo "$(coreutils sha256sum ${{ matrix.target }}.zip)" > ${{ matrix.target }}.sha256
       - name: Artifact

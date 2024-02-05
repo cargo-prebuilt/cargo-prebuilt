@@ -186,14 +186,9 @@ jobs:
         run: |
           target/${{ matrix.target }}/debug/${{ env.bin-name }}.exe just
           just --version
-      - name: TMP zip test
-        run: |
-          cd target/${{ matrix.target }}/debug
-          7z a -tzip ../../../tzip.zip ${{ env.bin-name }}.exe
       - name: Artifact
         uses: actions/upload-artifact@v4
         with:
           name: target-${{ matrix.target }}
           path: |
             target/${{ matrix.target }}/debug/${{ env.bin-name }}.exe
-            tzip.zip
