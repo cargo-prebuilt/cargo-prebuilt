@@ -2,6 +2,8 @@
 
 ## Upcoming
 
+- Fix reports directory being created when --ci is used.
+
 ## [0.6.6](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.6.6)
 
 - Deprecate --gen-config.

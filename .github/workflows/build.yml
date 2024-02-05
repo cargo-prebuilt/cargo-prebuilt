@@ -120,10 +120,10 @@ jobs:
       matrix:
         include:
           - target: x86_64-apple-darwin
-            can-test: true
+            os: macos-13
           - target: aarch64-apple-darwin
-            can-test: false
-    runs-on: macos-latest
+            os: macos-14
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - name: Update Rust and add target
@@ -138,12 +138,10 @@ jobs:
         with:
           key: ${{ matrix.target }}
       - name: Run tests
-        if: ${{ matrix.can-test }}
         run: cargo test --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
       - name: Build
         run: cargo auditable build --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
       - name: Run cargo-prebuilt
-        if: ${{ matrix.can-test }}
         run: |
           target/${{ matrix.target }}/debug/${{ env.bin-name }} just
           just --version
