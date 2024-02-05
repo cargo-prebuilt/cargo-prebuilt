@@ -67,9 +67,9 @@ jobs:
           --platform ${{ matrix.docker-arch }} \
           --userns host --user $(id -u):$(id -g) \
           -v $HOME/.cargo/registry:/usr/local/cargo/registry \
+          -v ./scripts/docker/test-entrypoint.sh:/entrypoint.sh:z,ro \
           -v ./:/project \
           -w /project \
-          --entrypoint ./scripts/docker/test-entrypoint.sh \
           rust:latest \
           test --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
       - name: Build with ink cross
