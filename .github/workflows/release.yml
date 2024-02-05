@@ -29,74 +29,74 @@ jobs:
           text: ${{ github.ref }}
           regex: '^refs\/tags\/v\d+\.\d+\.\d+$'
 
-  publish-crates-io:
-    if: ${{ ! contains(github.ref, '-dev') }}
-    runs-on: ubuntu-latest
-    needs: [ release, check-fmt, clippy, ink-cross, cross, apple-darwin, pc-windows-msvc ]
-    steps:
-      - uses: actions/checkout@v4
-      - name: Update Rust
-        run: |
-          rustup update
-          rustc --version
-      - name: Publish
-        run: cargo publish --verbose --locked --token ${CRATES_TOKEN}
-        env:
-          CRATES_TOKEN: ${{ secrets.CRATES_TOKEN }}
-
-  publish-github-releases:
-    runs-on: ubuntu-latest
-    needs: [ release, check-fmt, clippy, ink-cross, cross, apple-darwin, pc-windows-msvc ]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
-      - name: Merge hashes
-        shell: bash
-        run: |
-          set -euxo pipefail
-          echo -n "" > hashes.sha256
-          for D in target-*; do
-            if [ -d "${D}" ]; then
-              echo "${D}"
-              pushd "${D}"
-              cat *.sha256 >> ../hashes.sha256
-              popd
-            fi
-          done
-      - name: Sign archives
-        shell: bash
-        run: |
-          set -euxo pipefail
-          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-          brew install minisign
-          echo -n "$SIGNING_KEY" | base64 --decode > ~/.minisign_secret.key
-          for D in target-*; do
-            if [ -d "${D}" ]; then
-              echo "${D}"
-              pushd "${D}"
-        
-              for file in ./*.tar.gz ./*.zip; do
-                if [ -f "$file" ]; then
-                  minisign -S -s ~/.minisign_secret.key -m $file
-                  minisign -V -p ../keys/cargo-prebuilt.pub -m $file
-                fi 
-              done
-                
-              popd
-            fi
-          done
-          rm -f ~/.minisign_secret.key
-        env:
-          SIGNING_KEY: ${{ secrets.MINISIGN_SIGNING_KEY }}
-      - name: Create and push artifacts to release
-        uses: ncipollo/release-action@v1
-        with:
-          tag: ${{ needs.release.outputs.tag }}
-          name: ${{ needs.release.outputs.name }}
-          allowUpdates: true
-          prerelease: ${{ needs.release.outputs.prerelease }}
-          artifacts: "target-*/*.minisig,target-*/*.tar.gz,target-*/*.zip,hashes.sha256"
-          body: ""
+#  publish-crates-io:
+#    if: ${{ ! contains(github.ref, '-dev') }}
+#    runs-on: ubuntu-latest
+#    needs: [ release, check-fmt, clippy, ink-cross, cross, apple-darwin, pc-windows-msvc ]
+#    steps:
+#      - uses: actions/checkout@v4
+#      - name: Update Rust
+#        run: |
+#          rustup update
+#          rustc --version
+#      - name: Publish
+#        run: cargo publish --verbose --locked --token ${CRATES_TOKEN}
+#        env:
+#          CRATES_TOKEN: ${{ secrets.CRATES_TOKEN }}
+#
+#  publish-github-releases:
+#    runs-on: ubuntu-latest
+#    needs: [ release, check-fmt, clippy, ink-cross, cross, apple-darwin, pc-windows-msvc ]
+#    steps:
+#      - uses: actions/checkout@v4
+#      - uses: actions/download-artifact@v4
+#      - name: Merge hashes
+#        shell: bash
+#        run: |
+#          set -euxo pipefail
+#          echo -n "" > hashes.sha256
+#          for D in target-*; do
+#            if [ -d "${D}" ]; then
+#              echo "${D}"
+#              pushd "${D}"
+#              cat *.sha256 >> ../hashes.sha256
+#              popd
+#            fi
+#          done
+#      - name: Sign archives
+#        shell: bash
+#        run: |
+#          set -euxo pipefail
+#          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+#          brew install minisign
+#          echo -n "$SIGNING_KEY" | base64 --decode > ~/.minisign_secret.key
+#          for D in target-*; do
+#            if [ -d "${D}" ]; then
+#              echo "${D}"
+#              pushd "${D}"
+#
+#              for file in ./*.tar.gz ./*.zip; do
+#                if [ -f "$file" ]; then
+#                  minisign -S -s ~/.minisign_secret.key -m $file
+#                  minisign -V -p ../keys/cargo-prebuilt.pub -m $file
+#                fi
+#              done
+#
+#              popd
+#            fi
+#          done
+#          rm -f ~/.minisign_secret.key
+#        env:
+#          SIGNING_KEY: ${{ secrets.MINISIGN_SIGNING_KEY }}
+#      - name: Create and push artifacts to release
+#        uses: ncipollo/release-action@v1
+#        with:
+#          tag: ${{ needs.release.outputs.tag }}
+#          name: ${{ needs.release.outputs.name }}
+#          allowUpdates: true
+#          prerelease: ${{ needs.release.outputs.prerelease }}
+#          artifacts: "target-*/*.minisig,target-*/*.tar.gz,target-*/*.zip,hashes.sha256"
+#          body: ""
 
   check-fmt:
     env:
