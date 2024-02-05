@@ -128,8 +128,8 @@ jobs:
         include:
           - target: x86_64-unknown-linux-gnu
             os: ubuntu-latest
-          - target: x86_64-apple-darwin
-            os: macos-latest
+          - target: aarch64-apple-darwin
+            os: macos-14
           - target: x86_64-pc-windows-msvc
             os: windows-latest
     env:
@@ -169,8 +169,8 @@ jobs:
         include:
           - target: x86_64-unknown-linux-gnu
             os: ubuntu-latest
-          - target: x86_64-apple-darwin
-            os: macos-latest
+          - target: aarch64-apple-darwin
+            os: macos-14
           - target: x86_64-pc-windows-msvc
             os: windows-latest
     env:
@@ -217,8 +217,8 @@ jobs:
         include:
           - target: x86_64-unknown-linux-gnu
             os: ubuntu-latest
-          - target: x86_64-apple-darwin
-            os: macos-latest
+          - target: aarch64-apple-darwin
+            os: macos-14
           - target: x86_64-pc-windows-msvc
             os: windows-latest
     env:
@@ -437,10 +437,10 @@ jobs:
       matrix:
         include:
           - target: x86_64-apple-darwin
-            can-test: true
+            os: macos-13
           - target: aarch64-apple-darwin
-            can-test: false
-    runs-on: macos-latest
+            os: macos-14
+    runs-on: ${{ matrix.os }}
     needs: [ check-fmt, clippy, cargo-hack, cargo-msrv, cargo-deny ]
     steps:
       - uses: actions/checkout@v4
@@ -455,12 +455,10 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         if: ${{ env.cache == 'true' }}
       - name: Run tests
-        if: ${{ matrix.can-test }}
         run: cargo test --verbose --workspace --release --locked --target ${{ matrix.target }} ${{ env.feature-set }}
       - name: Build
         run: cargo auditable build --verbose --workspace --release --locked --target ${{ matrix.target }} ${{ env.feature-set }}
       - name: Run cargo-prebuilt
-        if: ${{ matrix.can-test }}
         run: |
           target/${{ matrix.target }}/release/${{ env.bin-name }} just
           just --version
