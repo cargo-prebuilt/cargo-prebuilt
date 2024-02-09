@@ -46,7 +46,7 @@ struct Arguments {
     ci: bool,
     no_create_path: bool,
     reports: Option<IndexSet<ReportType>>,
-    pub_key: Option<HashSet<String>>, // Forced to be optional, but is always Some().
+    pub_key: HashSet<String>,
     no_verify: bool,
     safe: bool,
     out: bool,
@@ -149,8 +149,7 @@ fn parse_args() -> Arguments {
         .help("A public verifying key encoded as base64. Must be used with --index.")
         .argument::<String>("PUB_KEY")
         .map(|s| s.split(',').map(|l| l.to_owned()).collect::<HashSet<_>>())
-        .fallback(HashSet::new())
-        .map(Some);
+        .fallback(HashSet::new());
 
     let no_verify = long("no-verify")
         .env("PREBUILT_NO_VERIFY")
@@ -287,7 +286,7 @@ fn fill_from_file(args: &mut Arguments) {
                                 if i.index.eq(index) {
                                     if let Some(pk) = i.pub_key {
                                         for pk in pk {
-                                            args.pub_key.as_mut().unwrap().insert(pk);
+                                            args.pub_key.insert(pk);
                                         }
                                     }
                                     if args.auth.is_none() && i.auth.is_some() {
@@ -304,7 +303,7 @@ fn fill_from_file(args: &mut Arguments) {
                                     args.index = Some(i.index);
                                     if let Some(pk) = i.pub_key {
                                         for pk in pk {
-                                            args.pub_key.as_mut().unwrap().insert(pk);
+                                            args.pub_key.insert(pk);
                                         }
                                     }
                                     if args.auth.is_none() && i.auth.is_some() {
@@ -373,7 +372,7 @@ fn convert(args: Arguments) -> Config {
     let out = args.out;
     let get_latest = args.get_latest;
 
-    let sigs = args.pub_key.unwrap();
+    let sigs = args.pub_key;
 
     match (args.color, args.no_color) {
         (true, false) => color::set_override(true),
@@ -435,8 +434,6 @@ pub fn get() -> Config {
     // Check index and add cargo-prebuilt-index pub key if needed.
     if args.index.is_none() || args.index.as_ref().unwrap().eq(DEFAULT_INDEX) {
         args.pub_key
-            .as_mut()
-            .unwrap()
             .insert(include_str!("../keys/cargo-prebuilt-index.pub").to_string());
     }
 
@@ -502,7 +499,7 @@ fn generate(args: &Arguments) -> ! {
                         key.clone(),
                         ConfigFileIndexes {
                             index: index.clone(),
-                            pub_key: args.pub_key.clone(),
+                            pub_key: Some(args.pub_key.clone()),
                             auth: args.auth.clone(),
                         },
                     );
@@ -513,7 +510,7 @@ fn generate(args: &Arguments) -> ! {
                         key.clone(),
                         ConfigFileIndexes {
                             index: index.clone(),
-                            pub_key: args.pub_key.clone(),
+                            pub_key: Some(args.pub_key.clone()),
                             auth: args.auth.clone(),
                         },
                     );
