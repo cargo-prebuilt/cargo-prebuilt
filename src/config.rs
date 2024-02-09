@@ -148,17 +148,9 @@ fn parse_args() -> Arguments {
         .env("PREBUILT_PUB_KEY")
         .help("A public verifying key encoded as base64. Must be used with --index.")
         .argument::<String>("PUB_KEY")
-        .optional()
-        .parse(|s| match s {
-            Some(s) => {
-                let mut v = HashSet::new();
-                for i in s.split(',') {
-                    v.insert(i.to_string());
-                }
-                Ok::<Option<HashSet<String>>, String>(Some(v))
-            }
-            None => Ok(Some(HashSet::new())),
-        });
+        .map(|s| s.split(',').map(|l| l.to_owned()).collect::<HashSet<_>>())
+        .fallback(HashSet::new())
+        .map(Some);
 
     let no_verify = long("no-verify")
         .env("PREBUILT_NO_VERIFY")
