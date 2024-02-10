@@ -446,6 +446,10 @@ fn generate(args: &Arguments) -> ! {
         "{} config, this will ignore package args.",
         err_color_print("Generating", PossibleColor::BrightPurple)
     );
+    eprintln!(
+        "--gen-config is {} and may generate wrong configs in the future.",
+        err_color_print("deprecated", PossibleColor::BrightRed)
+    );
 
     let conf = args.config.clone().unwrap_or_else(|| {
         match ProjectDirs::from(QUALIFIER, ORG, APPLICATION) {

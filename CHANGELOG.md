@@ -3,6 +3,8 @@
 ## Upcoming
 
 - Fix reports directory being created when --ci is used.
+- --gen-config now mentions it is deprecated.
+- Simplify pub_key arg parser. (#167) (Thanks pacak)
 
 ## [0.6.6](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.6.6)
 
