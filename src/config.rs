@@ -313,10 +313,10 @@ fn fill_from_file(args: &mut Arguments) {
                             }
                         }
                     }
-                    _ => panic!(),
+                    _ => {}
                 }
             }
-            Err(err) => eprintln!("Failed to parse config file.\n{err}"),
+            Err(err) => panic!("Failed to parse config file.\n{err}"),
         }
     }
     else {
