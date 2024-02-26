@@ -96,7 +96,7 @@ jobs:
           rustup update
           rustc --version
           rustup target add ${{ matrix.target }}
-      - uses: cargo-prebuilt/cargo-prebuilt-action@v3
+      - uses: cargo-prebuilt/cargo-prebuilt-action@trimmed
         with:
           pkgs: cross
       - uses: Swatinem/rust-cache@v2
@@ -131,7 +131,7 @@ jobs:
           rustup update
           rustc --version
           rustup target add ${{ matrix.target }}
-      - uses: cargo-prebuilt/cargo-prebuilt-action@v3
+      - uses: cargo-prebuilt/cargo-prebuilt-action@trimmed
         with:
           pkgs: cargo-auditable
       - uses: Swatinem/rust-cache@v2
@@ -170,7 +170,7 @@ jobs:
           rustup update
           rustc --version
           rustup target add ${{ matrix.target }}
-      - uses: cargo-prebuilt/cargo-prebuilt-action@v3
+      - uses: cargo-prebuilt/cargo-prebuilt-action@trimmed
         with:
           pkgs: cargo-auditable
       - uses: Swatinem/rust-cache@v2

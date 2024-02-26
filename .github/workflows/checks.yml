@@ -45,7 +45,7 @@ jobs:
         run: |
           rustup update
           rustc --version
-      - uses: cargo-prebuilt/cargo-prebuilt-action@v3
+      - uses: cargo-prebuilt/cargo-prebuilt-action@trimmed
         with:
           pkgs: cargo-audit,cargo-deny
       - uses: Swatinem/rust-cache@v2
@@ -128,7 +128,7 @@ jobs:
         run: |
           rustup update
           rustc --version
-      - uses: cargo-prebuilt/cargo-prebuilt-action@v3
+      - uses: cargo-prebuilt/cargo-prebuilt-action@trimmed
         with:
           pkgs: cargo-hack
       - uses: Swatinem/rust-cache@v2
@@ -165,7 +165,7 @@ jobs:
         run: |
           rustup update
           rustc --version
-      - uses: cargo-prebuilt/cargo-prebuilt-action@v3
+      - uses: cargo-prebuilt/cargo-prebuilt-action@trimmed
         with:
           pkgs: cargo-deny
       - name: Cargo Deny
