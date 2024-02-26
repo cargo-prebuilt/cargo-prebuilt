@@ -7,7 +7,7 @@ pub struct GithubPublic {
 }
 impl GithubPublic {
     pub fn new(agent: Agent, slug: &str) -> Self {
-        let pre_url = format!("https://{}/releases/download", slug);
+        let pre_url = format!("https://{slug}/releases/download");
         Self { agent, pre_url }
     }
 

@@ -45,12 +45,12 @@ impl TryFrom<&str> for ReportType {
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value {
-            "license" => Ok(ReportType::LicenseDL),
-            "deps" => Ok(ReportType::DepsDL),
-            "audit" => Ok(ReportType::AuditDL),
-            "license_event" => Ok(ReportType::LicenseEvent),
-            "deps_event" => Ok(ReportType::DepsEvent),
-            "audit_event" => Ok(ReportType::AuditEvent),
+            "license" => Ok(Self::LicenseDL),
+            "deps" => Ok(Self::DepsDL),
+            "audit" => Ok(Self::AuditDL),
+            "license_event" => Ok(Self::LicenseEvent),
+            "deps_event" => Ok(Self::DepsEvent),
+            "audit_event" => Ok(Self::AuditEvent),
             _ => Err(()),
         }
     }

@@ -1,6 +1,6 @@
 [package]
 name = "cargo-prebuilt"
-version = "0.6.7"
+version = "0.6.8-dev"
 edition = "2021"
 authors = ["harmless-tech"]
 description = "Download prebuilt crate binaries for many different platforms"
@@ -8,6 +8,7 @@ readme = "README.md"
 license = "MIT"
 #homepage = ""
 repository = "https://github.com/cargo-prebuilt/cargo-prebuilt"
+categories = ["development-tools", "development-tools::cargo-plugins"]
 keywords = ["cargo", "cargo-subcommand", "binary"]
 rust-version = "1.70"
 include = [
@@ -31,8 +32,8 @@ mimalloc = { version = "0.1.39", optional = true }
 minisign-verify = { version = "0.2.1", optional = true }
 native-tls = { version = "0.2.11", optional = true }
 owo-colors = { version = "4.0.0", features = ["supports-colors"], optional = true }
-serde = { version = "1.0.196", features = ["derive"] }
-serde_json = "1.0.113"
+serde = { version = "1.0.197", features = ["derive"] }
+serde_json = "1.0.114"
 sha2 = { version = "0.10.8", optional = true }
 sha3 = { version = "0.10.8", optional = true }
 tar = "0.4.40"
@@ -82,6 +83,17 @@ inherits = "release"
 opt-level = 0
 lto = false
 codegen-units = 16
+
+[lints.clippy]
+cargo = "deny"
+correctness = "deny"
+complexity = "deny"
+enum_glob_use = "deny"
+nursery = "deny"
+pedantic = "deny"
+perf = "deny"
+style = "deny"
+suspicious = "deny"
 
 [package.metadata.binstall]
 pkg-url = "{ repo }/releases/download/v{ version }/{ target }.tar.gz"

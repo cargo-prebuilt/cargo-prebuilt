@@ -18,15 +18,15 @@ pub enum InteractError {
 impl std::fmt::Display for InteractError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            InteractError::Malformed => write!(f, "The received string is malformed."),
-            InteractError::HttpCode(code) => write!(f, "Http code {code}"),
-            InteractError::ConnectionError => write!(f, "Connection error"),
+            Self::Malformed => write!(f, "The received string is malformed."),
+            Self::HttpCode(code) => write!(f, "Http code {code}"),
+            Self::ConnectionError => write!(f, "Connection error"),
         }
     }
 }
 impl std::error::Error for InteractError {}
 
-pub fn create_interact(input: String, auth: Option<&String>, agent: Agent) -> Box<dyn Interact> {
+pub fn create_interactive(input: &str, auth: Option<&String>, agent: Agent) -> Box<dyn Interact> {
     // Github public
     if input.starts_with("gh-pub:") {
         #[cfg(feature = "github-public")]
@@ -36,7 +36,7 @@ pub fn create_interact(input: String, auth: Option<&String>, agent: Agent) -> Bo
                 .expect("Missing url after gh-pub:");
             eprintln!(
                 "{} index https://{url}.",
-                err_color_print("Using", PossibleColor::BrightCyan),
+                err_color_print("Using", &PossibleColor::BrightCyan),
             );
             return Box::new(github_public::GithubPublic::new(agent, url));
         }
@@ -53,7 +53,7 @@ pub fn create_interact(input: String, auth: Option<&String>, agent: Agent) -> Bo
                 .expect("Missing url after gh-pri:");
             eprintln!(
                 "{} index https://{url}.",
-                err_color_print("Using", PossibleColor::BrightCyan),
+                err_color_print("Using", &PossibleColor::BrightCyan),
             );
             return Box::new(github_private::GithubPrivate::new(
                 agent,

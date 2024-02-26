@@ -17,7 +17,7 @@ pub struct Fetcher {
 }
 impl Fetcher {
     pub fn new(config: &Config, agent: Agent) -> Self {
-        let interact = interact::create_interact(config.index.clone(), config.auth.as_ref(), agent);
+        let interact = interact::create_interactive(&config.index, config.auth.as_ref(), agent);
         Self { interact }
     }
 
@@ -33,7 +33,7 @@ impl Fetcher {
     ) -> (InfoFileImm, HashesFileImm, Vec<u8>) {
         eprintln!(
             "{} info for {id}@{version}.",
-            err_color_print("Fetching", PossibleColor::BrightBlue),
+            err_color_print("Fetching", &PossibleColor::BrightBlue),
         );
 
         // info.json
@@ -63,37 +63,36 @@ impl Fetcher {
         }
 
         // check if target is supported
-        if !info.targets.contains(&config.target) {
-            panic!(
-                "{id}@{version} does {} target {}",
-                err_color_print("not support", PossibleColor::BrightRed),
-                config.target
-            );
-        }
+        assert!(
+            info.targets.contains(&config.target),
+            "{id}@{version} does {} target {}",
+            err_color_print("not support", &PossibleColor::BrightRed),
+            config.target
+        );
 
         // check if compression is supported
-        if !info.archive.compression.eq("gz") {
-            panic!("{id}@{version} does not support compression gzip");
-        }
+        assert!(
+            info.archive.compression.eq("gz"),
+            "{id}@{version} does not support compression gzip"
+        );
 
-        // check if binary does not exist, if safe mode is on
+        // check if binary does not exist if safe mode is on
         if config.safe && !config.ci {
-            for bin in info.bins.iter() {
+            for bin in &info.bins {
                 let mut path = config.path.clone();
                 path.push(bin);
 
-                if path.exists() {
-                    panic!(
-                        "Binary {bin} {} for {id}@{version}",
-                        err_color_print("already exists", PossibleColor::BrightRed)
-                    );
-                }
+                assert!(
+                    !path.exists(),
+                    "Binary {bin} {} for {id}@{version}",
+                    err_color_print("already exists", &PossibleColor::BrightRed)
+                );
             }
         }
 
         eprintln!(
             "{} hashes for {id}@{version} with target {}.",
-            err_color_print("Fetching", PossibleColor::BrightBlue),
+            err_color_print("Fetching", &PossibleColor::BrightBlue),
             &config.target
         );
 
@@ -128,7 +127,7 @@ impl Fetcher {
         // tar
         eprintln!(
             "{} {id}@{version} for target {}.",
-            err_color_print("Downloading", PossibleColor::BrightYellow),
+            err_color_print("Downloading", &PossibleColor::BrightYellow),
             &config.target
         );
         let tar_bytes = self.fetch_blob(
@@ -138,12 +137,12 @@ impl Fetcher {
         );
 
         // test hashes
-        self.verify_archive(id, version, config, &hashes, &tar_bytes);
+        Self::verify_archive(id, version, config, &hashes, &tar_bytes);
 
         (info, hashes, tar_bytes)
     }
 
-    pub fn is_bin(&self, info: &InfoFileImm, bin_name: &str) -> bool {
+    pub fn is_bin(info: &InfoFileImm, bin_name: &str) -> bool {
         let bin_name = bin_name.replace(".exe", "");
         info.bins.contains(&bin_name)
     }
@@ -155,10 +154,10 @@ impl Fetcher {
 
         eprintln!(
             "{} reports... ",
-            err_color_print("Getting", PossibleColor::BrightBlue)
+            err_color_print("Getting", &PossibleColor::BrightBlue)
         );
 
-        for report in config.reports.iter() {
+        for report in &config.reports {
             let report_name = match report {
                 ReportType::LicenseDL | ReportType::LicenseEvent => info.files.license.clone(),
                 ReportType::DepsDL | ReportType::DepsEvent => info.files.deps.clone(),
@@ -172,22 +171,22 @@ impl Fetcher {
                     let mut dir = config.report_path.clone();
                     dir.push(format!("{id}/{version}"));
                     match create_dir_all(&dir) {
-                        Ok(_) => {
+                        Ok(()) => {
                             dir.push(&report_name);
                             match File::create(&dir) {
                                 Ok(mut file) => match file.write(raw_str.as_bytes()) {
                                     Ok(_) => {
-                                        events::wrote_report(id, version, config, report.into())
+                                        events::wrote_report(id, version, config, report.into());
                                     }
                                     Err(_) => {
-                                        eprintln!("Could not write to {report_name} file.")
+                                        eprintln!("Could not write to {report_name} file.");
                                     }
                                 },
                                 Err(_) => eprintln!("Could not create {report_name} file."),
                             }
                         }
                         Err(_) => {
-                            eprintln!("Could not create directories for {report_name}.")
+                            eprintln!("Could not create directories for {report_name}.");
                         }
                     }
                 }
@@ -204,7 +203,7 @@ impl Fetcher {
             Err(InteractError::Malformed) => panic!("The version string for {id} is malformed."),
             Err(InteractError::HttpCode(404)) => panic!(
                 "Crate {id} {} in index!",
-                err_color_print("not found", PossibleColor::BrightRed)
+                err_color_print("not found", &PossibleColor::BrightRed)
             ),
             Err(InteractError::HttpCode(code)) => panic!("Http error {code} for crate {id}."),
             Err(err) => panic!("Connection error.\n{err}"),
@@ -219,7 +218,7 @@ impl Fetcher {
             }
             Err(InteractError::HttpCode(404)) => panic!(
                 "File {file} for {id}@{version} is {}!",
-                err_color_print("not found", PossibleColor::BrightRed)
+                err_color_print("not found", &PossibleColor::BrightRed)
             ),
             Err(InteractError::HttpCode(code)) => {
                 panic!("Http error {code} for {file} for {id}@{version}.")
@@ -236,7 +235,7 @@ impl Fetcher {
             }
             Err(InteractError::HttpCode(404)) => panic!(
                 "File {file} for {id}@{version} is {}!",
-                err_color_print("not found", PossibleColor::BrightRed)
+                err_color_print("not found", &PossibleColor::BrightRed)
             ),
             Err(InteractError::HttpCode(code)) => {
                 panic!("Http error {code} for {file} for {id}@{version}.")
@@ -257,19 +256,18 @@ impl Fetcher {
     ) -> bool {
         use minisign_verify::{PublicKey, Signature};
 
-        if config.sigs.is_empty() {
-            panic!(
-                "{} for index '{}'. Please add one with --pub-key or use --no-verify.",
-                err_color_print("No public key(s)", PossibleColor::BrightRed),
-                config.index
-            );
-        }
+        assert!(
+            !config.sigs.is_empty(),
+            "{} for index '{}'. Please add one with --pub-key or use --no-verify.",
+            err_color_print("No public key(s)", &PossibleColor::BrightRed),
+            config.index
+        );
 
         let sig = &self.fetch_str(id, version, sig_file);
         let signature = Signature::decode(sig).expect("Signature was malformed.");
 
         let mut verified = false;
-        for key in config.sigs.iter() {
+        for key in &config.sigs {
             let pk = PublicKey::from_base64(key).expect("Public key was malformed.");
             if pk.verify(raw_file.as_bytes(), &signature, false).is_ok() {
                 verified = true;
@@ -277,16 +275,16 @@ impl Fetcher {
             }
         }
 
-        if !verified {
-            panic!(
-                "{} verify {file} for {id}@{version}.",
-                err_color_print("Could not", PossibleColor::BrightRed)
+        if verified {
+            eprintln!(
+                "{} {file} for {id}@{version} with minisign.",
+                err_color_print("Verified", &PossibleColor::BrightWhite)
             );
         }
         else {
-            eprintln!(
-                "{} {file} for {id}@{version} with minisign.",
-                err_color_print("Verified", PossibleColor::BrightWhite)
+            panic!(
+                "{} verify {file} for {id}@{version}.",
+                err_color_print("Could not", &PossibleColor::BrightRed)
             );
         }
 
@@ -294,7 +292,6 @@ impl Fetcher {
     }
 
     fn verify_archive(
-        &self,
         id: &str,
         version: &str,
         config: &Config,
@@ -303,53 +300,55 @@ impl Fetcher {
     ) {
         if let Some(blob) = hashes.hashes.get(&config.target) {
             let hashes = &blob.archive;
-            self.verify_bytes(
+            Self::verify_bytes(
                 id,
                 version,
                 hashes,
                 &format!("{} archive", &config.target),
                 bytes,
-            )
+            );
         }
     }
 
-    fn verify_bytes(&self, id: &str, version: &str, hashes: &Hashes, item: &str, bytes: &[u8]) {
+    fn verify_bytes(id: &str, version: &str, in_hashes: &Hashes, item: &str, bytes: &[u8]) {
         #[cfg(feature = "sha3")]
         {
             use sha3::{Digest, Sha3_256, Sha3_512};
 
             // sha3_512
-            if let Some(sha_hash) = hashes.get(&HashType::Sha3_512) {
+            if let Some(sha_hash) = in_hashes.get(&HashType::Sha3_512) {
                 let mut hasher = Sha3_512::new();
                 hasher.update(bytes);
                 let hash: Vec<u8> = hasher.finalize().to_vec();
                 let hash = hex::encode(hash);
 
-                if !hash.eq(sha_hash) {
-                    panic!("sha3_512 hashes do not match for {item}. {sha_hash} != {hash}");
-                }
+                assert!(
+                    hash.eq(sha_hash),
+                    "sha3_512 hashes do not match for {item}. {sha_hash} != {hash}"
+                );
 
                 eprintln!(
                     "{} {item} for {id}@{version} with sha3_512.",
-                    err_color_print("Verified", PossibleColor::BrightWhite)
+                    err_color_print("Verified", &PossibleColor::BrightWhite)
                 );
                 return;
             }
 
             // sha3_256
-            if let Some(sha_hash) = hashes.get(&HashType::Sha3_256) {
+            if let Some(sha_hash) = in_hashes.get(&HashType::Sha3_256) {
                 let mut hasher = Sha3_256::new();
                 hasher.update(bytes);
                 let hash: Vec<u8> = hasher.finalize().to_vec();
                 let hash = hex::encode(hash);
 
-                if !hash.eq(sha_hash) {
-                    panic!("sha3_256 hashes do not match for {item}. {sha_hash} != {hash}");
-                }
+                assert!(
+                    hash.eq(sha_hash),
+                    "sha3_256 hashes do not match for {item}. {sha_hash} != {hash}"
+                );
 
                 eprintln!(
                     "{} {item} for {id}@{version} with sha3_256.",
-                    err_color_print("Verified", PossibleColor::BrightWhite)
+                    err_color_print("Verified", &PossibleColor::BrightWhite)
                 );
                 return;
             }
@@ -360,37 +359,39 @@ impl Fetcher {
             use sha2::{Digest, Sha256, Sha512};
 
             // sha512
-            if let Some(sha_hash) = hashes.get(&HashType::Sha512) {
+            if let Some(sha_hash) = in_hashes.get(&HashType::Sha512) {
                 let mut hasher = Sha512::new();
                 hasher.update(bytes);
                 let hash: Vec<u8> = hasher.finalize().to_vec();
                 let hash = hex::encode(hash);
 
-                if !hash.eq(sha_hash) {
-                    panic!("sha512 hashes do not match for {item}. {sha_hash} != {hash}");
-                }
+                assert!(
+                    hash.eq(sha_hash),
+                    "sha512 hashes do not match for {item}. {sha_hash} != {hash}"
+                );
 
                 eprintln!(
                     "{} {item} for {id}@{version} with sha512.",
-                    err_color_print("Verified", PossibleColor::BrightWhite)
+                    err_color_print("Verified", &PossibleColor::BrightWhite)
                 );
                 return;
             }
 
             // sha256
-            if let Some(sha_hash) = hashes.get(&HashType::Sha256) {
+            if let Some(sha_hash) = in_hashes.get(&HashType::Sha256) {
                 let mut hasher = Sha256::new();
                 hasher.update(bytes);
                 let hash: Vec<u8> = hasher.finalize().to_vec();
                 let hash = hex::encode(hash);
 
-                if !hash.eq(sha_hash) {
-                    panic!("sha256 hashes do not match for {item}. {sha_hash} != {hash}");
-                }
+                assert!(
+                    hash.eq(sha_hash),
+                    "sha256 hashes do not match for {item}. {sha_hash} != {hash}"
+                );
 
                 eprintln!(
                     "{} {item} for {id}@{version} with sha256.",
-                    err_color_print("Verified", PossibleColor::BrightWhite)
+                    err_color_print("Verified", &PossibleColor::BrightWhite)
                 );
                 return;
             }
