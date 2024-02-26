@@ -26,9 +26,7 @@ pub struct GithubPrivate {
 impl GithubPrivate {
     pub fn new(agent: Agent, auth_token: String, slug: &str) -> Self {
         let s: Vec<&str> = slug.split('/').collect();
-        if s.len() != 3 {
-            panic!("Slug '{slug}' is not formatted properly.");
-        }
+        assert_eq!(s.len(), 3, "Slug '{slug}' is not formatted properly.");
 
         Self {
             agent,
@@ -98,24 +96,22 @@ impl GithubPrivate {
             }
         }
 
-        match val {
-            Some(str) => Ok(str),
-            None => Err(InteractError::HttpCode(404)),
-        }
+        val.ok_or(InteractError::HttpCode(404))
     }
 
     fn get_release(&mut self, id: &str, version: &str) -> Result<Release, InteractError> {
         let key = format!("{id}/--/{version}");
-        match self.index.get(&key) {
-            Some(item) => Ok(item.clone()),
-            None => {
-                let rel = self.api_call(&format!(
-                    "{}/repos/{}/{}/releases/tags/{id}-{version}",
-                    self.u_url, self.u_owner, self.u_repo
-                ))?;
-                let _ = self.index.insert(key.clone(), rel);
-                Ok(self.index.get(&key).unwrap().clone())
-            }
+
+        if let Some(item) = self.index.get(&key) {
+            Ok(item.clone())
+        }
+        else {
+            let rel = self.api_call(&format!(
+                "{}/repos/{}/{}/releases/tags/{id}-{version}",
+                self.u_url, self.u_owner, self.u_repo
+            ))?;
+            let _ = self.index.insert(key.clone(), rel);
+            Ok(self.index.get(&key).unwrap().clone())
         }
     }
 }
@@ -125,7 +121,7 @@ impl Interact for GithubPrivate {
             self.stable_index = Some(self.api_call(&format!(
                 "{}/repos/{}/{}/releases/tags/stable-index",
                 self.u_url, self.u_owner, self.u_repo
-            ))?)
+            ))?);
         }
 
         // Get latest from file
@@ -185,9 +181,6 @@ impl Interact for GithubPrivate {
             }
         }
 
-        match val {
-            Some(bytes) => Ok(bytes),
-            None => Err(InteractError::HttpCode(404)),
-        }
+        val.ok_or(InteractError::HttpCode(404))
     }
 }

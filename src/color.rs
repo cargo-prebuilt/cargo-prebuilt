@@ -21,7 +21,7 @@ pub fn set_override(color: bool) {
 }
 
 #[cfg(feature = "color")]
-pub fn err_color_print(str: &str, color: PossibleColor) -> String {
+pub fn err_color_print(str: &str, color: &PossibleColor) -> String {
     use owo_colors::{OwoColorize, Stream::Stderr};
 
     match color {
@@ -55,6 +55,6 @@ pub fn err_color_print(str: &str, color: PossibleColor) -> String {
 
 #[cfg(not(feature = "color"))]
 #[inline(always)]
-pub fn err_color_print(str: &str, _color: PossibleColor) -> String {
+pub fn err_color_print(str: &str, _color: &PossibleColor) -> String {
     str.to_string()
 }

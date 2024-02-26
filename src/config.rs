@@ -16,6 +16,7 @@ use std::{
 
 static CONFIG_FILE: &str = "config.toml";
 
+#[allow(clippy::struct_excessive_bools)]
 #[derive(Clone, Debug)]
 pub struct Config {
     pub target: String,
@@ -34,6 +35,7 @@ pub struct Config {
     pub pkgs: IndexSet<String>,
 }
 
+#[allow(clippy::struct_excessive_bools)]
 #[derive(Clone, Debug)]
 struct Arguments {
     target: Option<String>,
@@ -59,7 +61,9 @@ struct Arguments {
 }
 
 // TODO: Consider moving fallback/default values to here.
+#[allow(clippy::too_many_lines)]
 fn parse_args() -> Arguments {
+    #[allow(clippy::wildcard_imports)]
     use bpaf::*;
 
     let pkgs = positional::<String>("PKGS")
@@ -136,7 +140,7 @@ fn parse_args() -> Arguments {
                         Ok(d) => {
                             let _ = v.insert(d);
                         }
-                        Err(_) => return Err(format!("{i} is not a report type.")),
+                        Err(()) => return Err(format!("{i} is not a report type.")),
                     }
                 }
             }
@@ -148,7 +152,11 @@ fn parse_args() -> Arguments {
         .env("PREBUILT_PUB_KEY")
         .help("A public verifying key encoded as base64. Must be used with --index.")
         .argument::<String>("PUB_KEY")
-        .map(|s| s.split(',').map(|l| l.to_owned()).collect::<HashSet<_>>())
+        .map(|s| {
+            s.split(',')
+                .map(std::borrow::ToOwned::to_owned)
+                .collect::<HashSet<_>>()
+        })
         .fallback(HashSet::new());
 
     let no_verify = long("no-verify")
@@ -223,21 +231,20 @@ fn parse_args() -> Arguments {
         .run()
 }
 
+#[allow(clippy::cognitive_complexity)]
 fn fill_from_file(args: &mut Arguments) {
     let conf = if let Some(p) = args.config.clone() {
         p
     }
     else if args.config.is_none() {
-        match ProjectDirs::from(QUALIFIER, ORG, APPLICATION) {
-            Some(project) => {
-                let mut conf = PathBuf::from(project.config_dir());
-                conf.push(CONFIG_FILE);
-                conf
-            }
-            None => {
-                eprintln!("Could not find default config directory! Config file will be ignored.");
-                return;
-            }
+        if let Some(project) = ProjectDirs::from(QUALIFIER, ORG, APPLICATION) {
+            let mut conf = PathBuf::from(project.config_dir());
+            conf.push(CONFIG_FILE);
+            conf
+        }
+        else {
+            eprintln!("Could not find default config directory! Config file will be ignored.");
+            return;
         }
     }
     else {
@@ -323,15 +330,14 @@ fn fill_from_file(args: &mut Arguments) {
         eprintln!("WARN: Could not find config, it will be ignored.");
     }
 
-    if args.config.is_some() {
-        panic!("Could not find an existing config files. Maybe try to generate one using --gen-config?");
-    }
-
-    if args.require_config {
-        panic!(
-            "Config file required, but not found at {conf:?}. Did you mean to use --config=$PATH?"
-        );
-    }
+    assert!(
+        args.config.is_none(),
+        "Could not find an existing config files. Maybe try to generate one using --gen-config?"
+    );
+    assert!(
+        !args.require_config,
+        "Config file required, but not found at {conf:?}. Did you mean to use --config=$PATH?"
+    );
 }
 
 fn convert(args: Arguments) -> Config {
@@ -349,16 +355,16 @@ fn convert(args: Arguments) -> Config {
         cargo_home
     });
 
-    let report_path =
-        args.report_path
-            .unwrap_or_else(|| match ProjectDirs::from(QUALIFIER, ORG, APPLICATION) {
-                Some(project) => {
-                    let mut data = PathBuf::from(project.data_dir());
-                    data.push("reports");
-                    data
-                }
-                None => panic!("Could not get report path, try setting $XDG_DATA_HOME or $HOME."),
-            });
+    let report_path = args.report_path.unwrap_or_else(|| {
+        ProjectDirs::from(QUALIFIER, ORG, APPLICATION).map_or_else(
+            || panic!("Could not get report path, try setting $XDG_DATA_HOME or $HOME."),
+            |project| {
+                let mut data = PathBuf::from(project.data_dir());
+                data.push("reports");
+                data
+            },
+        )
+    });
 
     let ci = args.ci;
     let no_create_path = args.no_create_path;
@@ -408,14 +414,13 @@ pub fn get() -> Config {
 
     // Check 1
     // --index and --index-key conflict
-    if args.index.is_some() && args.index_key.is_some() {
-        panic!(
-            "Arguments {} and {} {}.",
-            err_color_print("--index", PossibleColor::BrightBlue),
-            err_color_print("--index-key", PossibleColor::BrightBlue),
-            err_color_print("conflict", PossibleColor::BrightRed),
-        );
-    }
+    assert!(
+        !(args.index.is_some() && args.index_key.is_some()),
+        "Arguments {} and {} {}.",
+        err_color_print("--index", &PossibleColor::BrightBlue),
+        err_color_print("--index-key", &PossibleColor::BrightBlue),
+        err_color_print("conflict", &PossibleColor::BrightRed),
+    );
 
     // Generate a config file from the entered arguments
     if args.gen_config {
@@ -440,30 +445,33 @@ pub fn get() -> Config {
     convert(args)
 }
 
+#[allow(clippy::too_many_lines)]
 fn generate(args: &Arguments) -> ! {
     color::set_override(true);
     eprintln!(
         "{} config, this will ignore package args.",
-        err_color_print("Generating", PossibleColor::BrightPurple)
+        err_color_print("Generating", &PossibleColor::BrightPurple)
     );
     eprintln!(
         "--gen-config is {} and may generate wrong configs in the future.",
-        err_color_print("deprecated", PossibleColor::BrightRed)
+        err_color_print("deprecated", &PossibleColor::BrightRed)
     );
 
     let conf = args.config.clone().unwrap_or_else(|| {
-        match ProjectDirs::from(QUALIFIER, ORG, APPLICATION) {
-            Some(project) => {
+        ProjectDirs::from(QUALIFIER, ORG, APPLICATION).map_or_else(
+            || {
+                panic!(
+                    "{} get config directory! Try using --config or $PREBUILT_CONFIG.",
+                    err_color_print("Could not", &PossibleColor::BrightRed)
+                )
+            },
+            |project| {
                 let mut conf = PathBuf::from(project.config_dir());
                 create_dir_all(&conf).expect("Could not create paths for config file.");
                 conf.push(CONFIG_FILE);
                 conf
-            }
-            None => panic!(
-                "{} get config directory! Try using --config or $PREBUILT_CONFIG.",
-                err_color_print("Could not", color::PossibleColor::BrightRed)
-            ),
-        }
+            },
+        )
     });
     eprintln!("Config Path: {conf:?}");
 
@@ -480,58 +488,58 @@ fn generate(args: &Arguments) -> ! {
 
     // Prebuilt block
     if config.prebuilt.is_none() {
-        config.prebuilt = Some(ConfigFilePrebuilt::default())
+        config.prebuilt = Some(ConfigFilePrebuilt::default());
     }
 
     // Index writing
     match (&args.index, &args.index_key) {
         (Some(index), ik) => {
-            let key = match ik {
-                Some(ik) => ik.clone(),
-                None => format!(
-                    "gen_{}",
-                    SystemTime::now()
-                        .duration_since(UNIX_EPOCH)
-                        .expect("Failed to generate a random id for index addition.")
-                        .as_secs()
-                ),
-            };
+            let key = ik.as_ref().map_or_else(
+                || {
+                    format!(
+                        "gen_{}",
+                        SystemTime::now()
+                            .duration_since(UNIX_EPOCH)
+                            .expect("Failed to generate a random id for index addition.")
+                            .as_secs()
+                    )
+                },
+                Clone::clone,
+            );
 
-            match config.index.as_mut() {
-                Some(map) => {
-                    map.insert(
-                        key.clone(),
-                        ConfigFileIndexes {
-                            index: index.clone(),
-                            pub_key: Some(args.pub_key.clone()),
-                            auth: args.auth.clone(),
-                        },
-                    );
-                }
-                None => {
-                    let mut map = HashMap::new();
-                    map.insert(
-                        key.clone(),
-                        ConfigFileIndexes {
-                            index: index.clone(),
-                            pub_key: Some(args.pub_key.clone()),
-                            auth: args.auth.clone(),
-                        },
-                    );
-                    config.index = Some(map);
-                }
+            if let Some(map) = config.index.as_mut() {
+                map.insert(
+                    key.clone(),
+                    ConfigFileIndexes {
+                        index: index.clone(),
+                        pub_key: Some(args.pub_key.clone()),
+                        auth: args.auth.clone(),
+                    },
+                );
+            }
+            else {
+                let mut map = HashMap::new();
+                map.insert(
+                    key.clone(),
+                    ConfigFileIndexes {
+                        index: index.clone(),
+                        pub_key: Some(args.pub_key.clone()),
+                        auth: args.auth.clone(),
+                    },
+                );
+                config.index = Some(map);
             }
 
             eprintln!(
                 "{} an index ({index}) under key {key}.",
-                err_color_print("Added", PossibleColor::BrightMagenta)
+                err_color_print("Added", &PossibleColor::BrightMagenta)
             );
         }
         (None, Some(index_key)) => {
             config.prebuilt.as_mut().unwrap().index_key = Some(index_key.clone());
             eprintln!(
                 "{} an index_key.",
-                err_color_print("Added", PossibleColor::BrightMagenta)
+                err_color_print("Added", &PossibleColor::BrightMagenta)
             );
         }
         _ => {}
@@ -541,18 +549,18 @@ fn generate(args: &Arguments) -> ! {
         Some(prebuilt) => {
             // Path writing
             if let Some(item) = &args.path {
-                prebuilt.path = Some(item.to_path_buf());
+                prebuilt.path = Some(item.clone());
                 eprintln!(
                     "{} a path.",
-                    err_color_print("Added", PossibleColor::BrightMagenta)
+                    err_color_print("Added", &PossibleColor::BrightMagenta)
                 );
             }
             // Report Path writing
             if let Some(item) = &args.report_path {
-                prebuilt.report_path = Some(item.to_path_buf());
+                prebuilt.report_path = Some(item.clone());
                 eprintln!(
                     "{} a report path.",
-                    err_color_print("Added", PossibleColor::BrightMagenta)
+                    err_color_print("Added", &PossibleColor::BrightMagenta)
                 );
             }
             // No Create Path writing
@@ -560,7 +568,7 @@ fn generate(args: &Arguments) -> ! {
                 prebuilt.no_create_path = Some(true);
                 eprintln!(
                     "{} no create path.",
-                    err_color_print("Added", PossibleColor::BrightMagenta)
+                    err_color_print("Added", &PossibleColor::BrightMagenta)
                 );
             }
             // Reports writing
@@ -568,7 +576,7 @@ fn generate(args: &Arguments) -> ! {
                 prebuilt.reports = Some(item.clone());
                 eprintln!(
                     "{} reports.",
-                    err_color_print("Added", PossibleColor::BrightMagenta)
+                    err_color_print("Added", &PossibleColor::BrightMagenta)
                 );
             }
             // No Verify writing
@@ -576,7 +584,7 @@ fn generate(args: &Arguments) -> ! {
                 prebuilt.no_verify = Some(true);
                 eprintln!(
                     "{} no verify.",
-                    err_color_print("Added", PossibleColor::BrightMagenta)
+                    err_color_print("Added", &PossibleColor::BrightMagenta)
                 );
             }
             // Safe writing
@@ -584,7 +592,7 @@ fn generate(args: &Arguments) -> ! {
                 prebuilt.safe = Some(true);
                 eprintln!(
                     "{} safe mode.",
-                    err_color_print("Added", PossibleColor::BrightMagenta)
+                    err_color_print("Added", &PossibleColor::BrightMagenta)
                 );
             }
             // Out writing
@@ -592,7 +600,7 @@ fn generate(args: &Arguments) -> ! {
                 prebuilt.out = Some(true);
                 eprintln!(
                     "{} print events.",
-                    err_color_print("Added", PossibleColor::BrightMagenta)
+                    err_color_print("Added", &PossibleColor::BrightMagenta)
                 );
             }
             // Color
@@ -600,14 +608,14 @@ fn generate(args: &Arguments) -> ! {
                 prebuilt.color = Some(true);
                 eprintln!(
                     "{} color.",
-                    err_color_print("Added", PossibleColor::BrightMagenta)
+                    err_color_print("Added", &PossibleColor::BrightMagenta)
                 );
             }
             if args.no_color {
                 prebuilt.no_color = Some(true);
                 eprintln!(
                     "{} no color.",
-                    err_color_print("Added", PossibleColor::BrightMagenta)
+                    err_color_print("Added", &PossibleColor::BrightMagenta)
                 );
             }
         }
@@ -624,7 +632,7 @@ fn generate(args: &Arguments) -> ! {
 
     eprintln!(
         "{}",
-        err_color_print("Generated Config!", PossibleColor::Green)
+        err_color_print("Generated Config!", &PossibleColor::Green)
     );
     std::process::exit(0);
 }

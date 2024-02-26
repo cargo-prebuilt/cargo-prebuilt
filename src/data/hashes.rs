@@ -44,13 +44,13 @@ impl TryFrom<&str> for HashType {
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value {
             #[cfg(feature = "sha2")]
-            "sha256" => Ok(HashType::Sha256),
+            "sha256" => Ok(Self::Sha256),
             #[cfg(feature = "sha2")]
-            "sha512" => Ok(HashType::Sha512),
+            "sha512" => Ok(Self::Sha512),
             #[cfg(feature = "sha3")]
-            "sha3_256" => Ok(HashType::Sha3_256),
+            "sha3_256" => Ok(Self::Sha3_256),
             #[cfg(feature = "sha3")]
-            "sha3_512" => Ok(HashType::Sha3_512),
+            "sha3_512" => Ok(Self::Sha3_512),
             _ => Err(()),
         }
     }
