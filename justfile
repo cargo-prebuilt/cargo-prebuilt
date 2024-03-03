@@ -27,6 +27,19 @@ check-nightly:
     cargo +nightly clippy --all-targets --locked --workspace --release -- -D warnings
     cargo +nightly deny check
 
+default_log_level := 'INFO'
+sup-lint LOG_LEVEL=default_log_level:
+    docker run \
+    -t --rm \
+    --platform=linux/amd64 \
+    -e LOG_LEVEL={{LOG_LEVEL}} \
+    -e RUN_LOCAL=true \
+    -e SHELL=/bin/bash \
+    -e DEFAULT_BRANCH=main \
+    -e VALIDATE_ALL_CODEBASE=true \
+    -v ./:/tmp/lint \
+    ghcr.io/super-linter/super-linter:slim-latest
+
 docker:
     docker run -it --rm --pull=always \
     -e CARGO_TARGET_DIR=/ptarget \
