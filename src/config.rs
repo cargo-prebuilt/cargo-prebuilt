@@ -479,6 +479,7 @@ fn generate(args: &Arguments) -> ! {
         .read(true)
         .write(true)
         .create(true)
+        .truncate(true)
         .open(conf)
         .expect("Could not create/open config file.");
     let mut str = String::new();

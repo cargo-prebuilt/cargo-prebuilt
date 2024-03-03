@@ -1,5 +1,6 @@
 #![forbid(unsafe_code)]
 #![allow(clippy::module_name_repetitions)]
+#![allow(clippy::multiple_crate_versions)]
 
 mod color;
 mod config;

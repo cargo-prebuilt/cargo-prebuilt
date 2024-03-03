@@ -7,11 +7,13 @@
 
 Download prebuilt binaries of some crate.io crates.
 
-See supported targets and a list of prebuilt crates [here](https://github.com/cargo-prebuilt/index#readme).
+See supported targets, a list of prebuilt crates, and the offical index [here](https://github.com/cargo-prebuilt/index#readme).
 
 *(Some targets may not be prebuilt for some crates)*
 
-Request a crate to be added [here](https://github.com/cargo-prebuilt/index/issues/new?assignees=&labels=add-crate%2C+under-consideration&template=request-crate.md&title=).
+Request a crate to be added to the official index [here](https://github.com/cargo-prebuilt/index/issues/new?assignees=&labels=add-crate%2C+under-consideration&template=request-crate.md&title=).
+
+See the currently supported versions [here](docs/SUPPORTED.md)
 
 ## How to Use
 

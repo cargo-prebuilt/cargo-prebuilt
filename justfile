@@ -21,6 +21,12 @@ check:
     cargo clippy --all-targets --locked --workspace --release -- -D warnings
     cargo deny check
 
+check-nightly:
+    cargo +nightly fmt --check
+    cargo +nightly clippy --all-targets --locked --workspace -- -D warnings
+    cargo +nightly clippy --all-targets --locked --workspace --release -- -D warnings
+    cargo +nightly deny check
+
 docker:
     docker run -it --rm --pull=always \
     -e CARGO_TARGET_DIR=/ptarget \

@@ -27,7 +27,7 @@ directories = "5.0.1"
 flate2 = "1.0.28"
 hex = "0.4.3"
 home = "0.5.9"
-indexmap = { version = "2.2.3", features = ["serde"] }
+indexmap = { version = "2.2.5", features = ["serde"] }
 mimalloc = { version = "0.1.39", optional = true }
 minisign-verify = { version = "0.2.1", optional = true }
 native-tls = { version = "0.2.11", optional = true }
@@ -88,7 +88,6 @@ codegen-units = 16
 cargo = "deny"
 correctness = "deny"
 complexity = "deny"
-enum_glob_use = "deny"
 nursery = "deny"
 pedantic = "deny"
 perf = "deny"
