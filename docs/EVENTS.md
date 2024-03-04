@@ -1,6 +1,6 @@
 # Event Info
 
-### Info verified
+## Info verified
 
 ```json
 {
@@ -12,7 +12,7 @@
 }
 ```
 
-### Hashes verified
+## Hashes verified
 
 ```json
 {
@@ -24,7 +24,7 @@
 }
 ```
 
-### Target
+## Target
 
 ```json
 {
@@ -36,7 +36,7 @@
 }
 ```
 
-### Binary Installed
+## Binary Installed
 
 ```json
 {
@@ -48,7 +48,7 @@
 }
 ```
 
-### Installed
+## Installed
 
 ```json
 {
@@ -60,7 +60,7 @@
 }
 ```
 
-### Latest Version (--get-latest)
+## Latest Version (--get-latest)
 
 ```json
 {
@@ -72,7 +72,7 @@
 }
 ```
 
-### Wrote Report
+## Wrote Report
 
 ```json
 {
@@ -84,7 +84,7 @@
 }
 ```
 
-### Print License (license_event) {#print-license}
+## Print License (license_event) {#print-license}
 
 ```json
 {
@@ -96,7 +96,7 @@
 }
 ```
 
-### Print Deps (deps_event) {#print-deps}
+## Print Deps (deps_event) {#print-deps}
 
 ```json
 {
@@ -108,7 +108,7 @@
 }
 ```
 
-### Print Audit (audit_event) {#print-audit}
+## Print Audit (audit_event) {#print-audit}
 
 ```json
 {

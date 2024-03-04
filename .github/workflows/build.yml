@@ -1,19 +1,42 @@
+---
 name: Rust Build and Test
 ### https://github.com/harmless-tech/rust-github-actions
 
 on:
   push:
-    branches: [ main ]
-    paths: [ .github/workflows/build.yml, keys/**, src/**, test/**, build.rs, Cargo.lock, Cargo.toml, Cross.toml ]
+    branches: [main]
+    paths:
+      - .github/workflows/build.yml
+      - keys/**
+      - src/**
+      - test/**
+      - build.rs
+      - Cargo.lock
+      - Cargo.toml
+      - Cross.toml
   pull_request:
-    branches: [ main ]
-    paths: [ .github/workflows/build.yml, keys/**, src/**, test/**, build.rs, Cargo.lock, Cargo.toml, Cross.toml ]
+    branches: [main]
+    paths:
+      - .github/workflows/build.yml
+      - keys/**
+      - src/**
+      - test/**
+      - build.rs
+      - Cargo.lock
+      - Cargo.toml
+      - Cross.toml
   workflow_dispatch:
+
+permissions: { }
 
 env:
   bin-name: cargo-prebuilt
   feature-set: '--no-default-features --features default-native'
   CARGO_TERM_COLOR: always
+
+defaults:
+  run:
+    shell: bash
 
 jobs:
   ink-cross:
@@ -49,19 +72,21 @@ jobs:
         if: ${{ matrix.can-test }}
         run: |
           docker run --rm \
-          --userns host --user $(id -u):$(id -g) \
-          -v $HOME/.cargo/registry:/usr/local/cargo/registry \
+          --userns host --user "$(id -u)":"$(id -g)" \
+          -v "$HOME"/.cargo/registry:/usr/local/cargo/registry \
           -v ./:/project \
           ghcr.io/cargo-prebuilt/ink-cross:stable-${{ matrix.target }} \
-          test --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
+          test --verbose --workspace --locked \
+          --target ${{ matrix.target }} ${{ env.feature-set }}
       - name: Build with ink cross
         run: |
           docker run --rm \
-          --userns host --user $(id -u):$(id -g) \
-          -v $HOME/.cargo/registry:/usr/local/cargo/registry \
+          --userns host --user "$(id -u)":"$(id -g)" \
+          -v "$HOME"/.cargo/registry:/usr/local/cargo/registry \
           -v ./:/project \
           ghcr.io/cargo-prebuilt/ink-cross:stable-${{ matrix.target }} \
-          auditable build --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
+          auditable build --verbose --workspace --locked \
+          --target ${{ matrix.target }} ${{ env.feature-set }}
       - name: Run cargo-prebuilt
         if: ${{ matrix.can-test }}
         run: |
@@ -104,9 +129,13 @@ jobs:
           key: ${{ matrix.target }}
       - name: Run tests
         if: ${{ matrix.can-test }}
-        run: cross test --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
+        run: |
+          cross test --verbose --workspace --locked \
+          --target ${{ matrix.target }} ${{ env.feature-set }}
       - name: Build
-        run: cross build --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
+        run: |
+          cross build --verbose --workspace --locked \
+          --target ${{ matrix.target }} ${{ env.feature-set }}
       - name: Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -138,9 +167,13 @@ jobs:
         with:
           key: ${{ matrix.target }}
       - name: Run tests
-        run: cargo test --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
+        run: |
+          cargo test --verbose --workspace --locked \
+          --target ${{ matrix.target }} ${{ env.feature-set }}
       - name: Build
-        run: cargo auditable build --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
+        run: |
+          cargo auditable build --verbose --workspace --locked \
+          --target ${{ matrix.target }} ${{ env.feature-set }}
       - name: Run cargo-prebuilt
         run: |
           target/${{ matrix.target }}/debug/${{ env.bin-name }} just
@@ -178,9 +211,13 @@ jobs:
           key: ${{ matrix.target }}
       - name: Run tests
         if: ${{ matrix.can-test }}
-        run: cargo test --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
+        run: |
+          cargo test --verbose --workspace --locked \
+          --target ${{ matrix.target }} ${{ env.feature-set }}
       - name: Build
-        run: cargo auditable build --verbose --workspace --locked --target ${{ matrix.target }} ${{ env.feature-set }}
+        run: |
+          cargo auditable build --verbose --workspace --locked \
+          --target ${{ matrix.target }} ${{ env.feature-set }}
       - name: Run cargo-prebuilt
         if: ${{ matrix.can-test }}
         run: |

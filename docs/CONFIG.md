@@ -1,6 +1,7 @@
 # Config Info
 
 Config info is prioritized in the order of
+
 1. arguments
 2. environmental variables
 3. config file
@@ -18,7 +19,7 @@ Use ```cargo prebuilt --help```.
 
 > [!IMPORTANT]
 > The config file is ignored when using the --ci flag.
-
+>
 > [!WARNING]
 > Config files are not stable between any versions.
 
@@ -35,7 +36,7 @@ reports = ["$REPORT_TYPE"]  # Reports to download
 color = true|false          # Should CLI be on
 no_color = true|false       # Should CLI colors be off
 no_verify = true|false      # Do not verify signatures (See [key.$ANYTHING])
-safe = true|false           # Prevent the overwriting of binaires (Except when --ci is used)
+safe = true|false           # Prevent the overwriting of binaires (Except when--ci is used)
 out = true|false            # Print out event info (See EVENTS.md)
 
 [index.$INDEX_KEY]          # Add a public verifying key for an index

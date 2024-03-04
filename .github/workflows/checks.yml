@@ -1,19 +1,47 @@
+---
 name: Rust Checks
 ### https://github.com/harmless-tech/rust-github-actions
 
 on:
   push:
-    branches: [ main ]
-    paths: [ .github/workflows/checks.yml, keys/**, src/**, test/**, build.rs, Cargo.lock, Cargo.toml, Cross.toml, deny.toml, rustfmt.toml ]
+    branches: [main]
+    paths: 
+      - .github/workflows/checks.yml
+      - keys/**
+      - src/**
+      - test/**
+      - build.rs
+      - Cargo.lock
+      - Cargo.toml
+      - Cross.toml
+      - deny.toml
+      - rustfmt.toml
   pull_request:
-    branches: [ main ]
-    paths: [ .github/workflows/checks.yml, keys/**, src/**, test/**, build.rs, Cargo.lock, Cargo.toml, Cross.toml, deny.toml, rustfmt.toml ]
+    branches: [main]
+    paths:
+      - .github/workflows/checks.yml
+      - keys/**
+      - src/**
+      - test/**
+      - build.rs
+      - Cargo.lock
+      - Cargo.toml
+      - Cross.toml
+      - deny.toml
+      - rustfmt.toml
   workflow_dispatch:
+
+permissions: { }
 
 env:
   feature-set: '--no-default-features --features default-native'
-  hack-group: '--group-features default,default-native,default-rustls,default-no-tls,rustls,rustls-native-certs,native,vendored-openssl'
+  hack-group: "--group-features default,default-native,default-rustls,\
+    default-no-tls,rustls,rustls-native-certs,native,vendored-openssl"
   CARGO_TERM_COLOR: never
+
+defaults:
+  run:
+    shell: bash
 
 jobs:
   fmt-check:
@@ -28,14 +56,16 @@ jobs:
           cargo +nightly fmt --check 2>&1 | tee .step-data.txt
       - name: Put into summary (success)
         if: success()
-        run: echo "Success" >> $GITHUB_STEP_SUMMARY
+        run: echo "Success" >> "$GITHUB_STEP_SUMMARY"
       - name: Put into summary (failure)
         if: failure()
         run: |
-          echo "Failed!" >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`shell" >> $GITHUB_STEP_SUMMARY
-          cat .step-data.txt >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          {
+            echo "Failed!"
+            echo "\`\`\`shell"
+            cat .step-data.txt
+            echo "\`\`\`"
+          } >> "$GITHUB_STEP_SUMMARY"
 
   reports:
     runs-on: ubuntu-latest
@@ -57,18 +87,23 @@ jobs:
           key: cache-advisory-db
       - name: Deps Report
         run: |
-          echo "### Deps:" >> $GITHUB_STEP_SUMMARY
-          echo "Generated on: $(date --utc)" >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          cargo tree --verbose -e normal,build --locked >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          test -f Cargo.lock || cargo generate-lockfile --verbose
+          {
+            echo "### Deps:"
+            echo "Generated on: $(date --utc)"
+            echo "\`\`\`"
+            cargo tree --verbose -e normal,build --locked
+            echo "\`\`\`"
+          } >> "$GITHUB_STEP_SUMMARY"
       - name: Audit Report
         run: |
-          echo "### Audit:" >> $GITHUB_STEP_SUMMARY
-          echo "Generated on: $(date --utc)" >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          cargo audit >> $GITHUB_STEP_SUMMARY || true
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          {
+            echo "### Audit:"
+            echo "Generated on: $(date --utc)"
+            echo "\`\`\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+          cargo audit >> "$GITHUB_STEP_SUMMARY" || true
+          echo "\`\`\`" >> "$GITHUB_STEP_SUMMARY"
 
   clippy:
     strategy:
@@ -92,23 +127,24 @@ jobs:
         with:
           key: ${{ matrix.target }}
       - name: Clippy Check
-        shell: bash
         run: |
           set -o pipefail
-          cargo clippy --all-targets --verbose --workspace --locked -- -D warnings 2>&1 | tee .step-data.txt
-          cargo clippy --all-targets --verbose --workspace --locked ${{ env.feature-set }} -- -D warnings 2>&1 | tee .step-data.txt
+          cargo clippy --all-targets --verbose --workspace --locked \
+          -- -D warnings 2>&1 | tee .step-data.txt
+          cargo clippy --all-targets --verbose --workspace --locked \
+          ${{ env.feature-set }} -- -D warnings 2>&1 | tee .step-data.txt
       - name: Put into summary (success)
         if: success()
-        shell: bash
-        run: echo "Success" >> $GITHUB_STEP_SUMMARY
+        run: echo "Success" >> "$GITHUB_STEP_SUMMARY"
       - name: Put into summary (failure)
         if: failure()
-        shell: bash
         run: |
-          echo "Failed!" >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`shell" >> $GITHUB_STEP_SUMMARY
-          cat .step-data.txt >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          {
+            echo "Failed!"
+            echo "\`\`\`shell"
+            cat .step-data.txt
+            echo "\`\`\`"
+          } >> "$GITHUB_STEP_SUMMARY"
 
   cargo-hack:
     strategy:
@@ -135,27 +171,28 @@ jobs:
         with:
           key: ${{ matrix.target }}
       - name: Hack Check (each-feature)
-        shell: bash
         run: |
           set -o pipefail
-          cargo hack check --each-feature --no-dev-deps --verbose --workspace --locked 2>&1 | tee .step-data.txt
+          cargo hack check --each-feature --no-dev-deps --verbose --workspace \
+          --locked 2>&1 | tee .step-data.txt
       - name: Hack Check (feature-powerset)
-        shell: bash
         run: |
           set -o pipefail
-          cargo hack check --feature-powerset ${{ env.hack-group }} --no-dev-deps --verbose --workspace --locked 2>&1 | tee .step-data.txt
+          cargo hack check --feature-powerset ${{ env.hack-group }} \
+          --no-dev-deps --verbose --workspace \
+          --locked 2>&1 | tee .step-data.txt
       - name: Put into summary (success)
         if: success()
-        shell: bash
-        run: echo "Success" >> $GITHUB_STEP_SUMMARY
+        run: echo "Success" >> "$GITHUB_STEP_SUMMARY"
       - name: Put into summary (failure)
         if: failure()
-        shell: bash
         run: |
-          echo "Failed!" >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`shell" >> $GITHUB_STEP_SUMMARY
-          cat .step-data.txt >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          {
+            echo "Failed!"
+            echo "\`\`\`shell"
+            cat .step-data.txt
+            echo "\`\`\`"
+          } >> "$GITHUB_STEP_SUMMARY"
 
   cargo-deny:
     runs-on: ubuntu-latest
@@ -169,19 +206,18 @@ jobs:
         with:
           pkgs: cargo-deny
       - name: Cargo Deny
-        shell: bash
         run: |
           set -o pipefail
           cargo deny check 2>&1 | tee .step-data.txt
       - name: Put into summary (success)
         if: success()
-        shell: bash
-        run: echo "Success" >> $GITHUB_STEP_SUMMARY
+        run: echo "Success" >> "$GITHUB_STEP_SUMMARY"
       - name: Put into summary (failure)
         if: failure()
-        shell: bash
         run: |
-          echo "Failed!" >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`shell" >> $GITHUB_STEP_SUMMARY
-          cat .step-data.txt >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          {
+            echo "Failed!"
+            echo "\`\`\`shell"
+            cat .step-data.txt
+            echo "\`\`\`"
+          } >> "$GITHUB_STEP_SUMMARY"

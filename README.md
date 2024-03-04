@@ -7,9 +7,10 @@
 
 Download prebuilt binaries of some crate.io crates.
 
-See supported targets, a list of prebuilt crates, and the offical index [here](https://github.com/cargo-prebuilt/index#readme).
+See supported targets, a list of prebuilt crates,
+and the official index [here](https://github.com/cargo-prebuilt/index#readme).
 
-*(Some targets may not be prebuilt for some crates)*
+*(Some targets may not be prebuilt for some crates).*
 
 Request a crate to be added to the official index [here](https://github.com/cargo-prebuilt/index/issues/new?assignees=&labels=add-crate%2C+under-consideration&template=request-crate.md&title=).
 
@@ -17,7 +18,8 @@ See the currently supported versions [here](docs/SUPPORTED.md)
 
 ## How to Use
 
-*Cargo prebuilt overwrites existing binaries by default. To stop this use the ```-s``` flag, ```--safe``` flag, or add ```safe = true``` to your config file.*
+*Cargo prebuilt overwrites existing binaries by default. To stop this use the
+```-s``` flag, ```--safe``` flag, or add ```safe = true``` to your config file.*
 
 To download a crate: ```cargo prebuilt CRATE_NAME```
 
@@ -31,61 +33,95 @@ Need help? Try: ```cargo prebuilt --help``` or see [Config Info](docs/CONFIG.md)
 
 ## Installation
 
-- You can download the latest prebuilt binaries of cargo-prebuilt [here](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/latest).
-- Cargo install: ```cargo install cargo-prebuilt``` or ```cargo install cargo-prebuilt --profile=quick-build```
+- You can download the latest prebuilt binaries of cargo-prebuilt
+  [here](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/latest).
+- Cargo install: ```cargo install cargo-prebuilt``` or
+  ```cargo install cargo-prebuilt --profile=quick-build```
 - Cargo prebuilt: ```cargo prebuilt cargo-prebuilt```
 - Cargo binstall: ```cargo binstall cargo-prebuilt --no-confirm```
 - Cargo quickinstall: ```cargo quickinstall cargo-prebuilt```
 - Homebrew: ```brew install crow-rest/harmless/cargo-prebuilt```
-- Install script (unix platforms): ```curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-prebuilt/cargo-prebuilt/main/scripts/install-cargo-prebuilt.sh | bash```
-- For github actions you can use [cargo-prebuilt/cargo-prebuilt-action](https://github.com/cargo-prebuilt/cargo-prebuilt-action)
+- Install script (unix platforms):
+
+  ```shell
+  curl --proto '=https' --tlsv1.2 -sSf \
+  https://raw.githubusercontent.com/cargo-prebuilt/cargo-prebuilt/main/scripts/install-cargo-prebuilt.sh \
+  | bash
+  ```
+  
+- For GitHub actions you can use
+  [cargo-prebuilt/cargo-prebuilt-action](https://github.com/cargo-prebuilt/cargo-prebuilt-action)
 
 ## Building
 
 (Cargo prebuilt requires a tls feature)
 
-#### vendored-openssl (default)
+### vendored-openssl (default)
+
 ```cargo install cargo-prebuilt```
 
-#### native tls (github releases default)
+### native tls (GitHub releases default)
+
 ```cargo install cargo-prebuilt --no-default-features --features default-native```
 
-#### rustls
+### rustls
+
 ```cargo install cargo-prebuilt --no-default-features --features default-rustls```
 
-#### rustls with native certs
+### rustls with native certs
+
 ```cargo install cargo-prebuilt --no-default-features --features default-rustls,rustls-native-certs```
 
 ### limit security used
-(Cargo prebuilt is tested with default features and may break without the ```security``` feature)
 
-Remove ```security``` feature included by default, then add the features you want below:
+(Cargo prebuilt is tested with default features and may break without the
+```security``` feature)
+
+Remove ```security``` feature included by default, then add the features you
+want below:
+
 - ```sha2```: Sha2 hashing
 - ```sha3```: Sha3 hashing
 - ```sig```: Minisign signatures
 
-#### limit indexes used
-(Cargo prebuilt is tested with default features and may break without the ```indexes``` feature)
+### limit indexes used
 
-Remove ```indexes``` feature included by default, then add the features you want below:
+(Cargo prebuilt is tested with default features and may break without the
+```indexes``` feature)
+
+Remove ```indexes``` feature included by default, then add the features you
+want below:
+
 - [github-public](#github-public)
 - [github-private](#github-private)
-- [gitlab-public](#gitlab-public) (Not supported yet)
-- [gitlab-private](#gitlab-private) (Not supported yet)
-- [forgejo-public](#forgejo-public) (Not supported yet)
-- [forgejo-private](#forgejo-private) (Not supported yet)
-- [gitea-public](#gitea-public) (Not supported yet)
-- [gitea-private](#gitea-private) (Not supported yet)
-- [custom-http-public](#custom-http-private) (Not supported yet)
-- [custom-http-private](#custom-http-private) (Not supported yet)
 
-#### limit color
-(Cargo prebuilt is tested with default features and may break without the ```color``` feature)
+[//]: # (- [gitlab-public]&#40;#gitlab-public&#41; &#40;Not supported yet&#41;)
+
+[//]: # (- [gitlab-private]&#40;#gitlab-private&#41; &#40;Not supported yet&#41;)
+
+[//]: # (- [forgejo-public]&#40;#forgejo-public&#41; &#40;Not supported yet&#41;)
+
+[//]: # (- [forgejo-private]&#40;#forgejo-private&#41; &#40;Not supported yet&#41;)
+
+[//]: # (- [gitea-public]&#40;#gitea-public&#41; &#40;Not supported yet&#41;)
+
+[//]: # (- [gitea-private]&#40;#gitea-private&#41; &#40;Not supported yet&#41;)
+
+[//]: # (- [custom-http-public]&#40;#custom-http-private&#41; &#40;Not supported yet&#41;)
+
+[//]: # (- [custom-http-private]&#40;#custom-http-private&#41; &#40;Not supported yet&#41;)
+
+### limit color
+
+(Cargo prebuilt is tested with default features and may break without the
+```color``` feature)
 
 - Remove the ```color``` feature (enabled by default)
-- Or use ```--no-color```, ```NO_COLOR=true``` env var, or ```color = false``` in the config file.
+- Or use ```--no-color```, ```NO_COLOR=true``` env var,
+  or ```color = false``` in the config file.
 
 ### use mimalloc
+
 ```cargo install cargo-prebuilt --features mimalloc```
 
 ## Events
@@ -96,7 +132,7 @@ See [Events](docs/EVENTS.md).
 
 ## Reports
 
-Reports are generated when a crate is built in the index.
+Reports are generated during crate build time in the index.
 
 They are stored under ```$REPORTS/$CRATE/$VERSION``` by default.
 
@@ -108,33 +144,39 @@ Use ```--report-path``` to change where they are stored.
 
 ## Using a custom index
 
-#### GitHub public
+### GitHub public
 
-[Template](https://github.com/cargo-prebuilt/gh-pub-index) (Usually out of date compared to the main index)
+[Template](https://github.com/cargo-prebuilt/gh-pub-index)
+(Usually out of date compared to the main index)
 
-Your url should be formatted like ```github.com/cargo-prebuilt/index```. cargo-prebuilt requires https.
+Your URL should be formatted like ```github.com/cargo-prebuilt/index```.
+cargo-prebuilt requires HTTPS.
 
 - ```export PREBUILT_INDEX=gh-pub:$URL```
 - ```cargo prebuilt --index=gh-pub:$URL CRATES```
-- [config.toml](docs/CONFIG.md) 
+- [config.toml](docs/CONFIG.md)
+
     ```toml
     [key.index]
     index = "gh-pub:$URL"
     pub_key = []
     ```
 
-#### GitHub private
+### GitHub private
 
-Currently in beta!!!
+**Beta Feature.**
 
-Your url should be formatted like ```github.com/cargo-prebuilt/index```. Cargo-prebuilt requires https.
+Your URL should be formatted like ```github.com/cargo-prebuilt/index```.
+Cargo-prebuilt requires HTTPS.
 
-This index requires an auth token with: Repo permission -> Contents -> Read-only.
+This index requires an auth token with:
+Repository permission -> Contents -> Read-only.
 [Generate a token](https://github.com/settings/personal-access-tokens/new)
 
 - ```export PREBUILT_INDEX=gh-pri:$URL```
 - ```cargo prebuilt --index=gh-pri:$URL CRATES```
 - [config.toml](docs/CONFIG.md)
+
     ```toml
     [key.index]
     index = "gh-pri:$URL"
