@@ -14,6 +14,10 @@ permissions:
   packages: read
   statuses: write
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   typos:
     runs-on: ubuntu-latest

@@ -26,14 +26,14 @@ V_URL="https://github.com/cargo-prebuilt/cargo-prebuilt/releases/download/v"
 TEMP_DIR="$(mktemp -d)"
 pushd "$TEMP_DIR"
 
-": ${VERSION:="latest"}"
+: "${VERSION:="latest"}"
 
-": ${ARCH:="$(uname -m)"}"
-": ${OS_TYPE:="$(uname -s)"}"
-": ${LIBC:="gnu"}"
+: "${ARCH:="$(uname -m)"}"
+: "${OS_TYPE:="$(uname -s)"}"
+: "${LIBC:="gnu"}"
 
-": ${PUB_KEY:="RWTSqAR1Hbfu6mBFiaz4hb9I9gikhMmvKkVbyz4SJF/oxJcbbScmCqqO"}"
-": ${MINISIGN:="false"}"
+: "${PUB_KEY:="RWTSqAR1Hbfu6mBFiaz4hb9I9gikhMmvKkVbyz4SJF/oxJcbbScmCqqO"}"
+: "${MINISIGN:="false"}"
 
 # Build target string
 TARGET_STRING=""
@@ -148,7 +148,8 @@ if [ "$VERSION" != "latest" ]; then
 	END_VERSION+="@$VERSION"
 fi
 
-./cargo-prebuilt "$ARGS" cargo-prebuilt"$END_VERSION"
+# shellcheck disable=SC2086
+./cargo-prebuilt $ARGS cargo-prebuilt"$END_VERSION"
 
 popd
 rm -rf "$TEMP_DIR"

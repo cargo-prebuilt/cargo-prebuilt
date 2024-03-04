@@ -12,6 +12,10 @@ on:
 
 permissions: { }
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   test-install-script-1:
     runs-on: ubuntu-latest

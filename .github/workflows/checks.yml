@@ -35,10 +35,13 @@ permissions: { }
 
 env:
   feature-set: '--no-default-features --features default-native'
-  hack-group: >-
-    --group-features default,default-native,default-rustls,default-no-tls,
-    rustls,rustls-native-certs,native,vendored-openssl
+  hack-group: "--group-features default,default-native,default-rustls,\
+    default-no-tls,rustls,rustls-native-certs,native,vendored-openssl"
   CARGO_TERM_COLOR: never
+
+defaults:
+  run:
+    shell: bash
 
 jobs:
   fmt-check:
@@ -124,7 +127,6 @@ jobs:
         with:
           key: ${{ matrix.target }}
       - name: Clippy Check
-        shell: bash
         run: |
           set -o pipefail
           cargo clippy --all-targets --verbose --workspace --locked \
@@ -133,11 +135,9 @@ jobs:
           ${{ env.feature-set }} -- -D warnings 2>&1 | tee .step-data.txt
       - name: Put into summary (success)
         if: success()
-        shell: bash
         run: echo "Success" >> "$GITHUB_STEP_SUMMARY"
       - name: Put into summary (failure)
         if: failure()
-        shell: bash
         run: |
           {
             echo "Failed!"
@@ -171,13 +171,11 @@ jobs:
         with:
           key: ${{ matrix.target }}
       - name: Hack Check (each-feature)
-        shell: bash
         run: |
           set -o pipefail
           cargo hack check --each-feature --no-dev-deps --verbose --workspace \
           --locked 2>&1 | tee .step-data.txt
       - name: Hack Check (feature-powerset)
-        shell: bash
         run: |
           set -o pipefail
           cargo hack check --feature-powerset ${{ env.hack-group }} \
@@ -185,11 +183,9 @@ jobs:
           --locked 2>&1 | tee .step-data.txt
       - name: Put into summary (success)
         if: success()
-        shell: bash
         run: echo "Success" >> "$GITHUB_STEP_SUMMARY"
       - name: Put into summary (failure)
         if: failure()
-        shell: bash
         run: |
           {
             echo "Failed!"
@@ -210,17 +206,14 @@ jobs:
         with:
           pkgs: cargo-deny
       - name: Cargo Deny
-        shell: bash
         run: |
           set -o pipefail
           cargo deny check 2>&1 | tee .step-data.txt
       - name: Put into summary (success)
         if: success()
-        shell: bash
         run: echo "Success" >> "$GITHUB_STEP_SUMMARY"
       - name: Put into summary (failure)
         if: failure()
-        shell: bash
         run: |
           {
             echo "Failed!"

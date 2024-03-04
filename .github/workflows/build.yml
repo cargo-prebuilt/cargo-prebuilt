@@ -34,6 +34,10 @@ env:
   feature-set: '--no-default-features --features default-native'
   CARGO_TERM_COLOR: always
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   ink-cross:
     strategy:
