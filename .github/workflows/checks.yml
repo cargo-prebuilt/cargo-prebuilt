@@ -31,6 +31,8 @@ on:
       - rustfmt.toml
   workflow_dispatch:
 
+permissions: { }
+
 env:
   feature-set: '--no-default-features --features default-native'
   hack-group: >-

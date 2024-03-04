@@ -9,6 +9,11 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+  packages: read
+  statuses: write
+
 jobs:
   typos:
     runs-on: ubuntu-latest

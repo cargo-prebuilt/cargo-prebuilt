@@ -27,6 +27,8 @@ on:
       - Cross.toml
   workflow_dispatch:
 
+permissions: { }
+
 env:
   bin-name: cargo-prebuilt
   feature-set: '--no-default-features --features default-native'

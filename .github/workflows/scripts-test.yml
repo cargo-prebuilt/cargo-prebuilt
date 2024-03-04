@@ -10,6 +10,8 @@ on:
     paths: [.github/workflows/scripts-test.yml, scripts/**]
   workflow_dispatch:
 
+permissions: { }
+
 jobs:
   test-install-script-1:
     runs-on: ubuntu-latest
