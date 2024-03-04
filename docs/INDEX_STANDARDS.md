@@ -1,6 +1,8 @@
-Pull from https://github.com/cargo-prebuilt/index/blob/main/API.md.
+# Index Standards
 
-# info.json v1
+Pulled from [API.md](https://github.com/cargo-prebuilt/index/blob/main/API.md).
+
+## info.json v1
 
 ```json
 {
@@ -36,7 +38,7 @@ Pull from https://github.com/cargo-prebuilt/index/blob/main/API.md.
 }
 ```
 
-# hashes.json v1
+## hashes.json v1
 
 ```json
 {

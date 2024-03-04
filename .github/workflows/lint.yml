@@ -1,11 +1,13 @@
+---
 name: Lint
 
 on:
-    push:
-        branches: [ main ]
-    pull_request:
-        branches: [ main ]
-    workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['**.md', '**.yml', '**.sh', '**.json']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
 
 jobs:
   typos:
@@ -19,6 +21,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Lint Codebase
         id: super-linter
         uses: super-linter/super-linter/slim@v6
@@ -26,3 +30,7 @@ jobs:
           DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VALIDATE_ALL_CODEBASE: true
+          VALIDATE_RUST_2015: false
+          VALIDATE_RUST_2018: false
+          VALIDATE_RUST_2021: false
+          VALIDATE_RUST_CLIPPY: false

@@ -28,15 +28,20 @@ check-nightly:
     cargo +nightly deny check
 
 default_log_level := 'INFO'
+runner := 'docker'
 sup-lint LOG_LEVEL=default_log_level:
-    docker run \
-    -t --rm \
+    {{runner}} run \
+    -t --rm --pull=always \
     --platform=linux/amd64 \
     -e LOG_LEVEL={{LOG_LEVEL}} \
     -e RUN_LOCAL=true \
     -e SHELL=/bin/bash \
     -e DEFAULT_BRANCH=main \
     -e VALIDATE_ALL_CODEBASE=true \
+    -e VALIDATE_RUST_2015=false \
+    -e VALIDATE_RUST_2018=false \
+    -e VALIDATE_RUST_2021=false \
+    -e VALIDATE_RUST_CLIPPY=false \
     -v ./:/tmp/lint \
     ghcr.io/super-linter/super-linter:slim-latest
 

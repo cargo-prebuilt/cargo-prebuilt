@@ -1,1 +1,37 @@
-{"hashes_version":"1","hashes":{"TARGET":{"archive":{"sha256":"HASH","sha512":"HASH?"},"bins":{"BINARY":{"sha256":"HASH","sha256":"HASH?"},"BINARY?":{"sha512":"HASH","sha512":"HASH?"}}},"TARGET?":{"archive":{"sha256":"HASH","sha512":"HASH?"},"bins":{"BINARY":{"sha256":"HASH","sha512":"HASH?"},"BINARY?":{"sha256":"HASH","sha512":"HASH?"}}}}}
+{
+    "hashes_version": "1",
+    "hashes": {
+        "TARGET": {
+            "archive": {
+                "sha256": "HASH",
+                "sha512": "HASH?"
+            },
+            "bins": {
+                "BINARY": {
+                    "sha256": "HASH",
+                    "sha512": "HASH?"
+                },
+                "BINARY?": {
+                    "sha256": "HASH",
+                    "sha512": "HASH?"
+                }
+            }
+        },
+        "TARGET?": {
+            "archive": {
+                "sha256": "HASH",
+                "sha512": "HASH?"
+            },
+            "bins": {
+                "BINARY": {
+                    "sha256": "HASH",
+                    "sha512": "HASH?"
+                },
+                "BINARY?": {
+                    "sha256": "HASH",
+                    "sha512": "HASH?"
+                }
+            }
+        }
+    }
+}

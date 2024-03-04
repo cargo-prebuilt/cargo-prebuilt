@@ -34,7 +34,7 @@
 
 ## [0.6.3](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.6.3)
 
-- Changed config file to include auth on a per repo basis.
+- Changed config file to include auth on a per repository basis.
 - Changed config file to better support multiple indexes.
 - Changed how --gen-config works.
 - Changed some of the cli colors.
@@ -60,7 +60,7 @@
 - Removed nanoserde in favor of serde.
 - Bump deps.
 - Bump MSRV from Rust 1.63+ to Rust 1.65+.
-- version flag (--version) now uses bpaf's built in method.
+- version flag (--version) now uses bpaf's built-in method.
 - .prebuilt folder is now by default put in the home directory, but can be overridden.
 - config.toml is now more useful. (See [CONFIG](CONFIG.md))
 - Better config handling.
@@ -84,7 +84,8 @@
 - Allow adding to the config using the cmd line using --gen-config. (#76) (#77)
 - Add --out flag that prints out json events. (#75)
 - Follow directory standards. (#79)
-- Add --index-key which will select an index based on its entry in the config file. (#78)
+- Add --index-key which will select an index based on its entry in the config file.
+  (#78)
 - Add --config to allow selection of a config file anywhere. (#80)
 - Use panics instead of using std::process::exit. (#47)
 - Add way to get latest versions of crates. (#84)
@@ -108,7 +109,7 @@
 - Switch to bpaf for argument parsing. (#20)
 - Add env vars for some options. (#20)
 - Add owo-colors. (#20)
-- Support for custom indexes. [Github public] (#24)
+- Support for custom indexes. [GitHub public] (#24)
 - Removed which/where detection.
 - Check if path exists before downloading.
 
