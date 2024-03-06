@@ -12,13 +12,13 @@ categories = ["development-tools", "development-tools::cargo-plugins"]
 keywords = ["cargo", "cargo-subcommand", "binary"]
 rust-version = "1.70"
 include = [
-    "keys/",
-    "src/",
-    "build.rs",
-    "Cargo.lock",
-    "Cargo.toml",
-    "LICENSE",
-    "README.md"
+  "keys/",
+  "src/",
+  "build.rs",
+  "Cargo.lock",
+  "Cargo.toml",
+  "LICENSE",
+  "README.md",
 ]
 
 [dependencies]
@@ -31,14 +31,23 @@ indexmap = { version = "2.2.5", features = ["serde"] }
 mimalloc = { version = "0.1.39", optional = true }
 minisign-verify = { version = "0.2.1", optional = true }
 native-tls = { version = "0.2.11", optional = true }
-owo-colors = { version = "4.0.0", features = ["supports-colors"], optional = true }
+owo-colors = { version = "4.0.0", features = [
+  "supports-colors",
+], optional = true }
 serde = { version = "1.0.197", features = ["derive"] }
 serde_json = "1.0.114"
 sha2 = { version = "0.10.8", optional = true }
 sha3 = { version = "0.10.8", optional = true }
 tar = "0.4.40"
-toml = { version = "0.8.10", default-features = false, features = ["display", "parse"] }
-ureq = { version = "2.9.6", default-features = false, features = ["json", "gzip", "brotli"] }
+toml = { version = "0.8.10", default-features = false, features = [
+  "display",
+  "parse",
+] }
+ureq = { version = "2.9.6", default-features = false, features = [
+  "json",
+  "gzip",
+  "brotli",
+] }
 
 [features]
 default = ["vendored-openssl", "default-native"]

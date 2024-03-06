@@ -1,14 +1,10 @@
 [prebuilt]
 target = "$TARGET"
-index_key = "$IKEY" # In this example it would be 'KEY'
+index_key = "$IKEY"                    # In this example it would be 'KEY'
 path = "/prebuilt/bin"
 report_path = "/prebuilt"
 no_create_path = false
-reports = [
-    "license",
-    "deps",
-    "audit",
-]
+reports = ["license", "deps", "audit"]
 color = true
 no_color = true
 no_verify = true
