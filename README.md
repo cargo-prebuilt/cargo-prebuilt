@@ -40,7 +40,6 @@ Need help? Try: ```cargo prebuilt --help``` or see [Config Info](docs/CONFIG.md)
 - Cargo prebuilt: ```cargo prebuilt cargo-prebuilt```
 - Cargo binstall: ```cargo binstall cargo-prebuilt --no-confirm```
 - Cargo quickinstall: ```cargo quickinstall cargo-prebuilt```
-- Homebrew: ```brew install crow-rest/harmless/cargo-prebuilt```
 - Install script (unix platforms):
 
   ```shell

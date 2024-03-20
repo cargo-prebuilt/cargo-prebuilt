@@ -3,7 +3,7 @@
 ## Upcoming
 
 - General under the hood improvements.
-- Fix clippy lints.
+- Expand clippy lints.
 
 ## [0.6.7](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.6.7)
 
