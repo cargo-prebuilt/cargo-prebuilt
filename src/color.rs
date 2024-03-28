@@ -2,7 +2,6 @@ pub enum PossibleColor {
     BrightBlue,
     BrightCyan,
     BrightGreen,
-    BrightMagenta,
     BrightPurple,
     BrightRed,
     BrightWhite,
@@ -33,9 +32,6 @@ pub fn err_color_print(str: &str, color: &PossibleColor) -> String {
             .to_string(),
         PossibleColor::BrightGreen => str
             .if_supports_color(Stderr, |t| t.bright_green())
-            .to_string(),
-        PossibleColor::BrightMagenta => str
-            .if_supports_color(Stderr, |t| t.bright_magenta())
             .to_string(),
         PossibleColor::BrightPurple => str
             .if_supports_color(Stderr, |t| t.bright_purple())

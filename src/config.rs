@@ -1,18 +1,12 @@
 use crate::{
     color::{self, err_color_print, PossibleColor},
-    data::{ConfigFile, ConfigFileIndexes, ConfigFilePrebuilt, ReportType},
+    data::{ConfigFile, ReportType},
     APPLICATION, DEFAULT_INDEX, ORG, QUALIFIER, TARGET,
 };
 use directories::ProjectDirs;
 use home::cargo_home;
 use indexmap::IndexSet;
-use std::{
-    collections::{HashMap, HashSet},
-    fs::{create_dir_all, File, OpenOptions},
-    io::{Read, Seek, Write},
-    path::PathBuf,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::{collections::HashSet, fs::File, io::Read, path::PathBuf};
 
 static CONFIG_FILE: &str = "config.toml";
 
@@ -54,7 +48,6 @@ struct Arguments {
     out: bool,
     color: bool,
     no_color: bool,
-    gen_config: bool,
     get_latest: bool,
     require_config: bool,
     pkgs: IndexSet<String>,
@@ -185,10 +178,6 @@ fn parse_args() -> Arguments {
         .help("Force color to be turned off.")
         .switch();
 
-    let gen_config = long("gen-config")
-        .help("(DEPRECATED: May generate wrong configs in future versions.) Generate/Overwrite a base config at $CONFIG/cargo-prebuilt/config.toml. (This still requires PKGS to be filled, but they will be ignored.)")
-        .switch();
-
     let get_latest = long("get-latest")
         .env("PREBUILT_GET_LATEST")
         .help("Get latest versions of crates in index and then exit.")
@@ -219,7 +208,6 @@ fn parse_args() -> Arguments {
         out,
         color,
         no_color,
-        gen_config,
         get_latest,
         require_config,
         pkgs,
@@ -422,12 +410,6 @@ pub fn get() -> Config {
         err_color_print("conflict", &PossibleColor::BrightRed),
     );
 
-    // Generate a config file from the entered arguments
-    if args.gen_config {
-        generate(&args);
-        // NO RETURN
-    }
-
     // Load from config file
     if !args.ci {
         fill_from_file(&mut args);
@@ -443,199 +425,6 @@ pub fn get() -> Config {
     }
 
     convert(args)
-}
-
-#[allow(clippy::too_many_lines)]
-fn generate(args: &Arguments) -> ! {
-    color::set_override(true);
-    eprintln!(
-        "{} config, this will ignore package args.",
-        err_color_print("Generating", &PossibleColor::BrightPurple)
-    );
-    eprintln!(
-        "--gen-config is {} and may generate wrong configs in the future.",
-        err_color_print("deprecated", &PossibleColor::BrightRed)
-    );
-
-    let conf = args.config.clone().unwrap_or_else(|| {
-        ProjectDirs::from(QUALIFIER, ORG, APPLICATION).map_or_else(
-            || {
-                panic!(
-                    "{} get config directory! Try using --config or $PREBUILT_CONFIG.",
-                    err_color_print("Could not", &PossibleColor::BrightRed)
-                )
-            },
-            |project| {
-                let mut conf = PathBuf::from(project.config_dir());
-                create_dir_all(&conf).expect("Could not create paths for config file.");
-                conf.push(CONFIG_FILE);
-                conf
-            },
-        )
-    });
-    eprintln!("Config Path: {conf:?}");
-
-    let mut file = OpenOptions::new()
-        .read(true)
-        .write(true)
-        .create(true)
-        .truncate(true)
-        .open(conf)
-        .expect("Could not create/open config file.");
-    let mut str = String::new();
-    file.read_to_string(&mut str)
-        .expect("Could not read config file.");
-    let mut config: ConfigFile = toml::from_str(&str).expect("Could not parse config file.");
-
-    // Prebuilt block
-    if config.prebuilt.is_none() {
-        config.prebuilt = Some(ConfigFilePrebuilt::default());
-    }
-
-    // Index writing
-    match (&args.index, &args.index_key) {
-        (Some(index), ik) => {
-            let key = ik.as_ref().map_or_else(
-                || {
-                    format!(
-                        "gen_{}",
-                        SystemTime::now()
-                            .duration_since(UNIX_EPOCH)
-                            .expect("Failed to generate a random id for index addition.")
-                            .as_secs()
-                    )
-                },
-                Clone::clone,
-            );
-
-            if let Some(map) = config.index.as_mut() {
-                map.insert(
-                    key.clone(),
-                    ConfigFileIndexes {
-                        index: index.clone(),
-                        pub_key: Some(args.pub_key.clone()),
-                        auth: args.auth.clone(),
-                    },
-                );
-            }
-            else {
-                let mut map = HashMap::new();
-                map.insert(
-                    key.clone(),
-                    ConfigFileIndexes {
-                        index: index.clone(),
-                        pub_key: Some(args.pub_key.clone()),
-                        auth: args.auth.clone(),
-                    },
-                );
-                config.index = Some(map);
-            }
-
-            eprintln!(
-                "{} an index ({index}) under key {key}.",
-                err_color_print("Added", &PossibleColor::BrightMagenta)
-            );
-        }
-        (None, Some(index_key)) => {
-            config.prebuilt.as_mut().unwrap().index_key = Some(index_key.clone());
-            eprintln!(
-                "{} an index_key.",
-                err_color_print("Added", &PossibleColor::BrightMagenta)
-            );
-        }
-        _ => {}
-    }
-
-    match &mut config.prebuilt {
-        Some(prebuilt) => {
-            // Path writing
-            if let Some(item) = &args.path {
-                prebuilt.path = Some(item.clone());
-                eprintln!(
-                    "{} a path.",
-                    err_color_print("Added", &PossibleColor::BrightMagenta)
-                );
-            }
-            // Report Path writing
-            if let Some(item) = &args.report_path {
-                prebuilt.report_path = Some(item.clone());
-                eprintln!(
-                    "{} a report path.",
-                    err_color_print("Added", &PossibleColor::BrightMagenta)
-                );
-            }
-            // No Create Path writing
-            if args.no_create_path {
-                prebuilt.no_create_path = Some(true);
-                eprintln!(
-                    "{} no create path.",
-                    err_color_print("Added", &PossibleColor::BrightMagenta)
-                );
-            }
-            // Reports writing
-            if let Some(item) = &args.reports {
-                prebuilt.reports = Some(item.clone());
-                eprintln!(
-                    "{} reports.",
-                    err_color_print("Added", &PossibleColor::BrightMagenta)
-                );
-            }
-            // No Verify writing
-            if args.no_verify {
-                prebuilt.no_verify = Some(true);
-                eprintln!(
-                    "{} no verify.",
-                    err_color_print("Added", &PossibleColor::BrightMagenta)
-                );
-            }
-            // Safe writing
-            if args.safe {
-                prebuilt.safe = Some(true);
-                eprintln!(
-                    "{} safe mode.",
-                    err_color_print("Added", &PossibleColor::BrightMagenta)
-                );
-            }
-            // Out writing
-            if args.out {
-                prebuilt.out = Some(true);
-                eprintln!(
-                    "{} print events.",
-                    err_color_print("Added", &PossibleColor::BrightMagenta)
-                );
-            }
-            // Color
-            if args.color {
-                prebuilt.color = Some(true);
-                eprintln!(
-                    "{} color.",
-                    err_color_print("Added", &PossibleColor::BrightMagenta)
-                );
-            }
-            if args.no_color {
-                prebuilt.no_color = Some(true);
-                eprintln!(
-                    "{} no color.",
-                    err_color_print("Added", &PossibleColor::BrightMagenta)
-                );
-            }
-        }
-        None => panic!("How you get here?"),
-    }
-
-    // Rewind time
-    file.rewind().expect("Could not rewind config file stream.");
-
-    // Write to config
-    let str = toml::to_string(&config).expect("Could not convert ConfigFile to string.");
-    file.write_all(str.as_bytes())
-        .expect("Could not write to config file.");
-
-    eprintln!(
-        "{}",
-        err_color_print("Generated Config!", &PossibleColor::Green)
-    );
-    std::process::exit(0);
 }
 
 #[cfg(test)]

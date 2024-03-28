@@ -3,6 +3,7 @@
 ## Upcoming
 
 - Switch from hex to const-hex.
+- Remove --gen-config.
 
 ## [0.6.8](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.6.8)
 
