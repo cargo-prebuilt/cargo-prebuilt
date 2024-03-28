@@ -4,6 +4,7 @@
 
 - Switch from hex to const-hex.
 - Remove --gen-config.
+- Switch to rustls for default build.
 
 ## [0.6.8](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.6.8)
 
