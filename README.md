@@ -55,21 +55,20 @@ Need help? Try: ```cargo prebuilt --help``` or see [Config Info](docs/CONFIG.md)
 
 (Cargo prebuilt requires a tls feature)
 
-### vendored-openssl (default)
-
-```cargo install cargo-prebuilt```
-
-### native tls (GitHub releases default)
-
-```cargo install cargo-prebuilt --no-default-features --features default-native```
-
-### rustls
+### rustls (default)
 
 ```cargo install cargo-prebuilt --no-default-features --features default-rustls```
 
 ### rustls with native certs
 
 ```cargo install cargo-prebuilt --no-default-features --features default-rustls,rustls-native-certs```
+
+### vendored-openssl
+
+```cargo install cargo-prebuilt```
+
+### native tls
+```cargo install cargo-prebuilt --no-default-features --features default-native```
 
 ### limit security used
 

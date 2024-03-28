@@ -47,7 +47,7 @@ ureq = { version = "2.9.6", default-features = false, features = [
 ] }
 
 [features]
-default = ["vendored-openssl", "default-native"]
+default = ["default-rustls"]
 default-native = ["native", "default-no-tls"]
 default-rustls = ["rustls", "default-no-tls"]
 default-no-tls = ["indexes", "security", "color"]
