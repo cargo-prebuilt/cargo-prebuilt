@@ -23,9 +23,9 @@ include = [
 
 [dependencies]
 bpaf = { version = "0.9.11", features = ["autocomplete", "batteries"] }
+const-hex = "1.11.3"
 directories = "5.0.1"
 flate2 = "1.0.28"
-hex = "0.4.3"
 home = "0.5.9"
 indexmap = { version = "2.2.6", features = ["serde"] }
 mimalloc = { version = "0.1.39", optional = true }

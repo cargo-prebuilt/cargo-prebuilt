@@ -320,7 +320,7 @@ impl Fetcher {
                 let mut hasher = Sha3_512::new();
                 hasher.update(bytes);
                 let hash: Vec<u8> = hasher.finalize().to_vec();
-                let hash = hex::encode(hash);
+                let hash = const_hex::encode(hash);
 
                 assert!(
                     hash.eq(sha_hash),
@@ -339,7 +339,7 @@ impl Fetcher {
                 let mut hasher = Sha3_256::new();
                 hasher.update(bytes);
                 let hash: Vec<u8> = hasher.finalize().to_vec();
-                let hash = hex::encode(hash);
+                let hash = const_hex::encode(hash);
 
                 assert!(
                     hash.eq(sha_hash),
@@ -363,7 +363,7 @@ impl Fetcher {
                 let mut hasher = Sha512::new();
                 hasher.update(bytes);
                 let hash: Vec<u8> = hasher.finalize().to_vec();
-                let hash = hex::encode(hash);
+                let hash = const_hex::encode(hash);
 
                 assert!(
                     hash.eq(sha_hash),
@@ -382,7 +382,7 @@ impl Fetcher {
                 let mut hasher = Sha256::new();
                 hasher.update(bytes);
                 let hash: Vec<u8> = hasher.finalize().to_vec();
-                let hash = hex::encode(hash);
+                let hash = const_hex::encode(hash);
 
                 assert!(
                     hash.eq(sha_hash),
