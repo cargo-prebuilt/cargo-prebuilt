@@ -104,7 +104,8 @@ jobs:
           -v ./target/${{ matrix.target }}/debug/:/project \
           -w /project \
           debian:unstable-slim \
-          bash -c './${{ env.bin-name }} just && ./${{ env.bin-name }} --color just'
+          bash -c \
+          './${{ env.bin-name }} just && ./${{ env.bin-name }} --color just'
       - name: Artifact
         uses: actions/upload-artifact@v4
         with:

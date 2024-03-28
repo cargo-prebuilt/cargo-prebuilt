@@ -356,22 +356,31 @@ jobs:
         include:
           - target: aarch64-unknown-linux-gnu
             can-test: false
+            docker-arch: linux/arm64
           - target: aarch64-unknown-linux-musl
             can-test: false
+            docker-arch: linux/arm64
           - target: armv7-unknown-linux-gnueabihf
             can-test: false
+            docker-arch: linux/arm/v7
           - target: armv7-unknown-linux-musleabihf
             can-test: false
+            docker-arch: linux/arm/v7
           - target: powerpc64le-unknown-linux-gnu
             can-test: false
+            docker-arch: linux/ppc64le
           - target: riscv64gc-unknown-linux-gnu
             can-test: false
+            docker-arch: linux/riscv64
           - target: s390x-unknown-linux-gnu
             can-test: false
+            docker-arch: linux/s390x
           - target: x86_64-unknown-linux-gnu
             can-test: true
+            docker-arch: linux/amd64
           - target: x86_64-unknown-linux-musl
             can-test: true
+            docker-arch: linux/amd64
     runs-on: ubuntu-latest
     needs: [check-fmt, clippy, cargo-hack, cargo-msrv, cargo-deny]
     steps:
@@ -401,10 +410,15 @@ jobs:
           auditable build --verbose --workspace --release --locked \
           --target ${{ matrix.target }} ${{ env.feature-set }}
       - name: Run cargo-prebuilt
-        if: ${{ matrix.can-test }}
+        if: ${{ matrix.docker-arch != '' }}
         run: |
-          target/${{ matrix.target }}/release/${{ env.bin-name }} just
-          just --version
+          sudo docker run --privileged --rm tonistiigi/binfmt --install all &&
+          docker run --rm --platform='${{ matrix.docker-arch }}' \
+          -v ./target/${{ matrix.target }}/debug/:/project \
+          -w /project \
+          debian:unstable-slim \
+          bash -c \
+          './${{ env.bin-name }} just && ./${{ env.bin-name }} --color just'
       - name: Tar
         run: |
           tar czvf ${{ matrix.target }}.tar.gz \
