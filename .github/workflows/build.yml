@@ -61,7 +61,7 @@ jobs:
             docker-arch: linux/ppc64le
           - target: powerpc64-unknown-linux-gnu
             can-test: false
-            docker-arch: linux/ppc64
+            docker-arch:
           - target: riscv64gc-unknown-linux-gnu
             can-test: false
             docker-arch: linux/riscv64
@@ -106,11 +106,11 @@ jobs:
       - name: Run cargo-prebuilt
         if: ${{ matrix.docker-arch != '' }}
         run: |
-          sudo docker run --privileged --rm tonistiigi/binfmt --install all &&
+          sudo docker run --privileged --rm tonistiigi/binfmt:master --install all &&
           docker run --rm --platform='${{ matrix.docker-arch }}' \
           -v ./target/${{ matrix.target }}/debug/:/project \
           -w /project \
-          debian:unstable-slim \
+          debian:12-slim \
           bash -c \
           './${{ env.bin-name }} just && ./${{ env.bin-name }} --color just'
       - name: Artifact
