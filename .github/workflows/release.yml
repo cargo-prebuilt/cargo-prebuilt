@@ -421,7 +421,7 @@ jobs:
           docker run --rm --platform='${{ matrix.docker-arch }}' \
           -v ./target/${{ matrix.target }}/debug/:/project \
           -w /project \
-          debian:12-slim \
+          debian:unstable-slim \
           bash -c \
           './${{ env.bin-name }} just && ./${{ env.bin-name }} --color just'
       - name: Tar
