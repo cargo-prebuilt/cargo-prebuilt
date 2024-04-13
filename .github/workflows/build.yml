@@ -59,6 +59,9 @@ jobs:
           - target: powerpc64le-unknown-linux-gnu
             can-test: false
             docker-arch: linux/ppc64le
+          - target: powerpc64-unknown-linux-gnu
+            can-test: false
+            docker-arch:
           - target: riscv64gc-unknown-linux-gnu
             can-test: false
             docker-arch: linux/riscv64
@@ -71,6 +74,10 @@ jobs:
           - target: x86_64-unknown-linux-musl
             can-test: true
             docker-arch: linux/amd64
+          - target: x86_64-unknown-freebsd
+            can-test: false
+          - target: x86_64-unknown-netbsd
+            can-test: false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -99,56 +106,13 @@ jobs:
       - name: Run cargo-prebuilt
         if: ${{ matrix.docker-arch != '' }}
         run: |
-          sudo docker run --privileged --rm tonistiigi/binfmt --install all &&
+          sudo docker run --privileged --rm tonistiigi/binfmt:master --install all &&
           docker run --rm --platform='${{ matrix.docker-arch }}' \
           -v ./target/${{ matrix.target }}/debug/:/project \
           -w /project \
           debian:unstable-slim \
           bash -c \
           './${{ env.bin-name }} just && ./${{ env.bin-name }} --color just'
-      - name: Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: target-${{ matrix.target }}
-          path: |
-            target/${{ matrix.target }}/debug/${{ env.bin-name }}
-
-  cross:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - target: x86_64-unknown-freebsd
-            can-test: false
-          - target: x86_64-unknown-netbsd
-            can-test: false
-          - target: x86_64-unknown-illumos
-            can-test: false
-          - target: powerpc64-unknown-linux-gnu
-            can-test: true
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Update Rust and add target
-        run: |
-          rustup update
-          rustc --version
-          rustup target add ${{ matrix.target }}
-      - uses: cargo-prebuilt/cargo-prebuilt-action@v3
-        with:
-          pkgs: cross
-      - uses: Swatinem/rust-cache@v2
-        with:
-          key: ${{ matrix.target }}
-      - name: Run tests
-        if: ${{ matrix.can-test }}
-        run: |
-          cross test --verbose --workspace --locked \
-          --target ${{ matrix.target }} ${{ env.feature-set }}
-      - name: Build
-        run: |
-          cross build --verbose --workspace --locked \
-          --target ${{ matrix.target }} ${{ env.feature-set }}
       - name: Artifact
         uses: actions/upload-artifact@v4
         with:

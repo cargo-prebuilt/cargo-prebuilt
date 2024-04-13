@@ -5,6 +5,7 @@
 - Switch from hex to const-hex.
 - Remove --gen-config.
 - Switch to rustls for default build.
+- Dropped support for x86_64-unknown-illumos.
 
 ## [0.6.8](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.6.8)
 
