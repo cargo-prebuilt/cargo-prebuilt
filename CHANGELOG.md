@@ -6,6 +6,8 @@
 - Remove --gen-config.
 - Switch to rustls for default build.
 - Dropped support for x86_64-unknown-illumos.
+- Changed what -V/--version prints.
+- Added --docs, which prints a link to the docs.
 
 ## [0.6.8](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.6.8)
 

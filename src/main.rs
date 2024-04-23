@@ -29,6 +29,23 @@ use crate::{
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
+static PREBUILT_BUILD_REPO_LINK: &str = match option_env!("PREBUILT_BUILD_REPO_LINK") {
+    Some(s) => s,
+    None => "https://github.com/cargo-prebuilt/cargo-prebuilt",
+};
+static PREBUILT_BUILD_ISSUES_LINK: &str = match option_env!("PREBUILT_BUILD_ISSUES_LINK") {
+    Some(s) => s,
+    None => "https://github.com/cargo-prebuilt/cargo-prebuilt/issues",
+};
+static PREBUILT_BUILD_DOCS_LINK: &str = match option_env!("PREBUILT_BUILD_DOCS_LINK") {
+    Some(s) => s,
+    None => concat!(
+        "https://github.com/cargo-prebuilt/cargo-prebuilt/tree/v",
+        env!("CARGO_PKG_VERSION"),
+        "/docs"
+    ),
+};
+
 static QUALIFIER: &str = "tech";
 static ORG: &str = "harmless";
 static APPLICATION: &str = "cargo-prebuilt";
@@ -37,6 +54,17 @@ static DEFAULT_INDEX: &str = "gh-pub:github.com/cargo-prebuilt/index";
 static TARGET: &str = env!("TARGET");
 
 fn main() {
+    for a in std::env::args() {
+        if a.eq("--version") || a.eq("-V") {
+            println!("Version: {}\nRepo: {PREBUILT_BUILD_REPO_LINK}\nIssues: {PREBUILT_BUILD_ISSUES_LINK}\nDocs: {PREBUILT_BUILD_DOCS_LINK}", env!("CARGO_PKG_VERSION"));
+            std::process::exit(0);
+        }
+        else if a.eq("--docs") {
+            println!("{PREBUILT_BUILD_DOCS_LINK}");
+            std::process::exit(0);
+        }
+    }
+
     let config = config::get();
     let config = &config;
     #[cfg(debug_assertions)]

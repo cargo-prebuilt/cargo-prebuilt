@@ -32,6 +32,10 @@ pub struct Config {
 #[allow(clippy::struct_excessive_bools)]
 #[derive(Clone, Debug)]
 struct Arguments {
+    #[allow(dead_code)]
+    false_version: bool,
+    #[allow(dead_code)]
+    false_docs: bool,
     target: Option<String>,
     index_key: Option<String>,
     index: Option<String>,
@@ -95,7 +99,7 @@ fn parse_args() -> Arguments {
 
     let config = long("config")
         .env("PREBUILT_CONFIG")
-        .help(format!("Path to the config file (Default: See https://github.com/cargo-prebuilt/cargo-prebuilt/blob/v{}/docs/PATHS.md#config)", env!("CARGO_PKG_VERSION")).as_str())
+        .help("Path to the config file (Default: See --docs/PATHS.md#config)")
         .argument::<PathBuf>("CONFIG_PATH")
         .optional();
 
@@ -107,7 +111,7 @@ fn parse_args() -> Arguments {
 
     let report_path = long("report-path")
         .env("PREBUILT_REPORT_PATH")
-        .help(format!("Path to the folder where the reports will be put (Default: See https://github.com/cargo-prebuilt/cargo-prebuilt/blob/v{}/docs/PATHS.md#reports)", env!("CARGO_PKG_VERSION")).as_str())
+        .help("Path to the folder where the reports will be put (Default: See --docs/PATHS.md#reports)")
         .argument::<PathBuf>("REPORT_PATH")
         .optional();
 
@@ -123,7 +127,7 @@ fn parse_args() -> Arguments {
 
     let reports = long("reports")
         .env("PREBUILT_REPORTS")
-        .help(format!("Reports to be downloaded in a CSV format (Default: license) (See: See https://github.com/cargo-prebuilt/cargo-prebuilt/blob/v{}/docs/REPORT_TYPES.md)", env!("CARGO_PKG_VERSION")).as_str())
+        .help("Reports to be downloaded in a CSV format (Default: license) (See: See --docs/REPORT_TYPES.md)")
         .argument::<String>("REPORTS")
         .parse(|s| {
             let mut v = IndexSet::new();
@@ -189,6 +193,13 @@ fn parse_args() -> Arguments {
         .help("Require a config file to be used. (--ci will override this)")
         .switch();
 
+    let false_version = short('V')
+        .long("version")
+        .help("Prints version infomation.")
+        .switch();
+
+    let false_docs = long("docs").help("Prints link to documention.").switch();
+
     // TODO: sig-with and verify-with
 
     let parser = construct!(Arguments {
@@ -210,13 +221,12 @@ fn parse_args() -> Arguments {
         no_color,
         get_latest,
         require_config,
+        false_docs,
+        false_version,
         pkgs,
     });
 
-    cargo_helper("prebuilt", parser)
-        .to_options()
-        .version(env!("CARGO_PKG_VERSION"))
-        .run()
+    cargo_helper("prebuilt", parser).to_options().run()
 }
 
 #[allow(clippy::cognitive_complexity)]
