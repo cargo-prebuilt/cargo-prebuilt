@@ -84,6 +84,18 @@
 }
 ```
 
+## Print Info.json (info_json_event) {#print-info-json}
+
+```json
+{
+  "crate": "$CRATE",
+  "version": "$LATEST_VERSION",
+  "event_version": "1",
+  "event": "print_info_json",
+  "data": "$TEXT"
+}
+```
+
 ## Print License (license_event) {#print-license}
 
 ```json

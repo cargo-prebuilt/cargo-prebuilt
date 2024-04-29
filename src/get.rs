@@ -162,6 +162,7 @@ impl Fetcher {
                 ReportType::LicenseDL | ReportType::LicenseEvent => info.files.license.clone(),
                 ReportType::DepsDL | ReportType::DepsEvent => info.files.deps.clone(),
                 ReportType::AuditDL | ReportType::AuditEvent => info.files.audit.clone(),
+                ReportType::InfoJsonDL | ReportType::InfoJsonEvent => todo!(),
             };
 
             let raw_str = &self.fetch_str(id, version, &report_name);
@@ -193,6 +194,7 @@ impl Fetcher {
                 ReportType::LicenseEvent => events::print_license(id, version, raw_str),
                 ReportType::DepsEvent => events::print_deps(id, version, raw_str),
                 ReportType::AuditEvent => events::print_audit(id, version, raw_str),
+                ReportType::InfoJsonDL | ReportType::InfoJsonEvent => todo!(),
             }
         }
     }

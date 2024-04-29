@@ -16,12 +16,16 @@ pub enum ReportType {
     DepsDL,
     #[serde(rename = "audit")]
     AuditDL,
+    #[serde(rename = "info_json")]
+    InfoJsonDL,
     #[serde(rename = "license_event")]
     LicenseEvent,
     #[serde(rename = "deps_event")]
     DepsEvent,
     #[serde(rename = "audit_event")]
     AuditEvent,
+    #[serde(rename = "info_json_event")]
+    InfoJsonEvent,
 }
 impl From<ReportType> for &str {
     fn from(value: ReportType) -> Self {
@@ -29,9 +33,11 @@ impl From<ReportType> for &str {
             ReportType::LicenseDL => "license",
             ReportType::DepsDL => "deps",
             ReportType::AuditDL => "audit",
+            ReportType::InfoJsonDL => "info_json",
             ReportType::LicenseEvent => "license_event",
             ReportType::DepsEvent => "deps_event",
             ReportType::AuditEvent => "audit_event",
+            ReportType::InfoJsonEvent => "info_json_event",
         }
     }
 }

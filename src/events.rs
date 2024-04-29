@@ -15,7 +15,7 @@ fn event(id: &str, version: &str, event: &str, data: &str) {
             "event": event,
             "data": data,
         }))
-        .unwrap_or_else(|_| panic!("Could not generate {event} event."))
+        .unwrap_or_else(|_| "Could not generate {event} event.".to_string())
     );
 }
 
@@ -62,6 +62,10 @@ pub fn wrote_report(id: &str, version: &str, config: &Config, report_type: &str)
 
 pub fn print_license(id: &str, version: &str, text: &str) {
     event(id, version, "print_license", text);
+}
+
+pub fn print_info_json(id: &str, version: &str, text: &str) {
+    event(id, version, "print_info_json", text);
 }
 
 pub fn print_deps(id: &str, version: &str, text: &str) {

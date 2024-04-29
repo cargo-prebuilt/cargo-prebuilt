@@ -12,8 +12,6 @@ pub enum InteractError {
     Malformed,
     HttpCode(u16),
     ConnectionError,
-    // #[error("Unknown error")]
-    // Unknown,
 }
 impl std::fmt::Display for InteractError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
