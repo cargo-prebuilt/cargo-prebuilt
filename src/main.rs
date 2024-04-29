@@ -97,7 +97,7 @@ fn main() {
     let mut fetcher = Fetcher::new(config, agent);
 
     // Get pkgs
-    for pkg in &config.pkgs {
+    for pkg in &config.packages {
         let mut id = pkg.as_str();
         let mut version = None; // None will pull the latest version
 
@@ -120,10 +120,11 @@ fn main() {
         events::target(id, version, config);
 
         // Download and hash tar
-        let (info, _hashes, tar_bytes) = fetcher.download(id, version, config);
+        let (info, tar_bytes) = fetcher.download(id, version, config);
         let info = &info;
 
         // Extract Tar
+        // TODO: Fix Currently Here
         extract(info, config, id, version, tar_bytes);
 
         // Reports
@@ -157,10 +158,6 @@ fn extract(info: &InfoFileImm, config: &Config, id: &str, version: &str, tar_byt
     for e in es {
         let mut e = e.expect("Malformed entry in tarball.");
 
-        let mut blob_data = Vec::new();
-        e.read_to_end(&mut blob_data)
-            .expect("Could not extract binary from archive.");
-
         let bin_path = e.path().expect("Could not extract path from archive.");
         let str_name = bin_path
             .clone()
@@ -190,6 +187,14 @@ fn extract(info: &InfoFileImm, config: &Config, id: &str, version: &str, tar_byt
             "Binary {str_name} {} for {id}@{version}",
             err_color_print("already exists", &PossibleColor::BrightRed)
         );
+
+        let mut blob_data = Vec::new();
+        e.read_to_end(&mut blob_data)
+            .expect("Could not extract binary from archive.");
+
+        if config.hash_bins {
+            todo!()
+        }
 
         let mut file = File::create(&path).expect("Could not open file to write binary to.");
         file.write_all(&blob_data)

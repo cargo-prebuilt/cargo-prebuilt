@@ -6,7 +6,7 @@ use std::{
 use crate::{
     color::{err_color_print, PossibleColor},
     config::Config,
-    data::{HashType, Hashes, HashesFile, HashesFileImm, InfoFile, InfoFileImm, ReportType},
+    data::{HashType, Hashes, HashesFile, HashesFileV1, InfoFile, InfoFileImm, ReportType},
     events,
     interact::{self, Interact, InteractError},
 };
@@ -25,12 +25,7 @@ impl Fetcher {
         self.fetch_latest(id)
     }
 
-    pub fn download(
-        &mut self,
-        id: &str,
-        version: &str,
-        config: &Config,
-    ) -> (InfoFileImm, HashesFileImm, Vec<u8>) {
+    pub fn download(&mut self, id: &str, version: &str, config: &Config) -> (InfoFileImm, Vec<u8>) {
         eprintln!(
             "{} info for {id}@{version}.",
             err_color_print("Fetching", &PossibleColor::BrightBlue),
@@ -38,37 +33,24 @@ impl Fetcher {
 
         // info.json
         let raw_info_file = &self.fetch_str(id, version, "info.json");
+
+        // info.json verify
+        #[cfg(feature = "sig")]
+        if !config.no_sig {
+            let v = self.verify_file(
+                id,
+                version,
+                "info.json",
+                config,
+                "info.json.minisig",
+                raw_info_file,
+            );
+            events::info_verify(id, version, config, v);
+        }
+
         let info: InfoFile = serde_json::from_str(raw_info_file)
             .unwrap_or_else(|_| panic!("info.json is malformed for {id}@{version}"));
-        let info: InfoFileImm = info.into();
-
-        // info.json.minisig and test
-        #[cfg(feature = "sig")]
-        if !config.no_verify {
-            if let Some(sig_file) = info.files.sig_info.clone() {
-                let v =
-                    self.verify_file(id, version, "info.json", config, &sig_file, raw_info_file);
-                events::info_verify(id, version, config, v);
-            }
-            else {
-                panic!(
-                    "Could not force sig for index {}. info.json is not signed for {id}@{version}.",
-                    config.index
-                );
-            }
-        }
-        #[cfg(not(feature = "sig"))]
-        if !config.no_verify {
-            panic!("Could not force sig for index {}. This requires the 'security' and/or 'sig' feature(s). Or you can use the flag '--no-verify'.", config.index);
-        }
-
-        // check if target is supported
-        assert!(
-            info.targets.contains(&config.target),
-            "{id}@{version} does {} target {}",
-            err_color_print("not support", &PossibleColor::BrightRed),
-            config.target
-        );
+        let mut info: InfoFileImm = InfoFileImm::convert(info, &config.target);
 
         // check if compression is supported
         assert!(
@@ -90,38 +72,64 @@ impl Fetcher {
             }
         }
 
-        eprintln!(
-            "{} hashes for {id}@{version} with target {}.",
-            err_color_print("Fetching", &PossibleColor::BrightBlue),
-            &config.target
-        );
-
-        // hashes.json
-        let raw_hashes_file = &self.fetch_str(id, version, &info.files.hash);
-        let hashes: HashesFile = serde_json::from_str(raw_hashes_file)
-            .unwrap_or_else(|_| panic!("{} is malformed for {id}@{version}", info.files.hash));
-        let hashes: HashesFileImm = hashes.into();
-
-        // hashes.json.minisig and test
-        #[cfg(feature = "sig")]
-        if !config.no_verify {
-            if let Some(sig_file) = info.files.sig_hash.clone() {
-                let v = self.verify_file(
-                    id,
-                    version,
-                    &info.files.hash,
-                    config,
-                    &sig_file,
-                    raw_hashes_file,
+        #[cfg(any(feature = "sha2", feature = "sha3"))]
+        if !config.no_hash {
+            if let Some(ref polyfill) = info.polyfill {
+                eprintln!(
+                    "{} hashes for {id}@{version} with target {}.",
+                    err_color_print("Fetching", &PossibleColor::BrightBlue),
+                    &config.target
                 );
-                events::hashes_verify(id, version, config, v);
+
+                // hashes.json
+                let raw_hashes_file = &self.fetch_str(id, version, &polyfill.hash_file);
+
+                // hashes.json.minisig and test
+                #[cfg(feature = "sig")]
+                if !config.no_sig {
+                    if let Some(sig_file) = polyfill.hash_file_sig.clone() {
+                        let v = self.verify_file(
+                            id,
+                            version,
+                            &polyfill.hash_file,
+                            config,
+                            &sig_file,
+                            raw_hashes_file,
+                        );
+                        events::hashes_verify(id, version, config, v);
+                    }
+                    else {
+                        panic!(
+                            "Could not force sig for index {}. hashes.json is not signed for {id}@{version}.",
+                            config.index
+                        );
+                    }
+                }
+
+                let hashes: HashesFile =
+                    serde_json::from_str(raw_hashes_file).unwrap_or_else(|_| {
+                        panic!("{} is malformed for {id}@{version}", polyfill.hash_file)
+                    });
+                let hashes: HashesFileV1 = hashes.into();
+                let hashes = hashes
+                    .hashes
+                    .get(&config.target)
+                    .unwrap_or_else(|| panic!("No hashes for target {}", config.target));
+
+                info.archive_hashes = hashes.archive.clone();
+                info.bins_hashes = hashes.bins.clone();
             }
-            else {
-                panic!(
-                    "Could not force sig for index {}. hashes.json is not signed for {id}@{version}.",
-                    config.index
-                );
-            }
+        }
+
+        // check if target is supported, based on hash
+        #[cfg(any(feature = "sha2", feature = "sha3"))]
+        if !config.no_hash {
+            assert!(
+                !info.archive_hashes.is_empty(),
+                "{id}@{version} does {} target {}, due to empty archive hashes",
+                err_color_print("not support", &PossibleColor::BrightRed),
+                config.target
+            );
         }
 
         // tar
@@ -130,16 +138,12 @@ impl Fetcher {
             err_color_print("Downloading", &PossibleColor::BrightYellow),
             &config.target
         );
-        let tar_bytes = self.fetch_blob(
-            id,
-            version,
-            &format!("{}.{}", config.target, info.archive.ext),
-        );
+        let tar_bytes = self.fetch_blob(id, version, &info.archive_name);
 
         // test hashes
-        Self::verify_archive(id, version, config, &hashes, &tar_bytes);
+        Self::verify_archive(id, version, config, &info, &tar_bytes);
 
-        (info, hashes, tar_bytes)
+        (info, tar_bytes)
     }
 
     pub fn is_bin(info: &InfoFileImm, bin_name: &str) -> bool {
@@ -162,13 +166,16 @@ impl Fetcher {
                 ReportType::LicenseDL | ReportType::LicenseEvent => info.files.license.clone(),
                 ReportType::DepsDL | ReportType::DepsEvent => info.files.deps.clone(),
                 ReportType::AuditDL | ReportType::AuditEvent => info.files.audit.clone(),
-                ReportType::InfoJsonDL | ReportType::InfoJsonEvent => todo!(),
+                ReportType::InfoJsonDL | ReportType::InfoJsonEvent => "info.json".to_string(),
             };
 
             let raw_str = &self.fetch_str(id, version, &report_name);
 
             match report {
-                ReportType::LicenseDL | ReportType::DepsDL | ReportType::AuditDL => {
+                ReportType::LicenseDL
+                | ReportType::DepsDL
+                | ReportType::AuditDL
+                | ReportType::InfoJsonDL => {
                     let mut dir = config.report_path.clone();
                     dir.push(format!("{id}/{version}"));
                     match create_dir_all(&dir) {
@@ -194,7 +201,7 @@ impl Fetcher {
                 ReportType::LicenseEvent => events::print_license(id, version, raw_str),
                 ReportType::DepsEvent => events::print_deps(id, version, raw_str),
                 ReportType::AuditEvent => events::print_audit(id, version, raw_str),
-                ReportType::InfoJsonDL | ReportType::InfoJsonEvent => todo!(),
+                ReportType::InfoJsonEvent => events::print_info_json(id, version, raw_str),
             }
         }
     }
@@ -259,7 +266,7 @@ impl Fetcher {
         use minisign_verify::{PublicKey, Signature};
 
         assert!(
-            !config.sigs.is_empty(),
+            !config.pub_keys.is_empty(),
             "{} for index '{}'. Please add one with --pub-key or use --no-verify.",
             err_color_print("No public key(s)", &PossibleColor::BrightRed),
             config.index
@@ -269,7 +276,7 @@ impl Fetcher {
         let signature = Signature::decode(sig).expect("Signature was malformed.");
 
         let mut verified = false;
-        for key in &config.sigs {
+        for key in &config.pub_keys {
             let pk = PublicKey::from_base64(key).expect("Public key was malformed.");
             if pk.verify(raw_file.as_bytes(), &signature, false).is_ok() {
                 verified = true;
@@ -293,19 +300,12 @@ impl Fetcher {
         verified
     }
 
-    fn verify_archive(
-        id: &str,
-        version: &str,
-        config: &Config,
-        hashes: &HashesFileImm,
-        bytes: &[u8],
-    ) {
-        if let Some(blob) = hashes.hashes.get(&config.target) {
-            let hashes = &blob.archive;
+    fn verify_archive(id: &str, version: &str, config: &Config, info: &InfoFileImm, bytes: &[u8]) {
+        if !config.no_hash {
             Self::verify_bytes(
                 id,
                 version,
-                hashes,
+                &info.archive_hashes,
                 &format!("{} archive", &config.target),
                 bytes,
             );

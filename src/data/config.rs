@@ -6,8 +6,6 @@ use std::{
 use indexmap::IndexSet;
 use serde::{Deserialize, Serialize};
 
-use super::HashType;
-
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum ReportType {
     #[serde(rename = "license")]
@@ -54,9 +52,11 @@ impl TryFrom<&str> for ReportType {
             "license" => Ok(Self::LicenseDL),
             "deps" => Ok(Self::DepsDL),
             "audit" => Ok(Self::AuditDL),
+            "info_json" => Ok(Self::InfoJsonDL),
             "license_event" => Ok(Self::LicenseEvent),
             "deps_event" => Ok(Self::DepsEvent),
             "audit_event" => Ok(Self::AuditEvent),
+            "info_json_event" => Ok(Self::InfoJsonEvent),
             _ => Err(()),
         }
     }
@@ -73,17 +73,18 @@ pub struct ConfigFile {
 #[serde(deny_unknown_fields)]
 pub struct ConfigFilePrebuilt {
     pub target: Option<String>,
+    pub safe: Option<bool>,
     pub index_key: Option<String>,
+    pub no_sig: Option<bool>,
+    pub no_hash: Option<bool>,
+    pub hash_bins: Option<bool>,
     pub path: Option<PathBuf>,
     pub report_path: Option<PathBuf>,
     pub no_create_path: Option<bool>,
     pub reports: Option<IndexSet<ReportType>>,
+    pub out: Option<bool>,
     pub color: Option<bool>,
     pub no_color: Option<bool>,
-    pub hashes: Option<IndexSet<HashType>>,
-    pub no_verify: Option<bool>,
-    pub safe: Option<bool>,
-    pub out: Option<bool>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -91,7 +92,7 @@ pub struct ConfigFilePrebuilt {
 pub struct ConfigFileIndexes {
     pub index: String,
     pub pub_key: Option<HashSet<String>>,
-    pub auth: Option<String>, // TODO: Should be stored in base64? Maybe encrypt?
+    pub auth: Option<String>, // TODO: Should be stored in base64?
 }
 
 #[cfg(test)]

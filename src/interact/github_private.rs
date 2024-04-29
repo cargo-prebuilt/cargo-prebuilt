@@ -166,7 +166,7 @@ impl Interact for GithubPrivate {
                     .call()
                 {
                     Ok(response) => {
-                        //TODO: Allow limiting of size.
+                        //TODO: Allow limiting of size?
                         response
                             .into_reader()
                             .read_to_end(&mut bytes)

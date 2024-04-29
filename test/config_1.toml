@@ -1,15 +1,17 @@
 [prebuilt]
 target = "$TARGET"
-index_key = "$IKEY"                    # In this example it would be 'KEY'
+safe = true
+index_key = "$IKEY"
+no_sig = true
+no_hash = true
+hash_bins = true
 path = "/prebuilt/bin"
 report_path = "/prebuilt"
 no_create_path = false
-reports = ["license", "deps", "audit"]
+reports = ["license", "deps", "audit", "info_json"]
+out = true
 color = true
 no_color = true
-no_verify = true
-safe = true
-out = true
 
 [index.KEY]
 index = "$INDEX"

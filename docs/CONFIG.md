@@ -28,16 +28,18 @@ Use ```cargo prebuilt --help```.
 ```toml
 [prebuilt]
 target = "$TARGET"          # Target to download for
+safe = true|false           # Prevent the overwriting of binaires (Except when--ci is used)
 index_key = "$INDEX_KEY"    # Index to use
+no_sig = true|false         # Do not verify info.json
+no_hash = true|false        # Do not hash downloaded blobs
+hash_bins = true|false      # Hash extracted bins
 path = "$PATH"              # Absolute path to where the binaries will be installed
 report_path = "$PATH"       # Absolute path to where the reports will be put
 no_create_path = true|false # Do not create paths that do not exist
 reports = ["$REPORT_TYPE"]  # Reports to download
-color = true|false          # Should CLI be on
-no_color = true|false       # Should CLI colors be off
-no_verify = true|false      # Do not verify signatures (See [key.$ANYTHING])
-safe = true|false           # Prevent the overwriting of binaires (Except when--ci is used)
 out = true|false            # Print out event info (See EVENTS.md)
+color = true|false          # Should CLI colors be on
+no_color = true|false       # Should CLI colors be off
 
 [index.$INDEX_KEY]          # Add a public verifying key for an index
 index = "$INDEX"            # Index string

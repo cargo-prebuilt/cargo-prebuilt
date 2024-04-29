@@ -8,6 +8,15 @@
 - Dropped support for x86_64-unknown-illumos.
 - Changed what -V/--version prints.
 - Added --docs, which prints a link to the docs.
+- If an event could not be generated, do not panic.
+- Info.json v2.
+- Sig file must be under `$INFO_JSON_URL.minisig`, even for older
+  info.json versions that allowed it to be in other places.
+- Allow saving info.json to reports.
+- Targets may now declare a different archive name.
+- --no-sig.
+- --no-hash.
+- (TODO) --hash-bins.
 
 ## [0.6.8](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.6.8)
 
