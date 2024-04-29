@@ -28,7 +28,7 @@ Use ```cargo prebuilt --help```.
 ```toml
 [prebuilt]
 target = "$TARGET"          # Target to download for
-index_key = "$INDEX_KEY"            # Index to use
+index_key = "$INDEX_KEY"    # Index to use
 path = "$PATH"              # Absolute path to where the binaries will be installed
 report_path = "$PATH"       # Absolute path to where the reports will be put
 no_create_path = true|false # Do not create paths that do not exist
@@ -49,7 +49,7 @@ auth = "$TOKEN"             # (Optional) Auth token to use for this index.
 
 - ```$TARGET``` is a rustc target string. EX: ```aarch64-apple-darwin```
 - ```$INDEX``` is a custom index string. EX: ```gh-pub:github.com/cargo-prebuilt/index```
-- ```$INDEX_KEY``` is just a string.
+- ```$INDEX_KEY``` is any string.
 - ```$TOKEN``` is a auth token for the index.
 - ```$PATH``` is a absolute path. EX: ```/User/devops/.cargo/bin```
 - ```$REPORT_TYPE``` is a type of report. [Report Types](REPORT_TYPES.md)

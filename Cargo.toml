@@ -25,7 +25,7 @@ include = [
 bpaf = { version = "0.9.11", features = ["autocomplete", "batteries"] }
 const-hex = "1.11.3"
 directories = "5.0.1"
-flate2 = "1.0.28"
+flate2 = "1.0.29"
 home = "0.5.9"
 indexmap = { version = "2.2.6", features = ["serde"] }
 mimalloc = { version = "0.1.41", optional = true }
@@ -34,13 +34,13 @@ native-tls = { version = "0.2.11", optional = true }
 owo-colors = { version = "4.0.0", features = [
   "supports-colors",
 ], optional = true }
-serde = { version = "1.0.198", features = ["derive"] }
+serde = { version = "1.0.199", features = ["derive"] }
 serde_json = "1.0.116"
 sha2 = { version = "0.10.8", optional = true }
 sha3 = { version = "0.10.8", optional = true }
 tar = "0.4.40"
 toml = { version = "0.8.12", default-features = false, features = ["parse"] }
-ureq = { version = "2.9.6", default-features = false, features = [
+ureq = { version = "2.9.7", default-features = false, features = [
   "json",
   "gzip",
   "brotli",
@@ -51,9 +51,11 @@ default = ["default-rustls"]
 default-native = ["native", "default-no-tls"]
 default-rustls = ["rustls", "default-no-tls"]
 default-no-tls = ["indexes", "security", "color"]
+
+# Indexes to allow
 indexes = ["github-public", "github-private"]
 github-public = []
-github-private = []
+github-private = [] # Considered beta
 #gitlab-public = [] #TODO: Under dev
 #gitlab-private = [] #TODO: Under dev
 #forgejo-public = [] #TODO: Under dev
@@ -62,15 +64,28 @@ github-private = []
 #gitea-private = ["forgejo-private"] #TODO: Under dev
 #custom-http-public = [] #TODO: Under dev
 #custom-http-private = [] #TODO: Under dev
+
+# cargo-prebuilt is tested with the security feature and may break without it
 security = ["sha2", "sha3", "sig"]
+# Use sha2 hashing to verify blob integrity
 sha2 = ["dep:sha2"]
+# Use sha3 hashing to verify blob integrity
 sha3 = ["dep:sha3"]
+# Allow minisign to be used to verify *.json signatures
 sig = ["dep:minisign-verify"]
+
+# Use rustls for tls
 rustls = ["ureq/tls"]
 rustls-native-certs = ["rustls", "ureq/native-certs"]
+
+# Use openssl/native tls framework
 native = ["native-tls", "ureq/native-tls"]
 vendored-openssl = ["native", "native-tls/vendored"]
+
+# Use mimalloc for the allocator
 mimalloc = ["dep:mimalloc"]
+
+# Enable colored output
 color = ["dep:owo-colors", "bpaf/bright-color"]
 
 [profile.release]

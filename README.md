@@ -53,68 +53,9 @@ Need help? Try: `cargo prebuilt --help` or see [Config Info](docs/CONFIG.md)
 
 ## Building
 
-(Cargo prebuilt requires a tls feature)
+(Cargo prebuilt requires either the native or rustls feature)
 
-### rustls (default)
-
-`cargo install cargo-prebuilt --no-default-features --features default-rustls`
-
-### rustls with native certs
-
-`cargo install cargo-prebuilt --no-default-features --features default-rustls,rustls-native-certs`
-
-### vendored-openssl
-
-`cargo install cargo-prebuilt`
-
-### native tls
-
-`cargo install cargo-prebuilt --no-default-features --features default-native`
-
-### limit security used
-
-(Cargo prebuilt is tested with default features and may break without the
-`security` feature)
-
-Remove `security` feature included by default, then add the features you
-want below:
-
-- `sha2`: Sha2 hashing
-- `sha3`: Sha3 hashing
-- `sig`: Minisign signatures
-
-### limit indexes used
-
-(Cargo prebuilt is tested with default features and may break without the
-`indexes` feature)
-
-Remove `indexes` feature included by default, then add the features you
-want below:
-
-- [github-public](#github-public)
-- [github-private](#github-private)
-
-[//]: # "- [gitlab-public](#gitlab-public) (Not supported yet)"
-[//]: # "- [gitlab-private](#gitlab-private) (Not supported yet)"
-[//]: # "- [forgejo-public](#forgejo-public) (Not supported yet)"
-[//]: # "- [forgejo-private](#forgejo-private) (Not supported yet)"
-[//]: # "- [gitea-public](#gitea-public) (Not supported yet)"
-[//]: # "- [gitea-private](#gitea-private) (Not supported yet)"
-[//]: # "- [custom-http-public](#custom-http-private) (Not supported yet)"
-[//]: # "- [custom-http-private](#custom-http-private) (Not supported yet)"
-
-### limit color
-
-(Cargo prebuilt is tested with default features and may break without the
-`color` feature)
-
-- Remove the `color` feature (enabled by default)
-- Or use `--no-color`, `NO_COLOR=true` env var,
-  or `color = false` in the config file.
-
-### use mimalloc
-
-`cargo install cargo-prebuilt --features mimalloc`
+`cargo build`
 
 ## Events
 

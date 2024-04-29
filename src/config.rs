@@ -195,10 +195,10 @@ fn parse_args() -> Arguments {
 
     let false_version = short('V')
         .long("version")
-        .help("Prints version infomation.")
+        .help("Prints version information.")
         .switch();
 
-    let false_docs = long("docs").help("Prints link to documention.").switch();
+    let false_docs = long("docs").help("Prints link to documentation.").switch();
 
     // TODO: sig-with and verify-with
 

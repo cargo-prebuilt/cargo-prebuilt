@@ -38,6 +38,7 @@ sup-lint LOG_LEVEL=default_log_level:
     -e SHELL=/bin/bash \
     -e DEFAULT_BRANCH=main \
     -e VALIDATE_ALL_CODEBASE=true \
+    -e VALIDATE_JSCPD=false \
     -e VALIDATE_RUST_2015=false \
     -e VALIDATE_RUST_2018=false \
     -e VALIDATE_RUST_2021=false \
