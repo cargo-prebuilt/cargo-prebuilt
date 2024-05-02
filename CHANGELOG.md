@@ -2,6 +2,8 @@
 
 ## Upcoming
 
+## [0.7.0](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.7.0)
+
 - Switch from hex to const-hex.
 - Remove --gen-config.
 - Switch to rustls for default build.
@@ -9,14 +11,21 @@
 - Changed what -V/--version prints.
 - Added --docs, which prints a link to the docs.
 - If an event could not be generated, do not panic.
-- Info.json v2.
+- Info.json v2 standard.
 - Sig file must be under `$INFO_JSON_URL.minisig`, even for older
   info.json versions that allowed it to be in other places.
 - Allow saving info.json to reports.
 - Targets may now declare a different archive name.
 - --no-sig.
 - --no-hash.
-- (TODO) --hash-bins.
+- --hash-bins.
+- Switch dependency from toml to basic-toml.
+- Dropped sha2 and sha3 features.
+- Dropped sig and security features.
+- Verify ID and version with info.json ID and version.
+- Added defaults under --version.
+- Switch from bpaf combinatoric to bpaf derive.
+- Added update as a unimplemented flag.
 
 ## [0.6.8](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.6.8)
 

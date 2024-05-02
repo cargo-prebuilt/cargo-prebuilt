@@ -150,7 +150,6 @@ fn main() {
         let info = &info;
 
         // Extract Tar
-        // TODO: Fix Currently Here
         extract(info, config, id, version, tar_bytes);
 
         // Reports
