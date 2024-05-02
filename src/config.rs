@@ -1,7 +1,7 @@
 use crate::{
-    color::{self},
+    color,
     data::{ConfigFile, ReportType},
-    APPLICATION, DEFAULT_INDEX, ORG, QUALIFIER, TARGET,
+    APPLICATION, DEFAULT_INDEX, DEFAULT_INDEX_KEY, DEFAULT_TARGET, ORG, QUALIFIER,
 };
 use directories::ProjectDirs;
 use home::cargo_home;
@@ -81,7 +81,7 @@ fn parse_args() -> Arguments {
 
     let target = long("target")
         .env("PREBUILT_TARGET")
-        .help(format!("Target of the binary to download. (Default: {TARGET})").as_str())
+        .help(format!("Target of the binary to download. (Default: {DEFAULT_TARGET})").as_str())
         .argument::<String>("TARGET")
         .optional();
 
@@ -367,7 +367,7 @@ fn fill_from_file(args: &mut Arguments) {
 }
 
 fn convert(args: Arguments) -> Config {
-    let target = args.target.unwrap_or_else(|| TARGET.to_owned());
+    let target = args.target.unwrap_or_else(|| DEFAULT_TARGET.to_owned());
     let safe = args.safe;
     let update = args.update;
     let index = args.index.unwrap_or_else(|| DEFAULT_INDEX.to_string());
@@ -451,8 +451,9 @@ pub fn get() -> Config {
     // Check 1
     // Check index and add cargo-prebuilt-index pub key if needed.
     if args.index.is_none() || args.index.as_ref().unwrap().eq(DEFAULT_INDEX) {
-        args.pub_key
-            .insert(include_str!("../keys/cargo-prebuilt-index.pub").to_string());
+        for s in DEFAULT_INDEX_KEY.split(',') {
+            args.pub_key.insert(s.to_string());
+        }
     }
 
     convert(args)

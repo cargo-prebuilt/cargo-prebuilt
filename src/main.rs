@@ -29,15 +29,15 @@ use crate::{
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
-static PREBUILT_BUILD_REPO_LINK: &str = match option_env!("PREBUILT_BUILD_REPO_LINK") {
+static BUILD_REPO_LINK: &str = match option_env!("PREBUILT_BUILD_REPO_LINK") {
     Some(s) => s,
     None => "https://github.com/cargo-prebuilt/cargo-prebuilt",
 };
-static PREBUILT_BUILD_ISSUES_LINK: &str = match option_env!("PREBUILT_BUILD_ISSUES_LINK") {
+static BUILD_ISSUES_LINK: &str = match option_env!("PREBUILT_BUILD_ISSUES_LINK") {
     Some(s) => s,
     None => "https://github.com/cargo-prebuilt/cargo-prebuilt/issues",
 };
-static PREBUILT_BUILD_DOCS_LINK: &str = match option_env!("PREBUILT_BUILD_DOCS_LINK") {
+static BUILD_DOCS_LINK: &str = match option_env!("PREBUILT_BUILD_DOCS_LINK") {
     Some(s) => s,
     None => concat!(
         "https://github.com/cargo-prebuilt/cargo-prebuilt/tree/v",
@@ -50,17 +50,37 @@ static QUALIFIER: &str = "tech";
 static ORG: &str = "harmless";
 static APPLICATION: &str = "cargo-prebuilt";
 
-static DEFAULT_INDEX: &str = "gh-pub:github.com/cargo-prebuilt/index";
-static TARGET: &str = env!("TARGET");
+static DEFAULT_INDEX: &str = match option_env!("PREBUILT_BUILD_DEFAULT_INDEX") {
+    Some(s) => s,
+    None => "gh-pub:github.com/cargo-prebuilt/index",
+};
+static DEFAULT_INDEX_KEY: &str = match option_env!("PREBUILT_BUILD_DEFAULT_INDEX_KEY") {
+    Some(s) => s,
+    None => include_str!("../keys/cargo-prebuilt-index.pub"),
+};
+static DEFAULT_TARGET: &str = match option_env!("PREBUILT_BUILD_DEFAULT_TARGET") {
+    Some(s) => s,
+    None => env!("TARGET"),
+};
 
 fn main() {
+    #[cfg(debug_assertions)]
+    dbg!(
+        BUILD_REPO_LINK,
+        BUILD_ISSUES_LINK,
+        BUILD_DOCS_LINK,
+        DEFAULT_INDEX,
+        DEFAULT_INDEX_KEY,
+        DEFAULT_TARGET
+    );
+
     for a in std::env::args() {
         if a.eq("--version") || a.eq("-V") {
-            println!("Version: {}\nRepo: {PREBUILT_BUILD_REPO_LINK}\nIssues: {PREBUILT_BUILD_ISSUES_LINK}\nDocs: {PREBUILT_BUILD_DOCS_LINK}", env!("CARGO_PKG_VERSION"));
+            println!("Version: {}\nRepo: {BUILD_REPO_LINK}\nIssues: {BUILD_ISSUES_LINK}\nDocs: {BUILD_DOCS_LINK}", env!("CARGO_PKG_VERSION"));
             std::process::exit(0);
         }
         else if a.eq("--docs") {
-            println!("{PREBUILT_BUILD_DOCS_LINK}");
+            println!("{BUILD_DOCS_LINK}");
             std::process::exit(0);
         }
     }
