@@ -43,6 +43,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        rust-version: [stable, nightly]
         include:
           - target: aarch64-unknown-linux-gnu
             can-test: false
@@ -61,7 +62,7 @@ jobs:
             docker-arch: linux/ppc64le
           - target: powerpc64-unknown-linux-gnu
             can-test: false
-            docker-arch:
+            docker-arch: ""
           - target: riscv64gc-unknown-linux-gnu
             can-test: false
             docker-arch: linux/riscv64
@@ -91,7 +92,7 @@ jobs:
           --userns host --user "$(id -u)":"$(id -g)" \
           -v "$HOME"/.cargo/registry:/usr/local/cargo/registry \
           -v ./:/project \
-          ghcr.io/cargo-prebuilt/ink-cross:stable-${{ matrix.target }} \
+          ghcr.io/cargo-prebuilt/ink-cross:${{ matrix.rust-version }}-${{ matrix.target }} \
           test --verbose --workspace --locked \
           --target ${{ matrix.target }} ${{ env.feature-set }}
       - name: Build with ink cross
@@ -100,7 +101,7 @@ jobs:
           --userns host --user "$(id -u)":"$(id -g)" \
           -v "$HOME"/.cargo/registry:/usr/local/cargo/registry \
           -v ./:/project \
-          ghcr.io/cargo-prebuilt/ink-cross:stable-${{ matrix.target }} \
+          ghcr.io/cargo-prebuilt/ink-cross:${{ matrix.rust-version }}-${{ matrix.target }} \
           auditable build --verbose --workspace --locked \
           --target ${{ matrix.target }} ${{ env.feature-set }}
       - name: Run cargo-prebuilt
@@ -117,7 +118,7 @@ jobs:
       - name: Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: target-${{ matrix.target }}
+          name: target-${{ matrix.target }}---rust-${{ matrix.rust-version }}
           path: |
             target/${{ matrix.target }}/debug/${{ env.bin-name }}
 
@@ -125,6 +126,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        rust-version: [stable, nightly]
         include:
           - target: x86_64-apple-darwin
             os: macos-13
@@ -135,8 +137,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Update Rust and add target
         run: |
-          rustup update
-          rustc --version
+          rustup toolchain install ${{ matrix.rust-version }}
+          rustc +${{ matrix.rust-version }} --version
           rustup target add ${{ matrix.target }}
       - uses: cargo-prebuilt/cargo-prebuilt-action@v3
         with:
@@ -146,11 +148,11 @@ jobs:
           key: ${{ matrix.target }}
       - name: Run tests
         run: |
-          cargo test --verbose --workspace --locked \
+          cargo +${{ matrix.rust-version }} test --verbose --workspace --locked \
           --target ${{ matrix.target }} ${{ env.feature-set }}
       - name: Build
         run: |
-          cargo auditable build --verbose --workspace --locked \
+          cargo +${{ matrix.rust-version }} auditable build --verbose --workspace --locked \
           --target ${{ matrix.target }} ${{ env.feature-set }}
       - name: Run cargo-prebuilt
         run: |
@@ -160,7 +162,7 @@ jobs:
       - name: Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: target-${{ matrix.target }}
+          name: target-${{ matrix.target }}---rust-${{ matrix.rust-version }}
           path: |
             target/${{ matrix.target }}/debug/${{ env.bin-name }}
 
@@ -168,6 +170,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        rust-version: [stable, nightly]
         include:
           - target: x86_64-pc-windows-msvc
             can-test: true
@@ -178,8 +181,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Update Rust and add target
         run: |
-          rustup update
-          rustc --version
+          rustup toolchain install ${{ matrix.rust-version }}
+          rustc +${{ matrix.rust-version }} --version
           rustup target add ${{ matrix.target }}
       - uses: cargo-prebuilt/cargo-prebuilt-action@v3
         with:
@@ -190,11 +193,11 @@ jobs:
       - name: Run tests
         if: ${{ matrix.can-test }}
         run: |
-          cargo test --verbose --workspace --locked \
+          cargo +${{ matrix.rust-version }} test --verbose --workspace --locked \
           --target ${{ matrix.target }} ${{ env.feature-set }}
       - name: Build
         run: |
-          cargo auditable build --verbose --workspace --locked \
+          cargo +${{ matrix.rust-version }} auditable build --verbose --workspace --locked \
           --target ${{ matrix.target }} ${{ env.feature-set }}
       - name: Run cargo-prebuilt
         if: ${{ matrix.can-test }}
@@ -204,6 +207,6 @@ jobs:
       - name: Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: target-${{ matrix.target }}
+          name: target-${{ matrix.target }}---rust-${{ matrix.rust-version }}
           path: |
             target/${{ matrix.target }}/debug/${{ env.bin-name }}.exe
