@@ -68,7 +68,7 @@ impl InfoFileImm {
                     info: info.info,
                     archive: info.archive,
                     files: info.files,
-                    archive_name: info
+                    archive_name: info // TODO: Fail on target not found, here?
                         .targets
                         .get(target)
                         .cloned()

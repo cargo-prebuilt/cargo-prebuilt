@@ -35,7 +35,6 @@ impl Fetcher {
         let raw_info_file = &self.fetch_str(id, version, "info.json");
 
         // info.json verify
-        #[cfg(feature = "sig")]
         if !config.no_sig {
             let v = self.verify_file(
                 id,
@@ -51,6 +50,8 @@ impl Fetcher {
         let info: InfoFile = serde_json::from_str(raw_info_file)
             .unwrap_or_else(|_| panic!("info.json is malformed for {id}@{version}"));
         let mut info: InfoFileImm = InfoFileImm::convert(info, &config.target);
+
+        // TODO: Verify id and version with info.json.
 
         // check if compression is supported
         assert!(
@@ -72,7 +73,6 @@ impl Fetcher {
             }
         }
 
-        #[cfg(any(feature = "sha2", feature = "sha3"))]
         if !config.no_hash {
             if let Some(ref polyfill) = info.polyfill {
                 eprintln!(
@@ -85,7 +85,6 @@ impl Fetcher {
                 let raw_hashes_file = &self.fetch_str(id, version, &polyfill.hash_file);
 
                 // hashes.json.minisig and test
-                #[cfg(feature = "sig")]
                 if !config.no_sig {
                     if let Some(sig_file) = polyfill.hash_file_sig.clone() {
                         let v = self.verify_file(
@@ -122,7 +121,6 @@ impl Fetcher {
         }
 
         // check if target is supported, based on hash
-        #[cfg(any(feature = "sha2", feature = "sha3"))]
         if !config.no_hash {
             assert!(
                 !info.archive_hashes.is_empty(),
@@ -253,7 +251,6 @@ impl Fetcher {
         }
     }
 
-    #[cfg(feature = "sig")]
     fn verify_file(
         &mut self,
         id: &str,
@@ -385,7 +382,6 @@ impl Fetcher {
             }
         }
 
-        #[cfg(feature = "sha2")]
         {
             use sha2::{Digest, Sha256, Sha512};
 
@@ -428,11 +424,7 @@ impl Fetcher {
             }
         }
 
-        #[cfg(not(any(feature = "sha2", feature = "sha3")))]
-        eprintln!("Could not verify downloaded {item} for {id}@{version}. This requires the 'security', 'sha3', and/or 'sha2' feature(s).");
-
-        #[cfg(any(feature = "sha2", feature = "sha3"))]
-        panic!("Could not verify downloaded {item} for {id}@{version}.");
+        eprintln!("Could not verify downloaded {item} for {id}@{version}.");
     }
 
     // TODO: Use for update hashing.

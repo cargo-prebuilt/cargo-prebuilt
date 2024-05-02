@@ -30,7 +30,7 @@ flate2 = "1.0.30"
 home = "0.5.9"
 indexmap = { version = "2.2.6", features = ["serde"] }
 mimalloc = { version = "0.1.41", optional = true }
-minisign-verify = { version = "0.2.1", optional = true }
+minisign-verify = "0.2.1"
 native-tls = { version = "0.2.11", optional = true }
 owo-colors = { version = "4.0.0", features = [
   "supports-colors",
@@ -50,7 +50,7 @@ ureq = { version = "2.9.7", default-features = false, features = [
 default = ["default-rustls"]
 default-native = ["native", "default-no-tls"]
 default-rustls = ["rustls", "default-no-tls"]
-default-no-tls = ["indexes", "security", "color"]
+default-no-tls = ["indexes", "color"]
 
 # Indexes to allow
 indexes = ["github-public", "github-private"]
@@ -65,20 +65,11 @@ github-private = [] # Considered beta
 #custom-http-public = [] #TODO: Under dev
 #custom-http-private = [] #TODO: Under dev
 
-# cargo-prebuilt is tested with the security feature and may break without it
-security = ["sha2", "sha3", "sig"]
-# Use sha2 hashing to verify blob integrity
-sha2 = ["dep:sha2"]
-# Use sha3 hashing to verify blob integrity
-sha3 = ["dep:sha3"]
-# Allow minisign to be used to verify *.json signatures
-sig = ["dep:minisign-verify"]
-
 # Use rustls for tls
 rustls = ["ureq/tls"]
 rustls-native-certs = ["rustls", "ureq/native-certs"]
 
-# Use openssl/native tls framework
+# Use openssl/native for tls
 native = ["native-tls", "ureq/native-tls"]
 vendored-openssl = ["native", "native-tls/vendored"]
 
