@@ -301,19 +301,48 @@ impl Fetcher {
     }
 
     fn verify_archive(id: &str, version: &str, config: &Config, info: &InfoFileImm, bytes: &[u8]) {
-        if !config.no_hash {
-            Self::verify_bytes(
-                id,
-                version,
-                &info.archive_hashes,
-                &format!("{} archive", &config.target),
-                bytes,
-            );
-        }
+        Self::verify_bytes(
+            id,
+            version,
+            config,
+            &info.archive_hashes,
+            &format!("{} archive", &config.target),
+            bytes,
+        );
     }
 
-    fn verify_bytes(id: &str, version: &str, in_hashes: &Hashes, item: &str, bytes: &[u8]) {
-        #[cfg(feature = "sha3")]
+    pub fn verify_binary(
+        id: &str,
+        version: &str,
+        config: &Config,
+        info: &InfoFileImm,
+        binary_name: &str,
+        bytes: &[u8],
+    ) {
+        Self::verify_bytes(
+            id,
+            version,
+            config,
+            info.bins_hashes
+                .get(binary_name)
+                .unwrap_or_else(|| panic!("{binary_name} is missing hashes.")),
+            &format!("{} {binary_name} binary", &config.target),
+            bytes,
+        );
+    }
+
+    fn verify_bytes(
+        id: &str,
+        version: &str,
+        config: &Config,
+        in_hashes: &Hashes,
+        item: &str,
+        bytes: &[u8],
+    ) {
+        if config.no_hash {
+            return;
+        }
+
         {
             use sha3::{Digest, Sha3_256, Sha3_512};
 

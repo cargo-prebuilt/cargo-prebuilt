@@ -213,7 +213,7 @@ fn extract(info: &InfoFileImm, config: &Config, id: &str, version: &str, tar_byt
             .expect("Could not extract binary from archive.");
 
         if config.hash_bins {
-            todo!()
+            Fetcher::verify_binary(id, version, config, info, &str_name, &blob_data);
         }
 
         let mut file = File::create(&path).expect("Could not open file to write binary to.");
