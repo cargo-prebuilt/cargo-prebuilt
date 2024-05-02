@@ -76,7 +76,13 @@ fn main() {
 
     for a in std::env::args() {
         if a.eq("--version") || a.eq("-V") {
-            println!("Version: {}\nRepo: {BUILD_REPO_LINK}\nIssues: {BUILD_ISSUES_LINK}\nDocs: {BUILD_DOCS_LINK}", env!("CARGO_PKG_VERSION"));
+            println!("Version: {}", env!("CARGO_PKG_VERSION"));
+            println!("Default Target: {DEFAULT_TARGET}");
+            println!("Default Index: {DEFAULT_INDEX}");
+            println!("Default Index Key(s): {DEFAULT_INDEX_KEY}");
+            println!("Repo: {BUILD_REPO_LINK}");
+            println!("Issues: {BUILD_ISSUES_LINK}");
+            println!("Docs: {BUILD_DOCS_LINK}");
             std::process::exit(0);
         }
         else if a.eq("--docs") {

@@ -23,7 +23,8 @@ include = [
 
 [dependencies]
 basic-toml = "0.1.9"
-bpaf = { version = "0.9.12", features = ["autocomplete", "batteries"] }
+bpaf = { version = "0.9.12", features = ["autocomplete", "batteries", "derive"] }
+bpaf_derive = "0.5.10"
 const-hex = "1.11.3"
 directories = "5.0.1"
 flate2 = "1.0.30"

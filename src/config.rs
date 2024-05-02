@@ -3,6 +3,7 @@ use crate::{
     data::{ConfigFile, ReportType},
     APPLICATION, DEFAULT_INDEX, DEFAULT_INDEX_KEY, DEFAULT_TARGET, ORG, QUALIFIER,
 };
+use bpaf::Bpaf;
 use directories::ProjectDirs;
 use home::cargo_home;
 use indexmap::IndexSet;
@@ -33,223 +34,120 @@ pub struct Config {
 }
 
 #[allow(clippy::struct_excessive_bools)]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Bpaf)]
+#[bpaf(options("prebuilt"), generate(parse_args))]
 struct Arguments {
+    /// Target of the binary to download.
+    #[bpaf(long("target"), env("PREBUILT_TARGET"), argument::<String>("TARGET"))]
     target: Option<String>,
+    /// Do not overwrite binaries that already exist.
+    #[bpaf(short('s'), long("safe"), env("PREBUILT_SAFE"))]
     safe: bool,
+    /// Update packages based on binary hash.
+    #[bpaf(short('u'), long("update"), env("PREBUILT_UPDATE"))]
     update: bool,
+    /// Index to use.
+    #[bpaf(long("index"), env("PREBUILT_INDEX"), argument::<String>("INDEX"))]
     index: Option<String>,
+    /// A public verifying key encoded as base64. (Or a list of them using CSV). Must be used with --index.
+    #[bpaf(long("pub-key"), env("PREBUILT_PUB_KEY"), argument::<String>("PUB_KEYS"), optional, parse(parse_pub_keys))]
     pub_key: HashSet<String>,
+    /// Auth token to use for private indexes.
+    #[bpaf(long("auth"), env("PREBUILT_AUTH"), argument::<String>("TOKEN"))]
     auth: Option<String>,
+    /// Index to use, pulling from config file. Overrides --index.
+    #[bpaf(long("index-key"), env("PREBUILT_INDEX_KEY"), argument::<String>("INDEX_KEY"))]
     index_key: Option<String>,
+    /// Do not download reports, check for a config file, and ignore safe mode.
+    #[bpaf(long("ci"), env("PREBUILT_CI"))]
     ci: bool,
+    /// Do not verify downloaded info.json's and hashes.json's.
+    #[bpaf(long("no-sig"), env("PREBUILT_NO_SIG"))]
     no_sig: bool,
+    /// Do not verify downloaded archives.
+    #[bpaf(long("no-hash"), env("PREBUILT_NO_HASH"))]
     no_hash: bool,
+    /// Hash and verify extracted binaries.
+    #[bpaf(long("hash-bins"), env("PREBUILT_HASH_BINS"))]
     hash_bins: bool,
+    /// Path to the folder where downloaded binaries will be installed. (Default: `$CARGO_HOME/bin`)
+    #[bpaf(long("path"), env("PREBUILT_PATH"), argument::<PathBuf>("PATH"))]
     path: Option<PathBuf>,
+    /// Path to the folder where the reports will be put (Default: See `--docs/PATHS.md#reports`)
+    #[bpaf(long("report-path"), env("PREBUILT_REPORT_PATH"), argument::<PathBuf>("REPORT_PATH"))]
     report_path: Option<PathBuf>,
+    /// Do not create the report and/or bin folder if it is missing.
+    #[bpaf(long("no-create-path"), env("PREBUILT_NO_CREATE_PATH"))]
     no_create_path: bool,
+    /// Reports to be downloaded in a CSV format (Default: license) (See: See `--docs/REPORT_TYPES.md`)
+    #[bpaf(long("reports"), env("PREBUILT_REPORTS"), argument::<String>("REPORTS"), optional, parse(parse_reports))]
     reports: Option<IndexSet<ReportType>>,
+    /// Path to the config file (Default: See `--docs/PATHS.md#config`)
+    #[bpaf(long("config"), env("PREBUILT_CONFIG"), argument::<PathBuf>("CONFIG_PATH"))]
     config: Option<PathBuf>,
+    /// Require a config file to be used. (--ci will override this)
+    #[bpaf(short('r'), long("require-config"), env("PREBUILT_REQUIRE_CONFIG"))]
     require_config: bool,
+    /// Output events.
+    #[bpaf(long("out"), env("PREBUILT_OUT"))]
     out: bool,
+    /// Get latest versions of crates in index and then exit.
+    #[bpaf(long("get-latest"), env("PREBUILT_GET_LATEST"))]
     get_latest: bool,
+    /// Force color to be turned on.
+    #[bpaf(long("color"), env("FORCE_COLOR"))]
     color: bool,
+    /// Force color to be turned off.
+    #[bpaf(long("no-color"), env("NO_COLOR"))]
     no_color: bool,
+    /// Prints version information.
+    #[bpaf(short('V'), long("version"))]
     #[allow(dead_code)]
     false_version: bool,
+    /// Prints link to documentation.
+    #[bpaf(long("docs"))]
     #[allow(dead_code)]
     false_docs: bool,
+    /// A CSV list of packages with optional @VERSION.
+    #[bpaf(positional::<String>("PKGS"), parse(parse_packages))]
     packages: IndexSet<String>,
 }
 
-// TODO: Move to derive?
-#[allow(clippy::too_many_lines)]
-fn parse_args() -> Arguments {
-    #[allow(clippy::wildcard_imports)]
-    use bpaf::*;
+#[allow(clippy::unnecessary_wraps)]
+fn parse_pub_keys(s: Option<String>) -> Result<HashSet<String>, String> {
+    Ok(s.map_or_else(HashSet::new, |s| {
+        s.split(',')
+            .map(std::borrow::ToOwned::to_owned)
+            .collect::<HashSet<_>>()
+    }))
+}
 
-    let packages = positional::<String>("PKGS")
-        .help("A CSV list of packages with optional @VERSION")
-        .parse(|s| {
+fn parse_reports(s: Option<String>) -> Result<Option<IndexSet<ReportType>>, String> {
+    match s {
+        Some(s) => {
             let mut v = IndexSet::new();
             for i in s.split(',') {
-                v.insert(i.to_string());
-            }
-            Ok::<IndexSet<String>, String>(v)
-        });
-
-    let target = long("target")
-        .env("PREBUILT_TARGET")
-        .help(format!("Target of the binary to download. (Default: {DEFAULT_TARGET})").as_str())
-        .argument::<String>("TARGET")
-        .optional();
-
-    let safe = short('s')
-        .long("safe")
-        .env("PREBUILT_SAFE")
-        .help("Do not overwrite binaries that already exist.")
-        .switch();
-
-    let update = short('u')
-        .long("update")
-        .env("PREBUILT_UPDATE")
-        .help("Update packages based on binary hash.")
-        .switch();
-
-    let index = long("index")
-        .env("PREBUILT_INDEX")
-        .help(format!("Index to use. (Default: {DEFAULT_INDEX})").as_str())
-        .argument::<String>("INDEX")
-        .optional();
-
-    let pub_key = long("pub-key")
-        .env("PREBUILT_PUB_KEY")
-        .help("A public verifying key encoded as base64. Must be used with --index.")
-        .argument::<String>("PUB_KEY")
-        .map(|s| {
-            s.split(',')
-                .map(std::borrow::ToOwned::to_owned)
-                .collect::<HashSet<_>>()
-        })
-        .fallback(HashSet::new());
-
-    let auth = long("auth")
-        .env("PREBUILT_AUTH")
-        .help("Auth token to use for private indexes.")
-        .argument::<String>("TOKEN")
-        .optional();
-
-    let index_key = long("index-key")
-        .env("PREBUILT_INDEX_KEY")
-        .help("Index to use, pulling from config file. Overrides --index.")
-        .argument::<String>("INDEX_KEY")
-        .optional();
-
-    let ci = long("ci")
-        .env("PREBUILT_CI")
-        .help("Do not download reports, check for a config file, and ignore safe mode.")
-        .switch();
-
-    let no_sig = long("no-sig")
-        .env("PREBUILT_NO_SIG")
-        .help("Do not verify downloaded info.json's and hashes.json's.")
-        .switch();
-
-    let no_hash = long("no-hash")
-        .env("PREBUILT_NO_HASH")
-        .help("Do not verify downloaded archives.")
-        .switch();
-
-    let hash_bins = long("hash-bins")
-        .env("PREBUILT_HASH_BINS")
-        .help("Hash and verify extracted binaries.")
-        .switch();
-
-    let path = long("path")
-        .env("PREBUILT_PATH")
-        .help("Path to the folder where downloaded binaries will be installed. (Default: $CARGO_HOME/bin)")
-        .argument::<PathBuf>("PATH")
-        .optional();
-
-    let report_path = long("report-path")
-        .env("PREBUILT_REPORT_PATH")
-        .help("Path to the folder where the reports will be put (Default: See --docs/PATHS.md#reports)")
-        .argument::<PathBuf>("REPORT_PATH")
-        .optional();
-
-    let no_create_path = long("no-create-path")
-        .env("PREBUILT_NO_CREATE_PATH")
-        .help("Do not create the report and/or bin folder if it is missing.")
-        .switch();
-
-    let reports = long("reports")
-        .env("PREBUILT_REPORTS")
-        .help("Reports to be downloaded in a CSV format (Default: license) (See: See --docs/REPORT_TYPES.md)")
-        .argument::<String>("REPORTS")
-        .parse(|s| {
-            let mut v = IndexSet::new();
-            if !s.eq("") {
-                for i in s.split(',') {
-                    match TryInto::<ReportType>::try_into(i) {
-                        Ok(d) => {
-                            let _ = v.insert(d);
-                        }
-                        Err(()) => return Err(format!("{i} is not a report type.")),
+                match TryInto::<ReportType>::try_into(i) {
+                    Ok(d) => {
+                        let _ = v.insert(d);
                     }
+                    Err(()) => return Err(format!("{i} is not a report type.")),
                 }
             }
-            Ok(v)
-        })
-        .optional();
+            Ok(Some(v))
+        }
+        None => Ok(None),
+    }
+}
 
-    let config = long("config")
-        .env("PREBUILT_CONFIG")
-        .help("Path to the config file (Default: See --docs/PATHS.md#config)")
-        .argument::<PathBuf>("CONFIG_PATH")
-        .optional();
-
-    let require_config = short('r')
-        .long("require-config")
-        .env("PREBUILT_REQUIRE_CONFIG")
-        .help("Require a config file to be used. (--ci will override this)")
-        .switch();
-
-    let out = long("out")
-        .env("PREBUILT_OUT")
-        .help("Output events.")
-        .switch();
-
-    let get_latest = long("get-latest")
-        .env("PREBUILT_GET_LATEST")
-        .help("Get latest versions of crates in index and then exit.")
-        .switch();
-
-    let color = long("color")
-        .env("FORCE_COLOR")
-        .help("Force color to be turned on.")
-        .switch();
-
-    let no_color = long("no-color")
-        .env("NO_COLOR")
-        .help("Force color to be turned off.")
-        .switch();
-
-    let false_version = short('V')
-        .long("version")
-        .help("Prints version information.")
-        .switch();
-
-    let false_docs = long("docs").help("Prints link to documentation.").switch();
-
-    let parser = construct!(Arguments {
-        target,
-        safe,
-        update,
-        index,
-        pub_key,
-        auth,
-        index_key,
-        ci,
-        no_sig,
-        no_hash,
-        hash_bins,
-        path,
-        report_path,
-        no_create_path,
-        reports,
-        config,
-        require_config,
-        out,
-        get_latest,
-        color,
-        no_color,
-        false_version,
-        false_docs,
-        packages,
-    });
-
-    cargo_helper("prebuilt", parser).to_options().run()
+#[allow(clippy::needless_pass_by_value)]
+#[allow(clippy::unnecessary_wraps)]
+fn parse_packages(s: String) -> Result<IndexSet<String>, String> {
+    let mut v = IndexSet::new();
+    for i in s.split(',') {
+        v.insert(i.to_string());
+    }
+    Ok::<IndexSet<String>, String>(v)
 }
 
 #[allow(clippy::cognitive_complexity)]
@@ -437,7 +335,7 @@ fn convert(args: Arguments) -> Config {
 
 pub fn get() -> Config {
     // arguments and env vars
-    let mut args = parse_args();
+    let mut args = parse_args().run();
     #[cfg(debug_assertions)]
     dbg!(&args);
 
