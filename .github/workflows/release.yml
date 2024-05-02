@@ -9,6 +9,8 @@ on:
   workflow_dispatch:
 
 permissions:
+  id-token: write
+  attestations: write
   contents: write
 
 env:
@@ -429,6 +431,9 @@ jobs:
         run: |
           tar czvf ${{ matrix.info.target }}.tar.gz \
           -C ./target/${{ matrix.info.target }}/release ${{ env.bin-name }}
+      - uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: ${{ matrix.info.target }}.tar.gz
       - name: Hash
         run: |
           coreutils sha256sum ${{ matrix.info.target }}.tar.gz \
@@ -481,6 +486,9 @@ jobs:
         run: |
           tar czvf ${{ matrix.info.target }}.tar.gz \
           -C ./target/${{ matrix.info.target }}/release ${{ env.bin-name }}
+      - uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: ${{ matrix.info.target }}.tar.gz
       - name: Hash
         run: |
           coreutils sha256sum ${{ matrix.info.target }}.tar.gz \
@@ -535,6 +543,9 @@ jobs:
         run: |
           cd target/${{ matrix.info.target }}/release
           7z a -tzip ../../../${{ matrix.info.target }}.zip ${{ env.bin-name }}.exe
+      - uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: ${{ matrix.info.target }}.zip
       - name: Hash
         run: |
           coreutils sha256sum ${{ matrix.info.target }}.zip \
