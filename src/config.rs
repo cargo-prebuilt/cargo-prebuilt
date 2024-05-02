@@ -339,6 +339,13 @@ pub fn get() -> Config {
     #[cfg(debug_assertions)]
     dbg!(&args);
 
+    // TODO: When update is impl, remove this!
+    assert!(
+        !args.update,
+        "-u/--update is currently unimplemented. It will come in a future update."
+    );
+    //
+
     // Load from config file
     if !args.ci {
         fill_from_file(&mut args);
