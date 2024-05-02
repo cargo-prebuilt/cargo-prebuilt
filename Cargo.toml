@@ -80,6 +80,9 @@ mimalloc = ["dep:mimalloc"]
 # Enable colored output
 color = ["dep:owo-colors", "bpaf/bright-color"]
 
+[profile.dev]
+panic = "abort"
+
 [profile.release]
 opt-level = 3
 lto = true
