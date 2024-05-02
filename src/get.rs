@@ -51,7 +51,16 @@ impl Fetcher {
             .unwrap_or_else(|_| panic!("info.json is malformed for {id}@{version}"));
         let mut info: InfoFileImm = InfoFileImm::convert(info, &config.target);
 
-        // TODO: Verify id and version with info.json.
+        assert!(
+            info.id.eq(id),
+            "{id}@{version} does not match with info.json id {}",
+            info.id
+        );
+        assert!(
+            info.version.eq(version),
+            "{id}@{version} does not match with info.json version {}",
+            info.version
+        );
 
         // check if compression is supported
         assert!(
@@ -115,8 +124,8 @@ impl Fetcher {
                     .get(&config.target)
                     .unwrap_or_else(|| panic!("No hashes for target {}", config.target));
 
-                info.archive_hashes = hashes.archive.clone();
-                info.bins_hashes = hashes.bins.clone();
+                info.archive_hashes.clone_from(&hashes.archive);
+                info.bins_hashes.clone_from(&hashes.bins);
             }
         }
 
