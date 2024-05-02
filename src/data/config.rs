@@ -102,18 +102,18 @@ mod test {
     #[test]
     fn test_deser1() {
         let toml = include_str!("../../test/config_1.toml");
-        let _: ConfigFile = toml::from_str(toml).unwrap();
+        let _: ConfigFile = basic_toml::from_str(toml).unwrap();
     }
 
     #[test]
     fn test_deser2() {
         let toml = include_str!("../../test/config_2.toml");
-        let _: ConfigFile = toml::from_str(toml).unwrap();
+        let _: ConfigFile = basic_toml::from_str(toml).unwrap();
     }
 
     #[test]
     fn test_deser3() {
         let toml = "";
-        let _: ConfigFile = toml::from_str(toml).unwrap();
+        let _: ConfigFile = basic_toml::from_str(toml).unwrap();
     }
 }

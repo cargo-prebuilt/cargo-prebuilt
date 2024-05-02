@@ -274,7 +274,7 @@ fn fill_from_file(args: &mut Arguments) {
         file.read_to_string(&mut str)
             .expect("Could not read config file.");
 
-        let config: Result<ConfigFile, toml::de::Error> = toml::from_str(&str);
+        let config: Result<ConfigFile, _> = basic_toml::from_str(&str);
         match config {
             Ok(config) => {
                 if let Some(prebuilt) = config.prebuilt {
