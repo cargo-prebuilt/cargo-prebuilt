@@ -43,7 +43,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
+        rust-version: [stable, nightly]
+        info:
           - target: aarch64-unknown-linux-gnu
             can-test: false
             docker-arch: linux/arm64
@@ -61,7 +62,7 @@ jobs:
             docker-arch: linux/ppc64le
           - target: powerpc64-unknown-linux-gnu
             can-test: false
-            docker-arch:
+            docker-arch: ""
           - target: riscv64gc-unknown-linux-gnu
             can-test: false
             docker-arch: linux/riscv64
@@ -83,33 +84,33 @@ jobs:
       - uses: actions/checkout@v4
       - uses: Swatinem/rust-cache@v2
         with:
-          key: ${{ matrix.target }}
+          key: ${{ matrix.info.target }}
       - name: Run tests
-        if: ${{ matrix.can-test }}
+        if: ${{ matrix.info.can-test }}
         run: |
           docker run --rm \
           --userns host --user "$(id -u)":"$(id -g)" \
           -v "$HOME"/.cargo/registry:/usr/local/cargo/registry \
           -v ./:/project \
-          ghcr.io/cargo-prebuilt/ink-cross:stable-${{ matrix.target }} \
+          ghcr.io/cargo-prebuilt/ink-cross:${{ matrix.rust-version }}-${{ matrix.info.target }} \
           test --verbose --workspace --locked \
-          --target ${{ matrix.target }} ${{ env.feature-set }}
+          --target ${{ matrix.info.target }} ${{ env.feature-set }}
       - name: Build with ink cross
         run: |
           docker run --rm \
           --userns host --user "$(id -u)":"$(id -g)" \
           -v "$HOME"/.cargo/registry:/usr/local/cargo/registry \
           -v ./:/project \
-          ghcr.io/cargo-prebuilt/ink-cross:stable-${{ matrix.target }} \
+          ghcr.io/cargo-prebuilt/ink-cross:${{ matrix.rust-version }}-${{ matrix.info.target }} \
           auditable build --verbose --workspace --locked \
-          --target ${{ matrix.target }} ${{ env.feature-set }}
+          --target ${{ matrix.info.target }} ${{ env.feature-set }}
       - name: Run cargo-prebuilt
-        if: ${{ matrix.docker-arch != '' }}
+        if: ${{ matrix.info.docker-arch != '' }}
         run: |
           sudo docker run --privileged --rm \
           tonistiigi/binfmt:master --install all &&
-          docker run --rm --platform='${{ matrix.docker-arch }}' \
-          -v ./target/${{ matrix.target }}/debug/:/project \
+          docker run --rm --platform='${{ matrix.info.docker-arch }}' \
+          -v ./target/${{ matrix.info.target }}/debug/:/project \
           -w /project \
           debian:unstable-slim \
           bash -c \
@@ -117,58 +118,61 @@ jobs:
       - name: Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: target-${{ matrix.target }}
+          name: target-${{ matrix.info.target }}---rust-${{ matrix.rust-version }}
           path: |
-            target/${{ matrix.target }}/debug/${{ env.bin-name }}
+            target/${{ matrix.info.target }}/debug/${{ env.bin-name }}
 
   apple-darwin:
     strategy:
       fail-fast: false
       matrix:
-        include:
+        rust-version: [stable, nightly]
+        info:
           - target: x86_64-apple-darwin
             os: macos-13
           - target: aarch64-apple-darwin
             os: macos-14
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.info.os }}
     steps:
       - uses: actions/checkout@v4
       - name: Update Rust and add target
         run: |
-          rustup update
-          rustc --version
-          rustup target add ${{ matrix.target }}
+          rustup toolchain install ${{ matrix.rust-version }}
+          rustc +${{ matrix.rust-version }} --version
+          rustup target add ${{ matrix.info.target }}
+          rustup component add rust-src --toolchain ${{ matrix.rust-version }} --target ${{ matrix.info.target }}
       - uses: cargo-prebuilt/cargo-prebuilt-action@v3
         with:
           pkgs: cargo-auditable
       - uses: Swatinem/rust-cache@v2
         with:
-          key: ${{ matrix.target }}
+          key: ${{ matrix.info.target }}
       - name: Run tests
         run: |
-          cargo test --verbose --workspace --locked \
-          --target ${{ matrix.target }} ${{ env.feature-set }}
+          cargo +${{ matrix.rust-version }} test --verbose --workspace --locked \
+          --target ${{ matrix.info.target }} ${{ env.feature-set }}
       - name: Build
         run: |
-          cargo auditable build --verbose --workspace --locked \
-          --target ${{ matrix.target }} ${{ env.feature-set }}
+          cargo +${{ matrix.rust-version }} auditable build --verbose --workspace --locked \
+          --target ${{ matrix.info.target }} ${{ env.feature-set }}
       - name: Run cargo-prebuilt
         run: |
-          target/${{ matrix.target }}/debug/${{ env.bin-name }} just
+          target/${{ matrix.info.target }}/debug/${{ env.bin-name }} just
           just --version
-          target/${{ matrix.target }}/debug/${{ env.bin-name }} --color just
+          target/${{ matrix.info.target }}/debug/${{ env.bin-name }} --color just
       - name: Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: target-${{ matrix.target }}
+          name: target-${{ matrix.info.target }}---rust-${{ matrix.rust-version }}
           path: |
-            target/${{ matrix.target }}/debug/${{ env.bin-name }}
+            target/${{ matrix.info.target }}/debug/${{ env.bin-name }}
 
   pc-windows-msvc:
     strategy:
       fail-fast: false
       matrix:
-        include:
+        rust-version: [stable, nightly]
+        info:
           - target: x86_64-pc-windows-msvc
             can-test: true
           - target: aarch64-pc-windows-msvc
@@ -178,32 +182,33 @@ jobs:
       - uses: actions/checkout@v4
       - name: Update Rust and add target
         run: |
-          rustup update
-          rustc --version
-          rustup target add ${{ matrix.target }}
+          rustup toolchain install ${{ matrix.rust-version }}
+          rustc +${{ matrix.rust-version }} --version
+          rustup target add ${{ matrix.info.target }}
+          rustup component add rust-src --toolchain ${{ matrix.rust-version }} --target ${{ matrix.info.target }}
       - uses: cargo-prebuilt/cargo-prebuilt-action@v3
         with:
           pkgs: cargo-auditable
       - uses: Swatinem/rust-cache@v2
         with:
-          key: ${{ matrix.target }}
+          key: ${{ matrix.info.target }}
       - name: Run tests
-        if: ${{ matrix.can-test }}
+        if: ${{ matrix.info.can-test }}
         run: |
-          cargo test --verbose --workspace --locked \
-          --target ${{ matrix.target }} ${{ env.feature-set }}
+          cargo +${{ matrix.rust-version }} test --verbose --workspace --locked \
+          --target ${{ matrix.info.target }} ${{ env.feature-set }}
       - name: Build
         run: |
-          cargo auditable build --verbose --workspace --locked \
-          --target ${{ matrix.target }} ${{ env.feature-set }}
+          cargo +${{ matrix.rust-version }} auditable build --verbose --workspace --locked \
+          --target ${{ matrix.info.target }} ${{ env.feature-set }}
       - name: Run cargo-prebuilt
-        if: ${{ matrix.can-test }}
+        if: ${{ matrix.info.can-test }}
         run: |
-          target/${{ matrix.target }}/debug/${{ env.bin-name }}.exe just
+          target/${{ matrix.info.target }}/debug/${{ env.bin-name }}.exe just
           just --version
       - name: Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: target-${{ matrix.target }}
+          name: target-${{ matrix.info.target }}---rust-${{ matrix.rust-version }}
           path: |
-            target/${{ matrix.target }}/debug/${{ env.bin-name }}.exe
+            target/${{ matrix.info.target }}/debug/${{ env.bin-name }}.exe

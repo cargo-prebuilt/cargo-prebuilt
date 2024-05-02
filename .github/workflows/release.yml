@@ -9,6 +9,8 @@ on:
   workflow_dispatch:
 
 permissions:
+  id-token: write
+  attestations: write
   contents: write
 
 env:
@@ -93,14 +95,14 @@ jobs:
             if [ -d "${D}" ]; then
               echo "${D}"
               pushd "${D}"
-        
+
               for file in ./*.tar.gz ./*.zip; do
                 if [ -f "$file" ]; then
                   minisign -S -s ~/.minisign_secret.key -m "$file"
                   minisign -V -p ../keys/cargo-prebuilt.pub -m "$file"
-                fi 
+                fi
               done
-                
+
               popd
             fi
           done
@@ -351,7 +353,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
+        info:
           - target: aarch64-unknown-linux-gnu
             can-test: false
             docker-arch: linux/arm64
@@ -369,7 +371,7 @@ jobs:
             docker-arch: linux/ppc64le
           - target: powerpc64-unknown-linux-gnu
             can-test: false
-            docker-arch:
+            docker-arch: ""
           - target: riscv64gc-unknown-linux-gnu
             can-test: false
             docker-arch: linux/riscv64
@@ -396,69 +398,73 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         if: ${{ env.cache == 'true' }}
       - name: Run tests
-        if: ${{ matrix.can-test }}
+        if: ${{ matrix.info.can-test }}
         run: |
           docker run --rm \
           --userns host --user "$(id -u)":"$(id -g)" \
           -v "$HOME"/.cargo/registry:/usr/local/cargo/registry \
           -v ./:/project \
-          ghcr.io/cargo-prebuilt/ink-cross:stable-${{ matrix.target }} \
+          ghcr.io/cargo-prebuilt/ink-cross:nightly-${{ matrix.info.target }} \
           test --verbose --workspace --release --locked \
-          --target ${{ matrix.target }} ${{ env.feature-set }}
+          --target ${{ matrix.info.target }} ${{ env.feature-set }}
       - name: Build
         run: |
           docker run --rm \
           --userns host --user "$(id -u)":"$(id -g)" \
           -v "$HOME"/.cargo/registry:/usr/local/cargo/registry \
           -v ./:/project \
-          ghcr.io/cargo-prebuilt/ink-cross:stable-${{ matrix.target }} \
+          ghcr.io/cargo-prebuilt/ink-cross:nightly-${{ matrix.info.target }} \
           auditable build --verbose --workspace --release --locked \
-          --target ${{ matrix.target }} ${{ env.feature-set }}
+          --target ${{ matrix.info.target }} ${{ env.feature-set }}
       - name: Run cargo-prebuilt
-        if: ${{ matrix.docker-arch != '' }}
+        if: ${{ matrix.info.docker-arch != '' }}
         run: |
           sudo docker run --privileged --rm \
           tonistiigi/binfmt:master --install all &&
-          docker run --rm --platform='${{ matrix.docker-arch }}' \
-          -v ./target/${{ matrix.target }}/debug/:/project \
+          docker run --rm --platform='${{ matrix.info.docker-arch }}' \
+          -v ./target/${{ matrix.info.target }}/release/:/project \
           -w /project \
           debian:unstable-slim \
           bash -c \
           './${{ env.bin-name }} just && ./${{ env.bin-name }} --color just'
       - name: Tar
         run: |
-          tar czvf ${{ matrix.target }}.tar.gz \
-          -C ./target/${{ matrix.target }}/release ${{ env.bin-name }}
+          tar czvf ${{ matrix.info.target }}.tar.gz \
+          -C ./target/${{ matrix.info.target }}/release ${{ env.bin-name }}
+      - uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: ${{ matrix.info.target }}.tar.gz
       - name: Hash
         run: |
-          coreutils sha256sum ${{ matrix.target }}.tar.gz \
-          > ${{ matrix.target }}.sha256
+          coreutils sha256sum ${{ matrix.info.target }}.tar.gz \
+          > ${{ matrix.info.target }}.sha256
       - name: Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: target-${{ matrix.target }}
+          name: target-${{ matrix.info.target }}
           path: |
-            ${{ matrix.target }}.tar.gz
-            ${{ matrix.target }}.sha256
+            ${{ matrix.info.target }}.tar.gz
+            ${{ matrix.info.target }}.sha256
 
   apple-darwin:
     strategy:
       fail-fast: false
       matrix:
-        include:
+        info:
           - target: x86_64-apple-darwin
             os: macos-13
           - target: aarch64-apple-darwin
             os: macos-14
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.info.os }}
     needs: [check-fmt, clippy, cargo-hack, cargo-msrv, cargo-deny]
     steps:
       - uses: actions/checkout@v4
       - name: Update Rust and add target
         run: |
-          rustup update
-          rustc --version
-          rustup target add ${{ matrix.target }}
+          rustup toolchain install nightly
+          rustc +nightly --version
+          rustup target add ${{ matrix.info.target }}
+          rustup component add rust-src --toolchain nightly --target ${{ matrix.info.target }}
       - uses: cargo-prebuilt/cargo-prebuilt-action@v3
         with:
           pkgs: cargo-auditable,coreutils
@@ -466,37 +472,40 @@ jobs:
         if: ${{ env.cache == 'true' }}
       - name: Run tests
         run: |
-          cargo test --verbose --workspace --release --locked \
-          --target ${{ matrix.target }} ${{ env.feature-set }}
+          cargo +nightly test --verbose --workspace --release --locked \
+          --target ${{ matrix.info.target }} ${{ env.feature-set }}
       - name: Build
         run: |
-          cargo auditable build --verbose --workspace --release --locked \
-          --target ${{ matrix.target }} ${{ env.feature-set }}
+          cargo +nightly auditable build --verbose --workspace --release --locked \
+          --target ${{ matrix.info.target }} ${{ env.feature-set }}
       - name: Run cargo-prebuilt
         run: |
-          target/${{ matrix.target }}/release/${{ env.bin-name }} just
+          target/${{ matrix.info.target }}/release/${{ env.bin-name }} just
           just --version
       - name: Tar
         run: |
-          tar czvf ${{ matrix.target }}.tar.gz \
-          -C ./target/${{ matrix.target }}/release ${{ env.bin-name }}
+          tar czvf ${{ matrix.info.target }}.tar.gz \
+          -C ./target/${{ matrix.info.target }}/release ${{ env.bin-name }}
+      - uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: ${{ matrix.info.target }}.tar.gz
       - name: Hash
         run: |
-          coreutils sha256sum ${{ matrix.target }}.tar.gz \
-          > ${{ matrix.target }}.sha256
+          coreutils sha256sum ${{ matrix.info.target }}.tar.gz \
+          > ${{ matrix.info.target }}.sha256
       - name: Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: target-${{ matrix.target }}
+          name: target-${{ matrix.info.target }}
           path: |
-            ${{ matrix.target }}.tar.gz
-            ${{ matrix.target }}.sha256
+            ${{ matrix.info.target }}.tar.gz
+            ${{ matrix.info.target }}.sha256
 
   pc-windows-msvc:
     strategy:
       fail-fast: false
       matrix:
-        include:
+        info:
           - target: x86_64-pc-windows-msvc
             can-test: true
           - target: aarch64-pc-windows-msvc
@@ -507,40 +516,44 @@ jobs:
       - uses: actions/checkout@v4
       - name: Update Rust and add target
         run: |
-          rustup update
-          rustc --version
-          rustup target add ${{ matrix.target }}
+          rustup toolchain install nightly
+          rustc +nightly --version
+          rustup target add ${{ matrix.info.target }}
+          rustup component add rust-src --toolchain nightly --target ${{ matrix.info.target }}
       - uses: cargo-prebuilt/cargo-prebuilt-action@v3
         with:
           pkgs: cargo-auditable,coreutils
       - uses: Swatinem/rust-cache@v2
         if: ${{ env.cache == 'true' }}
       - name: Run tests
-        if: ${{ matrix.can-test }}
+        if: ${{ matrix.info.can-test }}
         run: |
-          cargo test --verbose --workspace --release --locked \
-          --target ${{ matrix.target }} ${{ env.feature-set }}
+          cargo +nightly test --verbose --workspace --release --locked \
+          --target ${{ matrix.info.target }} ${{ env.feature-set }}
       - name: Build
         run: |
-          cargo auditable build --verbose --workspace --release --locked \
-          --target ${{ matrix.target }} ${{ env.feature-set }}
+          cargo +nightly auditable build --verbose --workspace --release --locked \
+          --target ${{ matrix.info.target }} ${{ env.feature-set }}
       - name: Run cargo-prebuilt
-        if: ${{ matrix.can-test }}
+        if: ${{ matrix.info.can-test }}
         run: |
-          target/${{ matrix.target }}/release/${{ env.bin-name }}.exe just
+          target/${{ matrix.info.target }}/release/${{ env.bin-name }}.exe just
           just --version
       - name: Zip
         run: |
-          cd target/${{ matrix.target }}/release
-          7z a -tzip ../../../${{ matrix.target }}.zip ${{ env.bin-name }}.exe
+          cd target/${{ matrix.info.target }}/release
+          7z a -tzip ../../../${{ matrix.info.target }}.zip ${{ env.bin-name }}.exe
+      - uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: ${{ matrix.info.target }}.zip
       - name: Hash
         run: |
-          coreutils sha256sum ${{ matrix.target }}.zip \
-          > ${{ matrix.target }}.sha256
+          coreutils sha256sum ${{ matrix.info.target }}.zip \
+          > ${{ matrix.info.target }}.sha256
       - name: Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: target-${{ matrix.target }}
+          name: target-${{ matrix.info.target }}
           path: |
-            ${{ matrix.target }}.zip
-            ${{ matrix.target }}.sha256
+            ${{ matrix.info.target }}.zip
+            ${{ matrix.info.target }}.sha256
