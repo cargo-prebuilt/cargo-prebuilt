@@ -91,8 +91,6 @@ Pulled from [API.md](https://github.com/cargo-prebuilt/index/blob/main/API.md).
 
 ### info.json v2
 
-***Not final!***
-
 - Only gzip is supported for compression.
 - Only tar is supported for packaging.
 - Sig file must be under `$INFO_JSON_URL.minisig`

@@ -33,10 +33,11 @@ Need help? Try: `cargo prebuilt --help` or see [Config Info](docs/CONFIG.md)
 
 ## Installation
 
+More ways and how to verify your download [here](docs/DOWNLOAD.md).
+
 - You can download the latest prebuilt binaries of cargo-prebuilt
   [here](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/latest).
-- Cargo install: `cargo install cargo-prebuilt` or
-  `cargo install cargo-prebuilt --profile=quick-build`
+- Cargo install: `cargo install cargo-prebuilt`
 - Cargo prebuilt: `cargo prebuilt cargo-prebuilt`
 - Cargo binstall: `cargo binstall cargo-prebuilt --no-confirm`
 - Cargo quickinstall: `cargo quickinstall cargo-prebuilt`

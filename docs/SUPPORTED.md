@@ -17,3 +17,7 @@
 Only the latest stable version is supported.
 
 Alpha, beta, and rc versions are always unsupported.
+
+## Other Notes
+
+Release archives of cargo-prebuilt use GitHub's artifact attestations for versions 0.7.0+.
