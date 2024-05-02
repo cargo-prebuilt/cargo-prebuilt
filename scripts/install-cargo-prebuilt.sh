@@ -4,7 +4,7 @@
 ### VERSION: Version of cargo-prebuilt to install. (Defaults to latest)
 ### INSTALL_PATH: Path to where cargo-prebuilt should be installed.
 ### LIBC: Which libc flavor to use. (gnu or musl) (Does nothing on macos)
-### MINISIGN: If true, minisign will be used to verify the download. (Requires minisign to be installed)
+### MINISIGN: If true, minisign will be used to verify the download. (Requires minisign/rsign2 to be installed)
 ### R_TARGET: The target type of cargo-prebuilt you want to download.
 
 set -euxo pipefail
@@ -57,9 +57,6 @@ armv7l | armv7)
 ppc64le | powerpc64le)
 	TARGET_STRING+="powerpc64le-"
 	;;
-mips64 | mips64el)
-	TARGET_STRING+="mips64el-"
-	;;
 *)
 	echo "Unsupported Arch: $ARCH" && popd && exit 1
 	;;
@@ -91,9 +88,6 @@ if [ "$OS_TYPE" == "Linux" ]; then
 	case "$ARCH" in
 	armv7l | armv7)
 		TARGET_STRING+="eabihf"
-		;;
-	mips64 | mips64el)
-		TARGET_STRING+="abi64"
 		;;
 	esac
 fi

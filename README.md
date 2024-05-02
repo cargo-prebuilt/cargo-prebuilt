@@ -45,7 +45,9 @@ Need help? Try: `cargo prebuilt --help` or see [Config Info](docs/CONFIG.md)
   ```shell
   curl --proto '=https' --tlsv1.2 -sSf \
   https://raw.githubusercontent.com/cargo-prebuilt/cargo-prebuilt/main/scripts/install-cargo-prebuilt.sh \
-  | bash
+  -o install-cargo-prebuilt.sh \
+  && bash install-cargo-prebuilt.sh \
+  && rm install-cargo-prebuilt.sh
   ```
 
 - For GitHub actions you can use
