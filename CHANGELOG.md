@@ -33,6 +33,10 @@
 - Removed color feature.
 - Changed how colors are picked internally for maybe better performance/size.
 
+## [0.6.9](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.6.9)
+
+- Bump deps to fix CVE-2024-32650.
+
 ## [0.6.8](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.6.8)
 
 - General under the hood improvements.
