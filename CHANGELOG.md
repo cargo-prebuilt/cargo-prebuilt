@@ -26,6 +26,7 @@
 - Added defaults under --version.
 - Switch from bpaf combinatoric to bpaf derive.
 - Added update as a unimplemented flag.
+- No longer panic on being unable to set the file permissions of binaries.
 
 ## [0.6.8](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.6.8)
 
