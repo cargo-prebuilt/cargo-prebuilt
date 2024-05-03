@@ -1,5 +1,5 @@
 use crate::{
-    color,
+    coloring,
     data::{ConfigFile, ReportType},
     APPLICATION, DEFAULT_INDEX, DEFAULT_INDEX_KEY, DEFAULT_TARGET, ORG, QUALIFIER,
 };
@@ -305,8 +305,8 @@ fn convert(args: Arguments) -> Config {
     let get_latest = args.get_latest;
 
     match (args.color, args.no_color) {
-        (true, false) => color::set_override(true),
-        (_, true) => color::set_override(false),
+        (true, false) => coloring::set_override(true),
+        (_, true) => coloring::set_override(false),
         _ => {}
     }
 

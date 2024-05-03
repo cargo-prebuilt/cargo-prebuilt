@@ -2,7 +2,7 @@
 #![allow(clippy::module_name_repetitions)]
 #![allow(clippy::multiple_crate_versions)]
 
-mod color;
+mod coloring;
 mod config;
 mod data;
 mod events;
@@ -18,12 +18,7 @@ use std::{
 };
 use tar::Archive;
 
-use crate::{
-    color::{err_color_print, PossibleColor},
-    config::Config,
-    data::InfoFileImm,
-    get::Fetcher,
-};
+use crate::{config::Config, data::InfoFileImm, get::Fetcher};
 
 #[cfg(feature = "mimalloc")]
 #[global_allocator]
@@ -157,14 +152,11 @@ fn main() {
             fetcher.reports(id, version, info, config);
         }
 
-        eprintln!(
-            "{} {id}@{version}.",
-            err_color_print("Installed", &PossibleColor::BrightGreen)
-        );
+        eprintln!("{} {id}@{version}.", color!(bright_green, "Installed"));
         events::installed(id, version, config);
     }
 
-    eprintln!("{}", err_color_print("Done!", &PossibleColor::Green));
+    eprintln!("{}", color!(green, "Done!"));
 }
 
 fn extract(info: &InfoFileImm, config: &Config, id: &str, version: &str, tar_bytes: Vec<u8>) {
@@ -175,10 +167,7 @@ fn extract(info: &InfoFileImm, config: &Config, id: &str, version: &str, tar_byt
         .entries()
         .expect("Cannot get entries from downloaded tar.");
 
-    eprintln!(
-        "{} {id}@{version}...",
-        err_color_print("Extracting", &PossibleColor::BrightBlue)
-    );
+    eprintln!("{} {id}@{version}...", color!(bright_blue, "Extracting"));
 
     for e in es {
         let mut e = e.expect("Malformed entry in tarball.");
@@ -195,13 +184,13 @@ fn extract(info: &InfoFileImm, config: &Config, id: &str, version: &str, tar_byt
         assert!(
             !str_name.contains(std::path::is_separator),
             "{} path separator in archive for {id}@{version}",
-            err_color_print("Illegal", &PossibleColor::BrightRed)
+            color!(bright_red, "Illegal")
         );
 
         assert!(
             Fetcher::is_bin(info, &str_name),
             "{} binary ({str_name}) in archive for {id}@{version}",
-            err_color_print("Illegal", &PossibleColor::BrightRed)
+            color!(bright_red, "Illegal")
         );
 
         let mut path = config.path.clone();
@@ -210,7 +199,7 @@ fn extract(info: &InfoFileImm, config: &Config, id: &str, version: &str, tar_byt
         assert!(
             !(config.safe && !config.ci && path.exists()),
             "Binary {str_name} {} for {id}@{version}",
-            err_color_print("already exists", &PossibleColor::BrightRed)
+            color!(bright_red, "already exists")
         );
 
         let mut blob_data = Vec::new();
@@ -236,10 +225,7 @@ fn extract(info: &InfoFileImm, config: &Config, id: &str, version: &str, tar_byt
 
         let abs = fs::canonicalize(path).expect("Could not canonicalize install path.");
 
-        eprintln!(
-            "{} {abs:?}.",
-            err_color_print("Installed", &PossibleColor::BrightPurple)
-        );
+        eprintln!("{} {abs:?}.", color!(bright_purple, "Installed"));
 
         events::binary_installed(id, version, config, abs.as_path());
     }

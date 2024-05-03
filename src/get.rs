@@ -4,7 +4,7 @@ use std::{
 };
 
 use crate::{
-    color::{err_color_print, PossibleColor},
+    color,
     config::Config,
     data::{HashType, Hashes, HashesFile, HashesFileV1, InfoFile, InfoFileImm, ReportType},
     events,
@@ -28,7 +28,7 @@ impl Fetcher {
     pub fn download(&mut self, id: &str, version: &str, config: &Config) -> (InfoFileImm, Vec<u8>) {
         eprintln!(
             "{} info for {id}@{version}.",
-            err_color_print("Fetching", &PossibleColor::BrightBlue),
+            color!(bright_blue, "Fetching"),
         );
 
         // info.json
@@ -77,7 +77,7 @@ impl Fetcher {
                 assert!(
                     !path.exists(),
                     "Binary {bin} {} for {id}@{version}",
-                    err_color_print("already exists", &PossibleColor::BrightRed)
+                    color!(bright_red, "already exists")
                 );
             }
         }
@@ -86,7 +86,7 @@ impl Fetcher {
             if let Some(ref polyfill) = info.polyfill {
                 eprintln!(
                     "{} hashes for {id}@{version} with target {}.",
-                    err_color_print("Fetching", &PossibleColor::BrightBlue),
+                    color!(bright_blue, "Fetching"),
                     &config.target
                 );
 
@@ -134,7 +134,7 @@ impl Fetcher {
             assert!(
                 !info.archive_hashes.is_empty(),
                 "{id}@{version} does {} target {}, due to empty archive hashes",
-                err_color_print("not support", &PossibleColor::BrightRed),
+                color!(bright_red, "not support"),
                 config.target
             );
         }
@@ -142,7 +142,7 @@ impl Fetcher {
         // tar
         eprintln!(
             "{} {id}@{version} for target {}.",
-            err_color_print("Downloading", &PossibleColor::BrightYellow),
+            color!(bright_yellow, "Downloading"),
             &config.target
         );
         let tar_bytes = self.fetch_blob(id, version, &info.archive_name);
@@ -163,10 +163,7 @@ impl Fetcher {
             return;
         }
 
-        eprintln!(
-            "{} reports... ",
-            err_color_print("Getting", &PossibleColor::BrightBlue)
-        );
+        eprintln!("{} reports... ", color!(bright_blue, "Getting"));
 
         for report in &config.reports {
             let report_name = match report {
@@ -217,10 +214,9 @@ impl Fetcher {
         match self.interact.get_latest(id) {
             Ok(s) => s,
             Err(InteractError::Malformed) => panic!("The version string for {id} is malformed."),
-            Err(InteractError::HttpCode(404)) => panic!(
-                "Crate {id} {} in index!",
-                err_color_print("not found", &PossibleColor::BrightRed)
-            ),
+            Err(InteractError::HttpCode(404)) => {
+                panic!("Crate {id} {} in index!", color!(bright_red, "not found"))
+            }
             Err(InteractError::HttpCode(code)) => panic!("Http error {code} for crate {id}."),
             Err(err) => panic!("Connection error.\n{err}"),
         }
@@ -234,7 +230,7 @@ impl Fetcher {
             }
             Err(InteractError::HttpCode(404)) => panic!(
                 "File {file} for {id}@{version} is {}!",
-                err_color_print("not found", &PossibleColor::BrightRed)
+                color!(bright_red, "not found")
             ),
             Err(InteractError::HttpCode(code)) => {
                 panic!("Http error {code} for {file} for {id}@{version}.")
@@ -251,7 +247,7 @@ impl Fetcher {
             }
             Err(InteractError::HttpCode(404)) => panic!(
                 "File {file} for {id}@{version} is {}!",
-                err_color_print("not found", &PossibleColor::BrightRed)
+                color!(bright_red, "not found")
             ),
             Err(InteractError::HttpCode(code)) => {
                 panic!("Http error {code} for {file} for {id}@{version}.")
@@ -274,7 +270,7 @@ impl Fetcher {
         assert!(
             !config.pub_keys.is_empty(),
             "{} for index '{}'. Please add one with --pub-key or use --no-verify.",
-            err_color_print("No public key(s)", &PossibleColor::BrightRed),
+            color!(bright_red, "No public key(s)"),
             config.index
         );
 
@@ -293,13 +289,13 @@ impl Fetcher {
         if verified {
             eprintln!(
                 "{} {file} for {id}@{version} with minisign.",
-                err_color_print("Verified", &PossibleColor::BrightWhite)
+                color!(bright_white, "Verified")
             );
         }
         else {
             panic!(
                 "{} verify {file} for {id}@{version}.",
-                err_color_print("Could not", &PossibleColor::BrightRed)
+                color!(bright_red, "Could not")
             );
         }
 
@@ -366,7 +362,7 @@ impl Fetcher {
 
                 eprintln!(
                     "{} {item} for {id}@{version} with sha3_512.",
-                    err_color_print("Verified", &PossibleColor::BrightWhite)
+                    color!(bright_white, "Verified")
                 );
                 return;
             }
@@ -385,7 +381,7 @@ impl Fetcher {
 
                 eprintln!(
                     "{} {item} for {id}@{version} with sha3_256.",
-                    err_color_print("Verified", &PossibleColor::BrightWhite)
+                    color!(bright_white, "Verified")
                 );
                 return;
             }
@@ -408,7 +404,7 @@ impl Fetcher {
 
                 eprintln!(
                     "{} {item} for {id}@{version} with sha512.",
-                    err_color_print("Verified", &PossibleColor::BrightWhite)
+                    color!(bright_white, "Verified")
                 );
                 return;
             }
@@ -427,7 +423,7 @@ impl Fetcher {
 
                 eprintln!(
                     "{} {item} for {id}@{version} with sha256.",
-                    err_color_print("Verified", &PossibleColor::BrightWhite)
+                    color!(bright_white, "Verified")
                 );
                 return;
             }

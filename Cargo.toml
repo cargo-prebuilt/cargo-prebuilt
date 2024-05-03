@@ -33,9 +33,7 @@ indexmap = { version = "2.2.6", features = ["serde"] }
 mimalloc = { version = "0.1.41", optional = true }
 minisign-verify = "0.2.1"
 native-tls = { version = "0.2.11", optional = true }
-owo-colors = { version = "4.0.0", features = [
-  "supports-colors",
-], optional = true }
+owo-colors = { version = "4.0.0", features = ["supports-colors"] }
 serde = { version = "1.0.200", features = ["derive"] }
 serde_json = "1.0.116"
 sha2 = "0.10.8"
@@ -47,7 +45,7 @@ ureq = { version = "2.9.7", default-features = false, features = ["gzip"] }
 default = ["default-rustls"]
 default-native = ["native", "default-no-tls"]
 default-rustls = ["rustls", "default-no-tls"]
-default-no-tls = ["indexes", "color"]
+default-no-tls = ["indexes"]
 
 # Indexes to allow
 indexes = ["github-public", "github-private"]
@@ -75,9 +73,6 @@ dl-cp-brotli = ["ureq/brotli"]
 
 # Use mimalloc for the allocator
 mimalloc = ["dep:mimalloc"]
-
-# Enable colored output
-color = ["dep:owo-colors", "bpaf/bright-color"]
 
 [profile.dev]
 panic = "abort"
