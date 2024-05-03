@@ -4,7 +4,7 @@ name: Rust Build and Test
 
 on:
   push:
-    branches: [main]
+    branches: [main, releases/0.6]
     paths:
       - .github/workflows/build.yml
       - keys/**

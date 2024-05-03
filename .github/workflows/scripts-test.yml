@@ -3,7 +3,7 @@ name: Test Scripts
 
 on:
   push:
-    branches: [main]
+    branches: [main, releases/0.6]
     paths: [.github/workflows/scripts-test.yml, scripts/**]
   pull_request:
     branches: [main]

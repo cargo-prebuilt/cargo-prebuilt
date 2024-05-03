@@ -4,8 +4,8 @@ name: Rust Checks
 
 on:
   push:
-    branches: [main]
-    paths: 
+    branches: [main, releases/0.6]
+    paths:
       - .github/workflows/checks.yml
       - keys/**
       - src/**

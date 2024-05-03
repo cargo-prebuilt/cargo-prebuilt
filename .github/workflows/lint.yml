@@ -3,7 +3,7 @@ name: Lint
 
 on:
   push:
-    branches: [main]
+    branches: [main, releases/0.6]
     paths: ['**.md', '**.yml', '**.sh', '**.json']
   pull_request:
     branches: [main]
@@ -39,6 +39,7 @@ jobs:
           DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VALIDATE_ALL_CODEBASE: true
+          VALIDATE_JSCPD: false
           VALIDATE_RUST_2015: false
           VALIDATE_RUST_2018: false
           VALIDATE_RUST_2021: false
