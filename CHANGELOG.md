@@ -27,6 +27,9 @@
 - Switch from bpaf combinatoric to bpaf derive.
 - Added update as a unimplemented flag.
 - No longer panic on being unable to set the file permissions of binaries.
+- Removed bpaf autocomplete.
+- Removed brotli download compression.
+  This can be reenabled with the `dl-cp-brotli` feature.
 
 ## [0.6.8](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.6.8)
 

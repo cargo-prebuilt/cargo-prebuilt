@@ -23,7 +23,7 @@ include = [
 
 [dependencies]
 basic-toml = "0.1.9"
-bpaf = { version = "0.9.12", features = ["autocomplete", "batteries", "derive"] }
+bpaf = { version = "0.9.12", features = ["derive"] }
 bpaf_derive = "0.5.10"
 const-hex = "1.11.3"
 directories = "5.0.1"
@@ -41,11 +41,7 @@ serde_json = "1.0.116"
 sha2 = "0.10.8"
 sha3 = "0.10.8"
 tar = "0.4.40"
-ureq = { version = "2.9.7", default-features = false, features = [
-  "json",
-  "gzip",
-  "brotli",
-] }
+ureq = { version = "2.9.7", default-features = false, features = ["gzip"] }
 
 [features]
 default = ["default-rustls"]
@@ -73,6 +69,9 @@ rustls-native-certs = ["rustls", "ureq/native-certs"]
 # Use openssl/native for tls
 native = ["native-tls", "ureq/native-tls"]
 vendored-openssl = ["native", "native-tls/vendored"]
+
+# Allow downloading of compressed files with brotli
+dl-cp-brotli = ["ureq/brotli"]
 
 # Use mimalloc for the allocator
 mimalloc = ["dep:mimalloc"]
