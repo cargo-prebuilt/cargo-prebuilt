@@ -23,7 +23,7 @@ include = [
 
 [dependencies]
 basic-toml = "0.1.9"
-bpaf = { version = "0.9.12", features = ["derive"] }
+bpaf = { version = "0.9.12", features = ["bright-color", "derive"] }
 bpaf_derive = "0.5.10"
 const-hex = "1.11.3"
 directories = "5.0.1"

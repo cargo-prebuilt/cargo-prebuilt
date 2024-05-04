@@ -139,6 +139,8 @@ impl Fetcher {
             );
         }
 
+        // TODO: For updating, tar downloading and verifying needs to be moved to another location.
+
         // tar
         eprintln!(
             "{} {id}@{version} for target {}.",

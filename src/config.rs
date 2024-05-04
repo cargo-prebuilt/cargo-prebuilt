@@ -43,7 +43,7 @@ struct Arguments {
     /// Do not overwrite binaries that already exist.
     #[bpaf(short('s'), long("safe"), env("PREBUILT_SAFE"))]
     safe: bool,
-    /// Update packages based on binary hash.
+    /// Update packages based on binary hash. (This flag currently errors. It will be implemented in the future.)
     #[bpaf(short('u'), long("update"), env("PREBUILT_UPDATE"))]
     update: bool,
     /// Index to use.
