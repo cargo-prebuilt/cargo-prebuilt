@@ -69,7 +69,7 @@ fn main() {
         DEFAULT_TARGET
     );
 
-    for a in std::env::args() {
+    for a in std::env::args_os() {
         if a.eq("--version") || a.eq("-V") {
             println!("Version: {}", env!("CARGO_PKG_VERSION"));
             println!("Default Target: {DEFAULT_TARGET}");
