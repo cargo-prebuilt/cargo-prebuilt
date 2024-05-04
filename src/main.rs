@@ -144,6 +144,9 @@ fn main() {
         let (info, tar_bytes) = fetcher.download(id, version, config);
         let info = &info;
 
+        // TODO: Updating logic here?
+        // TODO: If one binary is not upto date, then update all binaries.
+
         // Extract Tar
         extract(info, config, id, version, tar_bytes);
 

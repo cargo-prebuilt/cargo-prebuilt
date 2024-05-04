@@ -84,7 +84,7 @@
 }
 ```
 
-## Print Info.json (info_json_event) {#print-info-json}
+## Print Info.json (info_json_event) <a id="print-info-json"></a>
 
 ```json
 {
@@ -96,7 +96,7 @@
 }
 ```
 
-## Print License (license_event) {#print-license}
+## Print License (license_event) <a id="print-license"></a>
 
 ```json
 {
@@ -108,7 +108,7 @@
 }
 ```
 
-## Print Deps (deps_event) {#print-deps}
+## Print Deps (deps_event) <a id="print-deps"></a>
 
 ```json
 {
@@ -120,7 +120,7 @@
 }
 ```
 
-## Print Audit (audit_event) {#print-audit}
+## Print Audit (audit_event) <a id="print-audit"></a>
 
 ```json
 {

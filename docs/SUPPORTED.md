@@ -1,5 +1,8 @@
 # Supported
 
+You should be viewing this on the
+[main branch](https://github.com/cargo-prebuilt/cargo-prebuilt/blob/main/docs/SUPPORTED.md).
+
 ## Support Table
 
 | Prebuilt Version | Supported | Notes      |
@@ -20,4 +23,6 @@ Alpha, beta, and rc versions are always unsupported.
 
 ## Other Notes
 
-Release archives of cargo-prebuilt use GitHub's artifact attestations for versions 0.7.0+.
+Release archives of cargo-prebuilt use
+[GitHub's artifact attestations](DOWNLOAD.md#github-attestation)
+for versions 0.7.0+.

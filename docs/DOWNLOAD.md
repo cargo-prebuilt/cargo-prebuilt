@@ -24,14 +24,21 @@
 If you are downloading cargo-prebuilt from the release page then there are
 multiple ways to verify it.
 
-- Minisign:
-  Download the associated minisig file with the archive you picked.
-  Get the [public key](https://github.com/cargo-prebuilt/cargo-prebuilt/blob/main/keys/cargo-prebuilt.pub.base64).
-  Download [minisign](https://jedisct1.github.io/minisign/) or
-  [rsign2](https://github.com/jedisct1/rsign2) and follow their instructions.
-- GitHub Attestation:
-  Download the [GitHub CLI](https://cli.github.com/) and run
-  `gh attestation verify $ARCHIVE --repo cargo-prebuilt/cargo-prebuilt`.
-- Hash File:
-  Download the associated hashes.sha256 file and run
-  `sha256sum -c --ignore-missing hashes.sha256`.
+### Minisign
+
+Download the associated minisig file with the archive you picked.
+
+Get the [public key](https://github.com/cargo-prebuilt/cargo-prebuilt/blob/main/keys/cargo-prebuilt.pub.base64).
+
+Download [minisign](https://jedisct1.github.io/minisign/) or
+[rsign2](https://github.com/jedisct1/rsign2) and follow their instructions.
+
+### GitHub Attestation
+
+Download the [GitHub CLI](https://cli.github.com/) and run
+`gh attestation verify $ARCHIVE --repo cargo-prebuilt/cargo-prebuilt`.
+
+### Hash File
+
+Download the associated hashes.sha256 file and run
+`sha256sum -c --ignore-missing hashes.sha256`.

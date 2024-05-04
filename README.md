@@ -59,6 +59,8 @@ More ways and how to verify your download [here](docs/DOWNLOAD.md).
 (Cargo prebuilt requires either the native or rustls feature)
 
 `cargo build`
+or for a release version
+`cargo build --release`
 
 ## Events
 
