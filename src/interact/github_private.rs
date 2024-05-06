@@ -1,7 +1,7 @@
-use crate::interact::{Interact, InteractError};
+use crate::interact::Interact;
 use serde::{de::DeserializeOwned, Deserialize};
 use std::collections::HashMap;
-use ureq::{Agent, Error};
+use ureq::Agent;
 
 #[derive(Clone, Debug, Deserialize)]
 struct Release {
@@ -39,8 +39,8 @@ impl GithubPrivate {
         }
     }
 
-    fn api_call<T: DeserializeOwned>(&self, url: &str) -> Result<T, InteractError> {
-        return match self
+    fn api_call<T: DeserializeOwned>(&self, url: &str) -> anyhow::Result<T> {
+        let res = self
             .agent
             .get(url)
             .set("Accept", "application/vnd.github+json")
@@ -49,21 +49,16 @@ impl GithubPrivate {
                 "Authorization",
                 format!("Bearer {}", self.auth_token).as_str(),
             )
-            .call()
-        {
-            Ok(res) => {
-                let s = res.into_string().map_err(|_| InteractError::Malformed)?;
-                let json = serde_json::from_str(&s)
-                    .unwrap_or_else(|_| panic!("Could not parse api json from {url}"));
-                Ok(json)
-            }
-            Err(Error::Status(code, _)) => Err(InteractError::HttpCode(code)),
-            Err(_) => Err(InteractError::ConnectionError),
-        };
+            .call()?;
+
+        let s = res.into_string()?;
+        let json = serde_json::from_str(&s)
+            .unwrap_or_else(|_| panic!("Could not parse api json from {url}"));
+        Ok(json)
     }
 
-    fn call(&self, url: &str) -> Result<String, InteractError> {
-        return match self
+    fn call(&self, url: &str) -> anyhow::Result<String> {
+        let res = self
             .agent
             .get(url)
             .set("Accept", "application/octet-stream")
@@ -71,22 +66,13 @@ impl GithubPrivate {
                 "Authorization",
                 format!("Bearer {}", self.auth_token).as_str(),
             )
-            .call()
-        {
-            Ok(res) => {
-                let s = res.into_string().map_err(|_| InteractError::Malformed)?;
-                Ok(s.trim().to_string())
-            }
-            Err(Error::Status(code, _)) => Err(InteractError::HttpCode(code)),
-            Err(_) => Err(InteractError::ConnectionError),
-        };
+            .call()?;
+
+        let s = res.into_string()?;
+        Ok(s.trim().to_string())
     }
 
-    fn get_str_file(
-        &self,
-        assets: &Vec<ReleaseAssets>,
-        file: &str,
-    ) -> Result<String, InteractError> {
+    fn get_str_file(&self, assets: &Vec<ReleaseAssets>, file: &str) -> anyhow::Result<String> {
         let mut val = None;
         for i in assets {
             if i.name.eq(file) {
@@ -96,10 +82,10 @@ impl GithubPrivate {
             }
         }
 
-        val.ok_or(InteractError::HttpCode(404))
+        val.ok_or_else(|| anyhow::anyhow!("Could not find {file} in assets list."))
     }
 
-    fn get_release(&mut self, id: &str, version: &str) -> Result<Release, InteractError> {
+    fn get_release(&mut self, id: &str, version: &str) -> anyhow::Result<Release> {
         let key = format!("{id}/--/{version}");
 
         if let Some(item) = self.index.get(&key) {
@@ -116,7 +102,7 @@ impl GithubPrivate {
     }
 }
 impl Interact for GithubPrivate {
-    fn get_latest(&mut self, id: &str) -> Result<String, InteractError> {
+    fn get_latest(&mut self, id: &str) -> anyhow::Result<String> {
         if self.stable_index.is_none() {
             self.stable_index = Some(self.api_call(&format!(
                 "{}/repos/{}/{}/releases/tags/stable-index",
@@ -133,29 +119,19 @@ impl Interact for GithubPrivate {
         self.get_str_file(&si.assets, id)
     }
 
-    fn get_str(
-        &mut self,
-        id: &str,
-        version: &str,
-        file_name: &str,
-    ) -> Result<String, InteractError> {
+    fn get_str(&mut self, id: &str, version: &str, file_name: &str) -> anyhow::Result<String> {
         let release = self.get_release(id, version)?;
         self.get_str_file(&release.assets, file_name)
     }
 
-    fn get_blob(
-        &mut self,
-        id: &str,
-        version: &str,
-        file_name: &str,
-    ) -> Result<Vec<u8>, InteractError> {
+    fn get_blob(&mut self, id: &str, version: &str, file_name: &str) -> anyhow::Result<Vec<u8>> {
         let release = self.get_release(id, version)?;
 
         let mut val = None;
         for i in &release.assets {
             if i.name.eq(file_name) {
                 let mut bytes = Vec::new();
-                match self
+                let res = self
                     .agent
                     .get(&i.url)
                     .set("Accept", "application/octet-stream")
@@ -163,24 +139,15 @@ impl Interact for GithubPrivate {
                         "Authorization",
                         format!("Bearer {}", self.auth_token).as_str(),
                     )
-                    .call()
-                {
-                    Ok(response) => {
-                        //TODO: Allow limiting of size?
-                        response
-                            .into_reader()
-                            .read_to_end(&mut bytes)
-                            .map_err(|_| InteractError::Malformed)?;
-                    }
-                    Err(Error::Status(code, _)) => return Err(InteractError::HttpCode(code)),
-                    Err(_) => return Err(InteractError::ConnectionError),
-                }
+                    .call()?;
+
+                res.into_reader().read_to_end(&mut bytes)?;
 
                 val = Some(bytes);
                 break;
             }
         }
 
-        val.ok_or(InteractError::HttpCode(404))
+        val.ok_or_else(|| anyhow::anyhow!("Could not find {file_name} in assets list."))
     }
 }

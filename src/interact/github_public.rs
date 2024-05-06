@@ -1,5 +1,5 @@
-use crate::interact::{Interact, InteractError};
-use ureq::{Agent, Error};
+use crate::interact::Interact;
+use ureq::Agent;
 
 pub struct GithubPublic {
     agent: Agent,
@@ -15,52 +15,29 @@ impl GithubPublic {
         format!("{}/{id}-{version}/{file}", self.pre_url)
     }
 
-    fn call(&self, url: &str) -> Result<String, InteractError> {
-        return match self.agent.get(url).call() {
-            Ok(res) => {
-                let s = res.into_string().map_err(|_| InteractError::Malformed)?;
-                Ok(s.trim().to_string())
-            }
-            Err(Error::Status(code, _)) => Err(InteractError::HttpCode(code)),
-            Err(_) => Err(InteractError::ConnectionError),
-        };
+    fn call(&self, url: &str) -> anyhow::Result<String> {
+        let res = self.agent.get(url).call()?;
+        let s = res.into_string()?;
+        Ok(s.trim().to_string())
     }
 }
 impl Interact for GithubPublic {
-    fn get_latest(&mut self, id: &str) -> Result<String, InteractError> {
+    fn get_latest(&mut self, id: &str) -> anyhow::Result<String> {
         let url = format!("{}/stable-index/{id}", self.pre_url);
         self.call(&url)
     }
 
-    fn get_str(
-        &mut self,
-        id: &str,
-        version: &str,
-        file_name: &str,
-    ) -> Result<String, InteractError> {
+    fn get_str(&mut self, id: &str, version: &str, file_name: &str) -> anyhow::Result<String> {
         let url = self.url(id, version, file_name);
         self.call(&url)
     }
 
-    fn get_blob(
-        &mut self,
-        id: &str,
-        version: &str,
-        file_name: &str,
-    ) -> Result<Vec<u8>, InteractError> {
+    fn get_blob(&mut self, id: &str, version: &str, file_name: &str) -> anyhow::Result<Vec<u8>> {
         let url = self.url(id, version, file_name);
+
         let mut bytes = Vec::new();
-        match self.agent.get(&url).call() {
-            Ok(response) => {
-                //TODO: Allow limiting of size?
-                response
-                    .into_reader()
-                    .read_to_end(&mut bytes)
-                    .map_err(|_| InteractError::Malformed)?;
-            }
-            Err(Error::Status(code, _)) => return Err(InteractError::HttpCode(code)),
-            Err(_) => return Err(InteractError::ConnectionError),
-        }
+        let res = self.agent.get(&url).call()?;
+        res.into_reader().read_to_end(&mut bytes)?;
 
         Ok(bytes)
     }

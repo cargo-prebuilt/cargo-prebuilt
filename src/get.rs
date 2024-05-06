@@ -8,7 +8,7 @@ use crate::{
     config::Config,
     data::{HashType, Hashes, HashesFile, HashesFileV1, InfoFile, InfoFileImm, ReportType},
     events,
-    interact::{self, Interact, InteractError},
+    interact::{self, Interact},
 };
 use ureq::Agent;
 
@@ -213,49 +213,15 @@ impl Fetcher {
     }
 
     fn fetch_latest(&mut self, id: &str) -> String {
-        match self.interact.get_latest(id) {
-            Ok(s) => s,
-            Err(InteractError::Malformed) => panic!("The version string for {id} is malformed."),
-            Err(InteractError::HttpCode(404)) => {
-                panic!("Crate {id} {} in index!", color!(bright_red, "not found"))
-            }
-            Err(InteractError::HttpCode(code)) => panic!("Http error {code} for crate {id}."),
-            Err(err) => panic!("Connection error.\n{err}"),
-        }
+        self.interact.get_latest(id).unwrap()
     }
 
     fn fetch_str(&mut self, id: &str, version: &str, file: &str) -> String {
-        match self.interact.get_str(id, version, file) {
-            Ok(s) => s,
-            Err(InteractError::Malformed) => {
-                panic!("The downloaded string {file} for {id}@{version} is malformed")
-            }
-            Err(InteractError::HttpCode(404)) => panic!(
-                "File {file} for {id}@{version} is {}!",
-                color!(bright_red, "not found")
-            ),
-            Err(InteractError::HttpCode(code)) => {
-                panic!("Http error {code} for {file} for {id}@{version}.")
-            }
-            Err(err) => panic!("Connection error.\n{err}"),
-        }
+        self.interact.get_str(id, version, file).unwrap()
     }
 
     fn fetch_blob(&mut self, id: &str, version: &str, file: &str) -> Vec<u8> {
-        match self.interact.get_blob(id, version, file) {
-            Ok(s) => s,
-            Err(InteractError::Malformed) => {
-                panic!("The downloaded blob {file} for {id}@{version} is malformed")
-            }
-            Err(InteractError::HttpCode(404)) => panic!(
-                "File {file} for {id}@{version} is {}!",
-                color!(bright_red, "not found")
-            ),
-            Err(InteractError::HttpCode(code)) => {
-                panic!("Http error {code} for {file} for {id}@{version}.")
-            }
-            Err(err) => panic!("Connection error.\n{err}"),
-        }
+        self.interact.get_blob(id, version, file).unwrap()
     }
 
     fn verify_file(
