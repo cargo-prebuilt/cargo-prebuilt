@@ -22,7 +22,7 @@ include = [
 ]
 
 [dependencies]
-anyhow = "1.0.82"
+anyhow = "1.0.83"
 basic-toml = "0.1.9"
 bpaf = { version = "0.9.12", features = ["bright-color", "derive"] }
 bpaf_derive = "0.5.10"
