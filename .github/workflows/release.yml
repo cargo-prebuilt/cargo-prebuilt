@@ -473,11 +473,11 @@ jobs:
       - name: Run tests
         run: |
           cargo +nightly test --verbose --workspace --release --locked \
-          --target ${{ matrix.info.target }} ${{ env.feature-set }}
+          --target ${{ matrix.info.target }} --no-default-features --features default-native ${{ env.feature-set }}
       - name: Build
         run: |
           cargo +nightly auditable build --verbose --workspace --release --locked \
-          --target ${{ matrix.info.target }} ${{ env.feature-set }}
+          --target ${{ matrix.info.target }} --no-default-features --features default-native ${{ env.feature-set }}
       - name: Run cargo-prebuilt
         run: |
           target/${{ matrix.info.target }}/release/${{ env.bin-name }} just
