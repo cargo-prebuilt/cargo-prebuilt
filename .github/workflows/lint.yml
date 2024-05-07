@@ -44,3 +44,4 @@ jobs:
           VALIDATE_RUST_2018: false
           VALIDATE_RUST_2021: false
           VALIDATE_RUST_CLIPPY: false
+          VALIDATE_GITHUB_ACTIONS: false # For now until a new version of actionlint is released.

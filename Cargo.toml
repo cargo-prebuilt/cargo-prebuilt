@@ -1,6 +1,6 @@
 [package]
 name = "cargo-prebuilt"
-version = "0.7.0-alpha.0"
+version = "0.7.0-alpha.1"
 edition = "2021"
 authors = ["harmless-tech"]
 description = "Download prebuilt crate binaries for many different platforms"
@@ -22,7 +22,7 @@ include = [
 ]
 
 [dependencies]
-anyhow = "1.0.82"
+anyhow = "1.0.83"
 basic-toml = "0.1.9"
 bpaf = { version = "0.9.12", features = ["bright-color", "derive"] }
 bpaf_derive = "0.5.10"
@@ -41,6 +41,9 @@ sha2 = "0.10.8"
 sha3 = "0.10.8"
 tar = "0.4.40"
 ureq = { version = "2.9.7", default-features = false, features = ["gzip"] }
+
+# TODO: Set native for macos and windows. Rustls for other platforms.
+# But how to do this best?
 
 [features]
 default = ["default-rustls"]

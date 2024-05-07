@@ -1,6 +1,8 @@
 #![forbid(unsafe_code)]
 #![allow(clippy::module_name_repetitions)]
 #![allow(clippy::multiple_crate_versions)]
+#![deny(clippy::std_instead_of_core)]
+#![deny(clippy::alloc_instead_of_core)]
 
 mod coloring;
 mod config;
