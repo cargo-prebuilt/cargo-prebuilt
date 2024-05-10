@@ -276,15 +276,6 @@ fn extract(meta: &Meta, info: &InfoFileImm, tar_bytes: Vec<u8>) {
         let mut path = meta.config.path.clone();
         path.push(bin_path);
 
-        // TODO: Is this needed? We check when we get the info file.
-        assert!(
-            meta.config.ci || meta.config.update || (meta.config.safe && !path.exists()),
-            "Binary {str_name} {} for {}@{}",
-            color!(bright_red, "already exists"),
-            meta.id,
-            meta.version
-        );
-
         let mut blob_data = Vec::new();
         e.read_to_end(&mut blob_data)
             .expect("Could not extract binary from archive.");
