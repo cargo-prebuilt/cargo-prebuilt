@@ -105,7 +105,7 @@ dependencies = [
 
 [[package]]
 name = "cargo-prebuilt"
-version = "0.7.0-alpha.1"
+version = "0.7.0-beta.0"
 dependencies = [
  "anyhow",
  "basic-toml",
@@ -113,6 +113,7 @@ dependencies = [
  "bpaf_derive",
  "const-hex",
  "directories",
+ "dunce",
  "flate2",
  "home",
  "indexmap",
@@ -227,6 +228,12 @@ dependencies = [
  "redox_users",
  "windows-sys 0.48.0",
 ]
+
+[[package]]
+name = "dunce"
+version = "1.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "56ce8c6da7551ec6c462cbaf3bfbc75131ebbfa1c944aeaa9dab51ca1c5f0c3b"
 
 [[package]]
 name = "equivalent"

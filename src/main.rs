@@ -300,7 +300,7 @@ fn extract(meta: &Meta, info: &InfoFileImm, tar_bytes: Vec<u8>) {
             }
         }
 
-        let abs = fs::canonicalize(path).expect("Could not canonicalize install path.");
+        let abs = dunce::canonicalize(path).expect("Could not canonicalize install path.");
 
         eprintln!("{} {abs:?}.", color!(bright_purple, "Installed"));
 

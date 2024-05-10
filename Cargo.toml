@@ -1,6 +1,6 @@
 [package]
 name = "cargo-prebuilt"
-version = "0.7.0-alpha.1"
+version = "0.7.0-beta.0"
 edition = "2021"
 authors = ["harmless-tech"]
 description = "Download prebuilt crate binaries for many different platforms"
@@ -28,6 +28,7 @@ bpaf = { version = "0.9.12", features = ["bright-color", "derive"] }
 bpaf_derive = "0.5.10"
 const-hex = "1.11.3"
 directories = "5.0.1"
+dunce = "1.0.4"
 flate2 = "1.0.30"
 home = "0.5.9"
 indexmap = { version = "2.2.6", features = ["serde"] }
