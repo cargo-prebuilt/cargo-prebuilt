@@ -1,5 +1,4 @@
 use serde_json::json;
-use std::path::Path;
 
 use crate::data::Meta;
 
@@ -47,13 +46,8 @@ pub fn target(meta: &Meta) {
     }
 }
 
-pub fn binary_installed(meta: &Meta, path: &Path) {
+pub fn binary_installed(meta: &Meta, path: &str) {
     if meta.config.out {
-        let path = format!("{path:?}");
-        let mut path = path.as_str();
-        path = path.strip_prefix('"').unwrap_or(path);
-        path = path.strip_suffix('"').unwrap_or(path);
-
         event(meta.id, meta.version, "bin_installed", path);
     }
 }

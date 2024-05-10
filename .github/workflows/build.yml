@@ -114,7 +114,7 @@ jobs:
           -w /project \
           debian:unstable-slim \
           bash -c \
-          './${{ env.bin-name }} just && ./${{ env.bin-name }} --color just'
+          './${{ env.bin-name }} just && ./${{ env.bin-name }} --color --out just'
       - name: Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -159,7 +159,7 @@ jobs:
         run: |
           target/${{ matrix.info.target }}/debug/${{ env.bin-name }} just
           just --version
-          target/${{ matrix.info.target }}/debug/${{ env.bin-name }} --color just
+          target/${{ matrix.info.target }}/debug/${{ env.bin-name }} --color --out just
       - name: Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -204,7 +204,7 @@ jobs:
       - name: Run cargo-prebuilt
         if: ${{ matrix.info.can-test }}
         run: |
-          target/${{ matrix.info.target }}/debug/${{ env.bin-name }}.exe just
+          target/${{ matrix.info.target }}/debug/${{ env.bin-name }}.exe --color --out just
           just --version
       - name: Artifact
         uses: actions/upload-artifact@v4

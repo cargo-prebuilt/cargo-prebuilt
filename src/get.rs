@@ -27,7 +27,7 @@ impl Fetcher {
 
     pub fn download_info(&mut self, meta: &Meta) -> InfoFileImm {
         eprintln!(
-            "{} info for {}@{}.",
+            "{} info for {}@{}...",
             color!(bright_blue, "Fetching"),
             meta.id,
             meta.version,
@@ -77,7 +77,10 @@ impl Fetcher {
 
                 assert!(
                     !path.exists(),
-                    "Binary {bin} {} for {}@{}",
+                    "Binary '{}' {} for {}@{}",
+                    dunce::canonicalize(path)
+                        .expect("Could not canonicalize path.")
+                        .display(),
                     color!(bright_red, "already exists"),
                     meta.id,
                     meta.version,
@@ -88,7 +91,7 @@ impl Fetcher {
         if !meta.config.no_hash {
             if let Some(ref polyfill) = info.polyfill {
                 eprintln!(
-                    "{} hashes for {}@{} with target {}.",
+                    "{} hashes for {}@{} with target {}...",
                     color!(bright_blue, "Fetching"),
                     meta.id,
                     meta.version,
@@ -149,7 +152,7 @@ impl Fetcher {
     pub fn download_blob(&mut self, meta: &Meta, info: &InfoFileImm) -> Vec<u8> {
         // tar
         eprintln!(
-            "{} {}@{} for target {}.",
+            "{} {}@{} for target {}...",
             color!(bright_yellow, "Downloading"),
             meta.id,
             meta.version,

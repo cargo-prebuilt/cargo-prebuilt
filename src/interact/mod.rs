@@ -15,7 +15,7 @@ pub fn create_interactive(input: &str, auth: Option<&String>, agent: Agent) -> B
             let url = input
                 .get(7..input.len())
                 .expect("Missing url after gh-pub:");
-            eprintln!("{} index https://{url}.", color!(bright_cyan, "Using"));
+            eprintln!("{} index https://{url}", color!(bright_cyan, "Using"));
             return Box::new(github_public::GithubPublic::new(agent, url));
         }
         #[cfg(not(feature = "github-public"))]
@@ -29,7 +29,7 @@ pub fn create_interactive(input: &str, auth: Option<&String>, agent: Agent) -> B
             let url = input
                 .get(7..input.len())
                 .expect("Missing url after gh-pri:");
-            eprintln!("{} index https://{url}.", color!(bright_cyan, "Using"));
+            eprintln!("{} index https://{url}", color!(bright_cyan, "Using"));
             return Box::new(github_private::GithubPrivate::new(
                 agent,
                 auth.expect("Need auth token for private index.").clone(),

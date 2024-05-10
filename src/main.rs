@@ -208,10 +208,13 @@ fn should_update(meta: &Meta, info: &InfoFileImm) -> bool {
             }
 
             eprintln!(
-                "{} for {}@{}. Cannot find/open binary at {path:?}.",
+                "{} for {}@{}. Cannot find/open binary at '{}'.",
                 color!(magenta, "Will Update"),
                 meta.id,
                 meta.version,
+                dunce::canonicalize(path)
+                    .expect("Could not canonicalize path.")
+                    .display(),
             );
             should_update = true;
             break;
@@ -302,9 +305,9 @@ fn extract(meta: &Meta, info: &InfoFileImm, tar_bytes: Vec<u8>) {
 
         let abs = dunce::canonicalize(path).expect("Could not canonicalize install path.");
 
-        eprintln!("{} {abs:?}.", color!(bright_purple, "Installed"));
+        eprintln!("{} {}", color!(bright_purple, "Installed"), abs.display());
 
-        events::binary_installed(meta, abs.as_path());
+        events::binary_installed(meta, &abs.display().to_string());
     }
 }
 
