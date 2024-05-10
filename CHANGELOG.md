@@ -32,7 +32,7 @@
   This can be reenabled with the `dl-cp-brotli` feature.
 - Removed color feature.
 - Changed how colors are picked internally for maybe better performance/size.
-- Simplified error handling internally.
+- Simplified error handling and passing information internally.
 - Added updating of binaires using their hash. Use the flag -u or --update.
 
 ## [0.6.9](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.6.9)

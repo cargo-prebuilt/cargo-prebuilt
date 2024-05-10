@@ -4,8 +4,6 @@
 #![deny(clippy::std_instead_of_core)]
 #![deny(clippy::alloc_instead_of_core)]
 
-// TODO: Move id, version, an config into a struct and pass that around.
-
 mod coloring;
 mod config;
 mod data;
@@ -22,7 +20,10 @@ use std::{
 };
 use tar::Archive;
 
-use crate::{config::Config, data::InfoFileImm, get::Fetcher};
+use crate::{
+    data::{InfoFileImm, Meta},
+    get::Fetcher,
+};
 
 #[cfg(feature = "mimalloc")]
 #[global_allocator]
@@ -142,14 +143,17 @@ fn main() {
         let version = version.map_or_else(|| fetcher.get_latest(id), ToString::to_string);
         let version = &version;
 
-        events::target(id, version, config);
+        let meta = Meta::new(id, version, config);
+        let meta = &meta;
+
+        events::target(meta);
 
         // Download and hash tar
-        let info = fetcher.download_info(id, version, config);
+        let info = fetcher.download_info(meta);
         let info = &info;
 
         // Check to update or not
-        if config.update && !should_update(info, config, id, version) {
+        if config.update && !should_update(meta, info) {
             eprintln!(
                 "{} for {id}@{version}. Already up to date.",
                 color!(magenta, "No Change")
@@ -157,34 +161,34 @@ fn main() {
             continue;
         }
 
-        let tar_bytes = fetcher.download_blob(id, version, config, info);
+        let tar_bytes = fetcher.download_blob(meta, info);
 
         // Extract Tar
-        extract(info, config, id, version, tar_bytes);
+        extract(meta, info, tar_bytes);
 
         // Reports
         if !config.ci {
-            fetcher.reports(id, version, info, config);
+            fetcher.reports(meta, info);
         }
 
         eprintln!("{} {id}@{version}.", color!(bright_green, "Installed"));
-        events::installed(id, version, config);
+        events::installed(meta);
     }
 
     eprintln!("{}", color!(green, "Done!"));
 }
 
-fn should_update(info: &InfoFileImm, config: &Config, id: &str, version: &str) -> bool {
+fn should_update(meta: &Meta, info: &InfoFileImm) -> bool {
     let mut should_update = true;
 
     for bin in &info.bins {
         if let Some(hashes) = info.bins_hashes.get(bin) {
             let mut bin_name = bin.clone();
-            if config.target.contains("windows") {
+            if meta.config.target.contains("windows") {
                 bin_name.push_str(".exe");
             }
 
-            let mut path = config.path.clone();
+            let mut path = meta.config.path.clone();
             path.push(bin_name);
 
             if let Ok(bytes) = fs::read(&path) {
@@ -194,24 +198,30 @@ fn should_update(info: &InfoFileImm, config: &Config, id: &str, version: &str) -
                 }
 
                 eprintln!(
-                    "{} for {id}@{version}. Hashes do not match.",
-                    color!(magenta, "Will Update")
+                    "{} for {}@{}. Hashes do not match.",
+                    color!(magenta, "Will Update"),
+                    meta.id,
+                    meta.version,
                 );
                 should_update = true;
                 break;
             }
 
             eprintln!(
-                "{} for {id}@{version}. Cannot find/open binary at {path:?}.",
-                color!(magenta, "Will Update")
+                "{} for {}@{}. Cannot find/open binary at {path:?}.",
+                color!(magenta, "Will Update"),
+                meta.id,
+                meta.version,
             );
             should_update = true;
             break;
         }
 
         eprintln!(
-            "{} for {id}@{version}. Missing binary hash.",
-            color!(magenta, "Will Update")
+            "{} for {}@{}. Missing binary hash.",
+            color!(magenta, "Will Update"),
+            meta.id,
+            meta.version,
         );
         should_update = true;
         break;
@@ -220,7 +230,7 @@ fn should_update(info: &InfoFileImm, config: &Config, id: &str, version: &str) -
     should_update
 }
 
-fn extract(info: &InfoFileImm, config: &Config, id: &str, version: &str, tar_bytes: Vec<u8>) {
+fn extract(meta: &Meta, info: &InfoFileImm, tar_bytes: Vec<u8>) {
     let reader = std::io::Cursor::new(tar_bytes);
     let mut archive = Archive::new(GzDecoder::new(reader));
 
@@ -228,7 +238,12 @@ fn extract(info: &InfoFileImm, config: &Config, id: &str, version: &str, tar_byt
         .entries()
         .expect("Cannot get entries from downloaded tar.");
 
-    eprintln!("{} {id}@{version}...", color!(bright_blue, "Extracting"));
+    eprintln!(
+        "{} {}@{}...",
+        color!(bright_blue, "Extracting"),
+        meta.id,
+        meta.version
+    );
 
     for e in es {
         let mut e = e.expect("Malformed entry in tarball.");
@@ -244,32 +259,38 @@ fn extract(info: &InfoFileImm, config: &Config, id: &str, version: &str, tar_byt
         // Make sure there are no path separators since this will be appended
         assert!(
             !str_name.contains(std::path::is_separator),
-            "{} path separator in archive for {id}@{version}",
-            color!(bright_red, "Illegal")
+            "{} path separator in archive for {}@{}",
+            color!(bright_red, "Illegal"),
+            meta.id,
+            meta.version
         );
 
         assert!(
             Fetcher::is_bin(info, &str_name),
-            "{} binary ({str_name}) in archive for {id}@{version}",
-            color!(bright_red, "Illegal")
+            "{} binary ({str_name}) in archive for {}@{}",
+            color!(bright_red, "Illegal"),
+            meta.id,
+            meta.version
         );
 
-        let mut path = config.path.clone();
+        let mut path = meta.config.path.clone();
         path.push(bin_path);
 
         // TODO: Is this needed? We check when we get the info file.
         assert!(
-            config.ci || config.update || (config.safe && !path.exists()),
-            "Binary {str_name} {} for {id}@{version}",
-            color!(bright_red, "already exists")
+            meta.config.ci || meta.config.update || (meta.config.safe && !path.exists()),
+            "Binary {str_name} {} for {}@{}",
+            color!(bright_red, "already exists"),
+            meta.id,
+            meta.version
         );
 
         let mut blob_data = Vec::new();
         e.read_to_end(&mut blob_data)
             .expect("Could not extract binary from archive.");
 
-        if config.hash_bins {
-            Fetcher::verify_binary(id, version, config, info, &str_name, &blob_data);
+        if meta.config.hash_bins {
+            Fetcher::verify_binary(meta, info, &str_name, &blob_data);
         }
 
         let mut file = File::create(&path).expect("Could not open file to write binary to.");
@@ -281,7 +302,10 @@ fn extract(info: &InfoFileImm, config: &Config, id: &str, version: &str, tar_byt
         {
             use std::os::unix::fs::PermissionsExt;
             if fs::set_permissions(&path, fs::Permissions::from_mode(0o755)).is_err() {
-                eprintln!("Could not set mode 755 for {id}@{version} binary {str_name}");
+                eprintln!(
+                    "Could not set mode 755 for {}@{} binary {str_name}",
+                    meta.id, meta.version
+                );
             }
         }
 
@@ -289,7 +313,7 @@ fn extract(info: &InfoFileImm, config: &Config, id: &str, version: &str, tar_byt
 
         eprintln!("{} {abs:?}.", color!(bright_purple, "Installed"));
 
-        events::binary_installed(id, version, config, abs.as_path());
+        events::binary_installed(meta, abs.as_path());
     }
 }
 

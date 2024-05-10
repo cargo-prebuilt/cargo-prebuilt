@@ -6,7 +6,7 @@ use std::{
 use crate::{
     color,
     config::Config,
-    data::{HashType, Hashes, HashesFile, HashesFileV1, InfoFile, InfoFileImm, ReportType},
+    data::{HashType, Hashes, HashesFile, HashesFileV1, InfoFile, InfoFileImm, Meta, ReportType},
     events,
     interact::{self, Interact},
 };
@@ -25,104 +25,106 @@ impl Fetcher {
         self.fetch_latest(id)
     }
 
-    pub fn download_info(&mut self, id: &str, version: &str, config: &Config) -> InfoFileImm {
+    pub fn download_info(&mut self, meta: &Meta) -> InfoFileImm {
         eprintln!(
-            "{} info for {id}@{version}.",
+            "{} info for {}@{}.",
             color!(bright_blue, "Fetching"),
+            meta.id,
+            meta.version,
         );
 
         // info.json
-        let raw_info_file = &self.fetch_str(id, version, "info.json");
+        let raw_info_file = &self.fetch_str(meta.id, meta.version, "info.json");
 
         // info.json verify
-        if !config.no_sig {
-            let v = self.verify_file(
-                id,
-                version,
-                "info.json",
-                config,
-                "info.json.minisig",
-                raw_info_file,
-            );
-            events::info_verify(id, version, config, v);
+        if !meta.config.no_sig {
+            let v = self.verify_file(meta, "info.json", "info.json.minisig", raw_info_file);
+            events::info_verify(meta, v);
         }
 
         let info: InfoFile = serde_json::from_str(raw_info_file)
-            .unwrap_or_else(|_| panic!("info.json is malformed for {id}@{version}"));
-        let mut info: InfoFileImm = InfoFileImm::convert(info, &config.target);
+            .unwrap_or_else(|_| panic!("info.json is malformed for {}@{}", meta.id, meta.version));
+        let mut info: InfoFileImm = InfoFileImm::convert(info, &meta.config.target);
 
         assert!(
-            info.id.eq(id),
-            "{id}@{version} does not match with info.json id {}",
+            info.id.eq(meta.id),
+            "{}@{} does not match with info.json id {}",
+            meta.id,
+            meta.version,
             info.id
         );
         assert!(
-            info.version.eq(version),
-            "{id}@{version} does not match with info.json version {}",
+            info.version.eq(meta.version),
+            "{}@{} does not match with info.json version {}",
+            meta.id,
+            meta.version,
             info.version
         );
 
         // check if compression is supported
         assert!(
             info.archive.compression.eq("gz"),
-            "{id}@{version} does not support compression gzip"
+            "{}@{} does not support compression gzip",
+            meta.id,
+            meta.version,
         );
 
         // check if binary does not exist if safe mode is on
-        if config.safe && !(config.ci || config.update) {
+        if meta.config.safe && !(meta.config.ci || meta.config.update) {
             for bin in &info.bins {
-                let mut path = config.path.clone();
+                let mut path = meta.config.path.clone();
                 path.push(bin);
 
                 assert!(
                     !path.exists(),
-                    "Binary {bin} {} for {id}@{version}",
-                    color!(bright_red, "already exists")
+                    "Binary {bin} {} for {}@{}",
+                    color!(bright_red, "already exists"),
+                    meta.id,
+                    meta.version,
                 );
             }
         }
 
-        if !config.no_hash {
+        if !meta.config.no_hash {
             if let Some(ref polyfill) = info.polyfill {
                 eprintln!(
-                    "{} hashes for {id}@{version} with target {}.",
+                    "{} hashes for {}@{} with target {}.",
                     color!(bright_blue, "Fetching"),
-                    &config.target
+                    meta.id,
+                    meta.version,
+                    &meta.config.target
                 );
 
                 // hashes.json
-                let raw_hashes_file = &self.fetch_str(id, version, &polyfill.hash_file);
+                let raw_hashes_file = &self.fetch_str(meta.id, meta.version, &polyfill.hash_file);
 
                 // hashes.json.minisig and test
-                if !config.no_sig {
+                if !meta.config.no_sig {
                     if let Some(sig_file) = polyfill.hash_file_sig.clone() {
-                        let v = self.verify_file(
-                            id,
-                            version,
-                            &polyfill.hash_file,
-                            config,
-                            &sig_file,
-                            raw_hashes_file,
-                        );
-                        events::hashes_verify(id, version, config, v);
+                        let v =
+                            self.verify_file(meta, &polyfill.hash_file, &sig_file, raw_hashes_file);
+                        events::hashes_verify(meta, v);
                     }
                     else {
                         panic!(
-                            "Could not force sig for index {}. hashes.json is not signed for {id}@{version}.",
-                            config.index
+                            "Could not force sig for index {}. hashes.json is not signed for {}@{}.",
+                            meta.config.index, meta.id, meta.version
                         );
                     }
                 }
 
                 let hashes: HashesFile =
                     serde_json::from_str(raw_hashes_file).unwrap_or_else(|_| {
-                        panic!("{} is malformed for {id}@{version}", polyfill.hash_file)
+                        panic!(
+                            "{} is malformed for {}@{}",
+                            polyfill.hash_file, meta.id, meta.version
+                        )
                     });
                 let hashes: HashesFileV1 = hashes.into();
                 let hashes = hashes
                     .hashes
-                    .get(&config.target)
-                    .unwrap_or_else(|| panic!("No hashes for target {}", config.target));
+                    .get(&meta.config.target)
+                    .unwrap_or_else(|| panic!("No hashes for target {}", meta.config.target));
 
                 info.archive_hashes.clone_from(&hashes.archive);
                 info.bins_hashes.clone_from(&hashes.bins);
@@ -130,35 +132,33 @@ impl Fetcher {
         }
 
         // check if target is supported, based on hash
-        if !config.no_hash {
+        if !meta.config.no_hash {
             assert!(
                 !info.archive_hashes.is_empty(),
-                "{id}@{version} does {} target {}, due to empty archive hashes",
+                "{}@{} does {} target {}, due to empty archive hashes",
+                meta.id,
+                meta.version,
                 color!(bright_red, "not support"),
-                config.target
+                meta.config.target
             );
         }
 
         info
     }
 
-    pub fn download_blob(
-        &mut self,
-        id: &str,
-        version: &str,
-        config: &Config,
-        info: &InfoFileImm,
-    ) -> Vec<u8> {
+    pub fn download_blob(&mut self, meta: &Meta, info: &InfoFileImm) -> Vec<u8> {
         // tar
         eprintln!(
-            "{} {id}@{version} for target {}.",
+            "{} {}@{} for target {}.",
             color!(bright_yellow, "Downloading"),
-            &config.target
+            meta.id,
+            meta.version,
+            &meta.config.target
         );
-        let tar_bytes = self.fetch_blob(id, version, &info.archive_name);
+        let tar_bytes = self.fetch_blob(meta.id, meta.version, &info.archive_name);
 
         // test hashes
-        Self::verify_archive(id, version, config, info, &tar_bytes);
+        Self::verify_archive(meta, info, &tar_bytes);
 
         tar_bytes
     }
@@ -168,14 +168,14 @@ impl Fetcher {
         info.bins.contains(&bin_name)
     }
 
-    pub fn reports(&mut self, id: &str, version: &str, info: &InfoFileImm, config: &Config) {
-        if config.reports.is_empty() {
+    pub fn reports(&mut self, meta: &Meta, info: &InfoFileImm) {
+        if meta.config.reports.is_empty() {
             return;
         }
 
         eprintln!("{} reports... ", color!(bright_blue, "Getting"));
 
-        for report in &config.reports {
+        for report in &meta.config.reports {
             let report_name = match report {
                 ReportType::LicenseDL | ReportType::LicenseEvent => info.files.license.clone(),
                 ReportType::DepsDL | ReportType::DepsEvent => info.files.deps.clone(),
@@ -183,22 +183,22 @@ impl Fetcher {
                 ReportType::InfoJsonDL | ReportType::InfoJsonEvent => "info.json".to_string(),
             };
 
-            let raw_str = &self.fetch_str(id, version, &report_name);
+            let raw_str = &self.fetch_str(meta.id, meta.version, &report_name);
 
             match report {
                 ReportType::LicenseDL
                 | ReportType::DepsDL
                 | ReportType::AuditDL
                 | ReportType::InfoJsonDL => {
-                    let mut dir = config.report_path.clone();
-                    dir.push(format!("{id}/{version}"));
+                    let mut dir = meta.config.report_path.clone();
+                    dir.push(format!("{}/{}", meta.id, meta.version));
                     match create_dir_all(&dir) {
                         Ok(()) => {
                             dir.push(&report_name);
                             match File::create(&dir) {
                                 Ok(mut file) => match file.write(raw_str.as_bytes()) {
                                     Ok(_) => {
-                                        events::wrote_report(id, version, config, report.into());
+                                        events::wrote_report(meta, report.into());
                                     }
                                     Err(_) => {
                                         eprintln!("Could not write to {report_name} file.");
@@ -212,10 +212,10 @@ impl Fetcher {
                         }
                     }
                 }
-                ReportType::LicenseEvent => events::print_license(id, version, raw_str),
-                ReportType::DepsEvent => events::print_deps(id, version, raw_str),
-                ReportType::AuditEvent => events::print_audit(id, version, raw_str),
-                ReportType::InfoJsonEvent => events::print_info_json(id, version, raw_str),
+                ReportType::LicenseEvent => events::print_license(meta, raw_str),
+                ReportType::DepsEvent => events::print_deps(meta, raw_str),
+                ReportType::AuditEvent => events::print_audit(meta, raw_str),
+                ReportType::InfoJsonEvent => events::print_info_json(meta, raw_str),
             }
         }
     }
@@ -232,29 +232,21 @@ impl Fetcher {
         self.interact.get_blob(id, version, file).unwrap()
     }
 
-    fn verify_file(
-        &mut self,
-        id: &str,
-        version: &str,
-        file: &str,
-        config: &Config,
-        sig_file: &str,
-        raw_file: &str,
-    ) -> bool {
+    fn verify_file(&mut self, meta: &Meta, file: &str, sig_file: &str, raw_file: &str) -> bool {
         use minisign_verify::{PublicKey, Signature};
 
         assert!(
-            !config.pub_keys.is_empty(),
+            !meta.config.pub_keys.is_empty(),
             "{} for index '{}'. Please add one with --pub-key or use --no-verify.",
             color!(bright_red, "No public key(s)"),
-            config.index
+            meta.config.index
         );
 
-        let sig = &self.fetch_str(id, version, sig_file);
+        let sig = &self.fetch_str(meta.id, meta.version, sig_file);
         let signature = Signature::decode(sig).expect("Signature was malformed.");
 
         let mut verified = false;
-        for key in &config.pub_keys {
+        for key in &meta.config.pub_keys {
             let pk = PublicKey::from_base64(key).expect("Public key was malformed.");
             if pk.verify(raw_file.as_bytes(), &signature, false).is_ok() {
                 verified = true;
@@ -264,60 +256,46 @@ impl Fetcher {
 
         if verified {
             eprintln!(
-                "{} {file} for {id}@{version} with minisign.",
-                color!(bright_white, "Verified")
+                "{} {file} for {}@{} with minisign.",
+                color!(bright_white, "Verified"),
+                meta.id,
+                meta.version
             );
         }
         else {
             panic!(
-                "{} verify {file} for {id}@{version}.",
-                color!(bright_red, "Could not")
+                "{} verify {file} for {}@{}.",
+                color!(bright_red, "Could not"),
+                meta.id,
+                meta.version
             );
         }
 
         verified
     }
 
-    fn verify_archive(id: &str, version: &str, config: &Config, info: &InfoFileImm, bytes: &[u8]) {
+    fn verify_archive(meta: &Meta, info: &InfoFileImm, bytes: &[u8]) {
         Self::verify_bytes(
-            id,
-            version,
-            config,
+            meta,
             &info.archive_hashes,
-            &format!("{} archive", &config.target),
+            &format!("{} archive", &meta.config.target),
             bytes,
         );
     }
 
-    pub fn verify_binary(
-        id: &str,
-        version: &str,
-        config: &Config,
-        info: &InfoFileImm,
-        binary_name: &str,
-        bytes: &[u8],
-    ) {
+    pub fn verify_binary(meta: &Meta, info: &InfoFileImm, binary_name: &str, bytes: &[u8]) {
         Self::verify_bytes(
-            id,
-            version,
-            config,
+            meta,
             info.bins_hashes
                 .get(binary_name)
                 .unwrap_or_else(|| panic!("{binary_name} is missing hashes.")),
-            &format!("{} {binary_name} binary", &config.target),
+            &format!("{} {binary_name} binary", &meta.config.target),
             bytes,
         );
     }
 
-    fn verify_bytes(
-        id: &str,
-        version: &str,
-        config: &Config,
-        in_hashes: &Hashes,
-        item: &str,
-        bytes: &[u8],
-    ) {
-        if config.no_hash {
+    fn verify_bytes(meta: &Meta, in_hashes: &Hashes, item: &str, bytes: &[u8]) {
+        if meta.config.no_hash {
             return;
         }
 
@@ -337,8 +315,10 @@ impl Fetcher {
                 );
 
                 eprintln!(
-                    "{} {item} for {id}@{version} with sha3_512.",
-                    color!(bright_white, "Verified")
+                    "{} {item} for {}@{} with sha3_512.",
+                    color!(bright_white, "Verified"),
+                    meta.id,
+                    meta.version
                 );
                 return;
             }
@@ -356,8 +336,10 @@ impl Fetcher {
                 );
 
                 eprintln!(
-                    "{} {item} for {id}@{version} with sha3_256.",
-                    color!(bright_white, "Verified")
+                    "{} {item} for {}@{} with sha3_256.",
+                    color!(bright_white, "Verified"),
+                    meta.id,
+                    meta.version
                 );
                 return;
             }
@@ -379,8 +361,10 @@ impl Fetcher {
                 );
 
                 eprintln!(
-                    "{} {item} for {id}@{version} with sha512.",
-                    color!(bright_white, "Verified")
+                    "{} {item} for {}@{} with sha512.",
+                    color!(bright_white, "Verified"),
+                    meta.id,
+                    meta.version
                 );
                 return;
             }
@@ -398,14 +382,19 @@ impl Fetcher {
                 );
 
                 eprintln!(
-                    "{} {item} for {id}@{version} with sha256.",
-                    color!(bright_white, "Verified")
+                    "{} {item} for {}@{} with sha256.",
+                    color!(bright_white, "Verified"),
+                    meta.id,
+                    meta.version
                 );
                 return;
             }
         }
 
-        eprintln!("Could not verify downloaded {item} for {id}@{version}.");
+        eprintln!(
+            "Could not verify downloaded {item} for {}@{}.",
+            meta.id, meta.version
+        );
     }
 
     pub fn verify_bytes_update(in_hashes: &Hashes, item: &str, bytes: &[u8]) -> bool {
