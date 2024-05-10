@@ -35,8 +35,8 @@ mimalloc = { version = "0.1.41", optional = true }
 minisign-verify = "0.2.1"
 native-tls = { version = "0.2.11", optional = true }
 owo-colors = { version = "4.0.0", features = ["supports-colors"] }
-serde = { version = "1.0.200", features = ["derive"] }
-serde_json = "1.0.116"
+serde = { version = "1.0.201", features = ["derive"] }
+serde_json = "1.0.117"
 sha2 = "0.10.8"
 sha3 = "0.10.8"
 tar = "0.4.40"
@@ -95,7 +95,7 @@ opt-level = "s"
 
 [profile.quick-build]
 inherits = "release"
-opt-level = 0
+opt-level = 1
 lto = false
 codegen-units = 16
 
