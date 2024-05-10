@@ -25,7 +25,7 @@ impl Fetcher {
         self.fetch_latest(id)
     }
 
-    pub fn download(&mut self, id: &str, version: &str, config: &Config) -> (InfoFileImm, Vec<u8>) {
+    pub fn download_info(&mut self, id: &str, version: &str, config: &Config) -> InfoFileImm {
         eprintln!(
             "{} info for {id}@{version}.",
             color!(bright_blue, "Fetching"),
@@ -69,7 +69,7 @@ impl Fetcher {
         );
 
         // check if binary does not exist if safe mode is on
-        if config.safe && !config.ci {
+        if config.safe && !(config.ci || config.update) {
             for bin in &info.bins {
                 let mut path = config.path.clone();
                 path.push(bin);
@@ -139,8 +139,16 @@ impl Fetcher {
             );
         }
 
-        // TODO: For updating, tar downloading and verifying needs to be moved to another location.
+        info
+    }
 
+    pub fn download_blob(
+        &mut self,
+        id: &str,
+        version: &str,
+        config: &Config,
+        info: &InfoFileImm,
+    ) -> Vec<u8> {
         // tar
         eprintln!(
             "{} {id}@{version} for target {}.",
@@ -150,9 +158,9 @@ impl Fetcher {
         let tar_bytes = self.fetch_blob(id, version, &info.archive_name);
 
         // test hashes
-        Self::verify_archive(id, version, config, &info, &tar_bytes);
+        Self::verify_archive(id, version, config, info, &tar_bytes);
 
-        (info, tar_bytes)
+        tar_bytes
     }
 
     pub fn is_bin(info: &InfoFileImm, bin_name: &str) -> bool {
@@ -400,30 +408,79 @@ impl Fetcher {
         eprintln!("Could not verify downloaded {item} for {id}@{version}.");
     }
 
-    // TODO: Use for update hashing.
-    // No need to verify bins, since archive hash should do this for us.
-    //    pub fn verify_bin(&self, config: &Config, bin_name: &str, bytes: &[u8]) {
-    //        let id = self
-    //            .data
-    //            .id
-    //            .as_ref()
-    //            .expect("Failed to get id, but it should have been guaranteed.");
-    //        let version = self
-    //            .data
-    //            .version
-    //            .as_ref()
-    //            .expect("Failed to get version, but it should have been guaranteed.");
-    //        let hashes = self
-    //            .data
-    //            .hashes
-    //            .as_ref()
-    //            .expect("Failed to get hashes, but it should have been guaranteed.");
-    //
-    //        if let Some(blob) = hashes.hashes.get(&config.target) {
-    //            match &blob.bins.get(bin_name) {
-    //                Some(blob) => self.verify_bytes(blob, &format!("{bin_name} binary"), bytes),
-    //                None => panic!("Could not find {bin_name} hash for {id}@{version}."),
-    //            }
-    //        }
-    //    }
+    pub fn verify_bytes_update(in_hashes: &Hashes, item: &str, bytes: &[u8]) -> bool {
+        {
+            use sha3::{Digest, Sha3_256, Sha3_512};
+
+            // sha3_512
+            if let Some(sha_hash) = in_hashes.get(&HashType::Sha3_512) {
+                let mut hasher = Sha3_512::new();
+                hasher.update(bytes);
+                let hash: Vec<u8> = hasher.finalize().to_vec();
+                let hash = const_hex::encode(hash);
+
+                if !hash.eq(sha_hash) {
+                    eprintln!(
+                        "Update: sha3_512 hashes do not match for {item}. {sha_hash} != {hash}"
+                    );
+                    return false;
+                }
+                return true;
+            }
+
+            // sha3_256
+            if let Some(sha_hash) = in_hashes.get(&HashType::Sha3_256) {
+                let mut hasher = Sha3_256::new();
+                hasher.update(bytes);
+                let hash: Vec<u8> = hasher.finalize().to_vec();
+                let hash = const_hex::encode(hash);
+
+                if !hash.eq(sha_hash) {
+                    eprintln!(
+                        "Update: sha3_256 hashes do not match for {item}. {sha_hash} != {hash}"
+                    );
+                    return false;
+                }
+                return true;
+            }
+        }
+
+        {
+            use sha2::{Digest, Sha256, Sha512};
+
+            // sha512
+            if let Some(sha_hash) = in_hashes.get(&HashType::Sha512) {
+                let mut hasher = Sha512::new();
+                hasher.update(bytes);
+                let hash: Vec<u8> = hasher.finalize().to_vec();
+                let hash = const_hex::encode(hash);
+
+                if !hash.eq(sha_hash) {
+                    eprintln!(
+                        "Update: sha512 hashes do not match for {item}. {sha_hash} != {hash}"
+                    );
+                    return false;
+                }
+                return true;
+            }
+
+            // sha256
+            if let Some(sha_hash) = in_hashes.get(&HashType::Sha256) {
+                let mut hasher = Sha256::new();
+                hasher.update(bytes);
+                let hash: Vec<u8> = hasher.finalize().to_vec();
+                let hash = const_hex::encode(hash);
+
+                if !hash.eq(sha_hash) {
+                    eprintln!(
+                        "Update: sha256 hashes do not match for {item}. {sha_hash} != {hash}"
+                    );
+                    return false;
+                }
+                return true;
+            }
+        }
+
+        false
+    }
 }

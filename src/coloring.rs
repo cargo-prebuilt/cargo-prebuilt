@@ -32,6 +32,10 @@ macro_rules! color {
         use owo_colors::OwoColorize;
         $s.if_supports_color(owo_colors::Stream::Stderr, |t| t.green())
     }};
+    (magenta, $s:expr) => {{
+        use owo_colors::OwoColorize;
+        $s.if_supports_color(owo_colors::Stream::Stderr, |t| t.magenta())
+    }};
 }
 
 pub fn set_override(color: bool) {
@@ -50,5 +54,6 @@ mod test {
         _ = color!(bright_white, "");
         _ = color!(bright_yellow, "");
         _ = color!(green, "");
+        _ = color!(magenta, "");
     }
 }

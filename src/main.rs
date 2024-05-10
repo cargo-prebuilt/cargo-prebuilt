@@ -4,6 +4,8 @@
 #![deny(clippy::std_instead_of_core)]
 #![deny(clippy::alloc_instead_of_core)]
 
+// TODO: Move id, version, an config into a struct and pass that around.
+
 mod coloring;
 mod config;
 mod data;
@@ -143,11 +145,19 @@ fn main() {
         events::target(id, version, config);
 
         // Download and hash tar
-        let (info, tar_bytes) = fetcher.download(id, version, config);
+        let info = fetcher.download_info(id, version, config);
         let info = &info;
 
-        // TODO: Updating logic here?
-        // TODO: If one binary is not upto date, then update all binaries.
+        // Check to update or not
+        if config.update && !should_update(info, config, id, version) {
+            eprintln!(
+                "{} for {id}@{version}. Already up to date.",
+                color!(magenta, "No Change")
+            );
+            continue;
+        }
+
+        let tar_bytes = fetcher.download_blob(id, version, config, info);
 
         // Extract Tar
         extract(info, config, id, version, tar_bytes);
@@ -162,6 +172,52 @@ fn main() {
     }
 
     eprintln!("{}", color!(green, "Done!"));
+}
+
+fn should_update(info: &InfoFileImm, config: &Config, id: &str, version: &str) -> bool {
+    let mut should_update = true;
+
+    for bin in &info.bins {
+        if let Some(hashes) = info.bins_hashes.get(bin) {
+            let mut bin_name = bin.clone();
+            if config.target.contains("windows") {
+                bin_name.push_str(".exe");
+            }
+
+            let mut path = config.path.clone();
+            path.push(bin_name);
+
+            if let Ok(bytes) = fs::read(&path) {
+                if Fetcher::verify_bytes_update(hashes, bin, &bytes) {
+                    should_update = false;
+                    continue;
+                }
+
+                eprintln!(
+                    "{} for {id}@{version}. Hashes do not match.",
+                    color!(magenta, "Will Update")
+                );
+                should_update = true;
+                break;
+            }
+
+            eprintln!(
+                "{} for {id}@{version}. Cannot find/open binary at {path:?}.",
+                color!(magenta, "Will Update")
+            );
+            should_update = true;
+            break;
+        }
+
+        eprintln!(
+            "{} for {id}@{version}. Missing binary hash.",
+            color!(magenta, "Will Update")
+        );
+        should_update = true;
+        break;
+    }
+
+    should_update
 }
 
 fn extract(info: &InfoFileImm, config: &Config, id: &str, version: &str, tar_bytes: Vec<u8>) {
@@ -201,8 +257,9 @@ fn extract(info: &InfoFileImm, config: &Config, id: &str, version: &str, tar_byt
         let mut path = config.path.clone();
         path.push(bin_path);
 
+        // TODO: Is this needed? We check when we get the info file.
         assert!(
-            !(config.safe && !config.ci && path.exists()),
+            config.ci || config.update || (config.safe && !path.exists()),
             "Binary {str_name} {} for {id}@{version}",
             color!(bright_red, "already exists")
         );
