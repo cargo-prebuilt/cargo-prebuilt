@@ -36,6 +36,7 @@ pub struct Config {
 #[allow(clippy::struct_excessive_bools)]
 #[derive(Clone, Debug, Bpaf)]
 #[bpaf(options("prebuilt"), generate(parse_args))]
+/// Download prebuilt binaires of some crates.io crates.
 struct Arguments {
     /// Target of the binary to download.
     #[bpaf(long("target"), env("PREBUILT_TARGET"), argument::<String>("TARGET"))]

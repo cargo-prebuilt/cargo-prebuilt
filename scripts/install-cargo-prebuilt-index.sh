@@ -1,13 +1,14 @@
 #!/bin/bash
 
-## Install cargo-prebuilt from the cargo-prebuilt repo.
+## Install cargo-prebuilt from the official cargo-prebuilt index.
+## Uses the repo version to bootstrap.
 
-### Accepts in params (env vars) VERSION, INSTALL_PATH, LIBC, ARCH, OS_TYPE, FORCE, TARGET.
+### Accepts in params (env vars) VERSION, INSTALL_PATH, LIBC, ARCH, OS_TYPE, FORCE, R_TARGET.
 ### VERSION: Version of cargo-prebuilt to install. (Defaults to latest)
-### TARGET: The target type of cargo-prebuilt you want to download.
 ### INSTALL_PATH: Path to where cargo-prebuilt should be installed.
 ### LIBC: Which libc flavor to use. (gnu or musl) (Does nothing on macos)
 ### MINISIGN: If true, minisign will be used to verify the download. (Requires minisign/rsign2 to be installed)
+### R_TARGET: The target type of cargo-prebuilt you want to download.
 
 set -euxo pipefail
 
@@ -29,7 +30,6 @@ TEMP_DIR="$(mktemp -d)"
 pushd "$TEMP_DIR"
 
 : "${VERSION:="latest"}"
-: "${TARGET:="current"}"
 
 : "${ARCH:="$(uname -m)"}"
 : "${OS_TYPE:="$(uname -s)"}"
@@ -38,69 +38,66 @@ pushd "$TEMP_DIR"
 : "${PUB_KEY:="RWTSqAR1Hbfu6mBFiaz4hb9I9gikhMmvKkVbyz4SJF/oxJcbbScmCqqO"}"
 : "${MINISIGN:="false"}"
 
-if [ "$TARGET" == "current" ]; then
-	# Build target string
-	TARGET_STRING=""
+# Build target string
+TARGET_STRING=""
 
+case "$ARCH" in
+arm64 | aarch64)
+	TARGET_STRING+="aarch64-"
+	;;
+amd64 | x86_64)
+	TARGET_STRING+="x86_64-"
+	;;
+riscv64 | riscv64gc)
+	TARGET_STRING+="riscv64gc-"
+	;;
+s390x)
+	TARGET_STRING+="s390x-"
+	;;
+armv7l | armv7)
+	TARGET_STRING+="armv7-"
+	;;
+ppc64le | powerpc64le)
+	TARGET_STRING+="powerpc64le-"
+	;;
+*)
+	echo "Unsupported Arch: $ARCH" && popd && exit 1
+	;;
+esac
+
+case "$OS_TYPE" in
+Darwin)
+	TARGET_STRING+="apple-darwin"
+	;;
+Linux)
+	TARGET_STRING+="unknown-linux-"
+	;;
+FreeBSD)
+	TARGET_STRING+="unknown-freebsd"
+	;;
+NetBSD)
+	TARGET_STRING+="unknown-netbsd"
+	;;
+MINGW64* | MSYS_NT*)
+	TARGET_STRING+="pc-windows-gnu"
+	;;
+*)
+	echo "Unsupported OS: $OS_TYPE" && popd && exit 1
+	;;
+esac
+
+if [ "$OS_TYPE" == "Linux" ]; then
+	TARGET_STRING+="$LIBC"
 	case "$ARCH" in
-	arm64 | aarch64)
-		TARGET_STRING+="aarch64-"
-		;;
-	amd64 | x86_64)
-		TARGET_STRING+="x86_64-"
-		;;
-	riscv64 | riscv64gc)
-		TARGET_STRING+="riscv64gc-"
-		;;
-	s390x)
-		TARGET_STRING+="s390x-"
-		;;
 	armv7l | armv7)
-		TARGET_STRING+="armv7-"
-		;;
-	ppc64le | powerpc64le)
-		TARGET_STRING+="powerpc64le-"
-		;;
-	*)
-		echo "Unsupported Arch: $ARCH" && popd && exit 1
+		TARGET_STRING+="eabihf"
 		;;
 	esac
-
-	case "$OS_TYPE" in
-	Darwin)
-		TARGET_STRING+="apple-darwin"
-		;;
-	Linux)
-		TARGET_STRING+="unknown-linux-"
-		;;
-	FreeBSD)
-		TARGET_STRING+="unknown-freebsd"
-		;;
-	NetBSD)
-		TARGET_STRING+="unknown-netbsd"
-		;;
-	MINGW64* | MSYS_NT*)
-		TARGET_STRING+="pc-windows-gnu"
-		;;
-	*)
-		echo "Unsupported OS: $OS_TYPE" && popd && exit 1
-		;;
-	esac
-
-	if [ "$OS_TYPE" == "Linux" ]; then
-		TARGET_STRING+="$LIBC"
-		case "$ARCH" in
-		armv7l | armv7)
-			TARGET_STRING+="eabihf"
-			;;
-		esac
-	fi
-
-	echo "Determined target: $TARGET_STRING"
-	TARGET="$TARGET_STRING"
 fi
 
-TAR="$TARGET.tar.gz"
+echo "Determined target: $TARGET_STRING"
+
+TAR="$TARGET_STRING.tar.gz"
 SIG="$TAR.minisig"
 
 # Determine url
@@ -133,23 +130,23 @@ fi
 
 tar -xzvf "$TAR"
 
-: "${INSTALL_PATH:="--unknown"}"
-
-if [ "$INSTALL_PATH" == "--unknown" ]; then
-	if [ -n "${CARGO_HOME+x}" ]; then
-		INSTALL_PATH="$CARGO_HOME/bin"
-	elif [ -n "${HOME+x}" ]; then
-		INSTALL_PATH="$HOME/.cargo/bin"
-	else
-		echo "Could not find an install path. Please set INSTALL_PATH."
-		exit 1
-	fi
+# Install cargo-prebuilt with cargo-prebuilt
+ARGS=""
+if [ -n "${INSTALL_PATH+x}" ]; then
+	ARGS+="--path=$INSTALL_PATH"
 fi
 
-# Install cargo-prebuilt
-mv ./cargo-prebuilt "$INSTALL_PATH"/cargo-prebuilt
-chmod 755 "$INSTALL_PATH"/cargo-prebuilt
-"$INSTALL_PATH"/cargo-prebuilt --version
+if [ -n "${R_TARGET+x}" ]; then
+	ARGS+="--target=$R_TARGET"
+fi
+
+END_VERSION=""
+if [ "$VERSION" != "latest" ]; then
+	END_VERSION+="@$VERSION"
+fi
+
+# shellcheck disable=SC2086
+./cargo-prebuilt $ARGS cargo-prebuilt"$END_VERSION"
 
 popd
 rm -rf "$TEMP_DIR"
