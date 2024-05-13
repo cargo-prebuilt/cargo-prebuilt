@@ -147,9 +147,10 @@ if [ "$INSTALL_PATH" == "--unknown" ]; then
 fi
 
 # Install cargo-prebuilt
-mv ./cargo-prebuilt "$INSTALL_PATH"/cargo-prebuilt
-chmod 755 "$INSTALL_PATH"/cargo-prebuilt
-"$INSTALL_PATH"/cargo-prebuilt --version
+PREBUILT_ITEM="$(ls cargo-prebuilt*)"
+
+mv ./"$PREBUILT_ITEM" "$INSTALL_PATH"/"$PREBUILT_ITEM"
+chmod 755 "$INSTALL_PATH"/"$PREBUILT_ITEM"
 
 popd
 rm -rf "$TEMP_DIR"

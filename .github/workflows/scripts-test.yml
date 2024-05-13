@@ -33,7 +33,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Run install script
         run: |
-          R_TARGET="aarch64-pc-windows-msvc" \
+          TARGET="aarch64-unknown-linux-musl" \
           ./scripts/install-cargo-prebuilt.sh
       - name: Find cargo-prebuilt
-        run: which cargo-prebuilt.exe
+        run: which cargo-prebuilt
