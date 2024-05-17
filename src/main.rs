@@ -158,6 +158,7 @@ fn main() {
                 "{} for {id}@{version}. Already up to date.",
                 color!(magenta, "No Change")
             );
+            events::no_update(meta);
             continue;
         }
 

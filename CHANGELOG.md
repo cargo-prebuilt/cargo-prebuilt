@@ -35,6 +35,7 @@
 - Simplified error handling and passing information internally.
 - Added updating of binaires using their hash. Use the flag -u or --update.
 - Output Windows regular paths instead of Windows UNC paths when possible.
+- Added no_update event.
 
 ## [0.6.9](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.6.9)
 

@@ -63,6 +63,12 @@ pub fn installed(meta: &Meta) {
     }
 }
 
+pub fn no_update(meta: &Meta) {
+    if meta.config.out {
+        event(meta.id, meta.version, "no_update", "skip");
+    }
+}
+
 pub fn wrote_report(meta: &Meta, report_type: &str) {
     if meta.config.out {
         event(meta.id, meta.version, "wrote_report", report_type);
