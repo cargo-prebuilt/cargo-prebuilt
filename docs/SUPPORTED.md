@@ -5,15 +5,19 @@ You should be viewing this on the
 
 ## Support Table
 
-| Prebuilt Version | Supported | Notes      |
-|------------------|-----------|------------|
-| 0.7.*            | ✅         | Unreleased |
-| 0.6.*            | ✅         |            |
-| 0.5.*            | ❌         |            |
-| 0.4.*            | ❌         |            |
-| 0.3.*            | ❌         |            |
-| 0.2.*            | ❌         |            |
-| 0.1.*            | ❌         |            |
+- ✅ = Supported
+- ⚠️ = Will be unsupported after $DATE
+- ❌ = Unsupported
+
+| Version | Supported | Notes                            |
+|---------|-----------|----------------------------------|
+| 0.7.*   | ✅         | Unreleased                       |
+| 0.6.*   | ⚠️        | Unsupported after May 20th, 2024 |
+| 0.5.*   | ❌         |                                  |
+| 0.4.*   | ❌         |                                  |
+| 0.3.*   | ❌         |                                  |
+| 0.2.*   | ❌         |                                  |
+| 0.1.*   | ❌         |                                  |
 
 ## Support Policy
 
