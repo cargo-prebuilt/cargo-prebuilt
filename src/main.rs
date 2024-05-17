@@ -189,7 +189,7 @@ fn should_update(meta: &Meta, info: &InfoFileImm) -> bool {
             }
 
             let mut path = meta.config.path.clone();
-            path.push(bin_name);
+            path.push(&bin_name);
 
             if let Ok(bytes) = fs::read(&path) {
                 if Fetcher::verify_bytes_update(hashes, bin, &bytes) {
@@ -208,13 +208,11 @@ fn should_update(meta: &Meta, info: &InfoFileImm) -> bool {
             }
 
             eprintln!(
-                "{} for {}@{}. Cannot find/open binary at '{}'.",
+                "{} for {}@{}. Cannot find/open binary '{}'.",
                 color!(magenta, "Will Update"),
                 meta.id,
                 meta.version,
-                dunce::canonicalize(path)
-                    .expect("Could not canonicalize path.")
-                    .display(),
+                bin_name,
             );
             should_update = true;
             break;

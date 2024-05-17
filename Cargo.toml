@@ -26,7 +26,7 @@ anyhow = "1.0.83"
 basic-toml = "0.1.9"
 bpaf = { version = "0.9.12", features = ["bright-color", "derive"] }
 bpaf_derive = "0.5.10"
-const-hex = "1.11.3"
+const-hex = "1.11.4"
 directories = "5.0.1"
 dunce = "1.0.4"
 flate2 = "1.0.30"
@@ -36,7 +36,7 @@ mimalloc = { version = "0.1.41", optional = true }
 minisign-verify = "0.2.1"
 native-tls = { version = "0.2.11", optional = true }
 owo-colors = { version = "4.0.0", features = ["supports-colors"] }
-serde = { version = "1.0.201", features = ["derive"] }
+serde = { version = "1.0.202", features = ["derive"] }
 serde_json = "1.0.117"
 sha2 = "0.10.8"
 sha3 = "0.10.8"
