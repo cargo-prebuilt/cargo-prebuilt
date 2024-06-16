@@ -6,18 +6,22 @@ use serde::Deserialize;
 /// This is an intermediate format, only for use in this program.
 #[derive(Debug)]
 pub struct InfoFileImm {
-    pub id: String,                            // Crate ID
-    pub version: String,                       // Crate Version
-    pub license: String,                       // SPDX License String
-    pub git: String,                           // Url to Git
-    pub description: String,                   // Crate Description
-    pub bins: Vec<String>,                     // Crate Binaries
-    pub info: HashMap<String, String>,         // Metadata
-    pub archive: InfoFileArchiveV2,            // Archive Info
-    pub files: InfoFileFilesV2,                // File Names
-    pub archive_name: String,                  // Archive Name
-    pub archive_hashes: Hashes,                // Archive Hashes
-    pub bins_hashes: HashMap<String, Hashes>,  // Binaries Hashes
+    pub id: String,      // Crate ID
+    pub version: String, // Crate Version
+    #[allow(dead_code)]
+    pub license: String, // SPDX License String
+    #[allow(dead_code)]
+    pub git: String, // Url to Git
+    #[allow(dead_code)]
+    pub description: String, // Crate Description
+    pub bins: Vec<String>, // Crate Binaries
+    #[allow(dead_code)]
+    pub info: HashMap<String, String>, // Metadata
+    pub archive: InfoFileArchiveV2, // Archive Info
+    pub files: InfoFileFilesV2, // File Names
+    pub archive_name: String, // Archive Name
+    pub archive_hashes: Hashes, // Archive Hashes
+    pub bins_hashes: HashMap<String, Hashes>, // Binaries Hashes
     pub polyfill: Option<InfoFileImmPolyFill>, // Backwards Compat
 }
 impl InfoFileImm {
@@ -118,7 +122,8 @@ pub struct InfoFileV2 {
 #[serde(deny_unknown_fields)]
 pub struct InfoFileArchiveV2 {
     pub compression: String, // Archive Compression Type
-    pub package: String,     // Archive Packing Type
+    #[allow(dead_code)]
+    pub package: String, // Archive Packing Type
 }
 
 #[derive(Debug, Deserialize)]
@@ -143,7 +148,8 @@ pub struct InfoFileV1 {
     pub info: HashMap<String, String>, // Metadata
     pub archive: InfoFileArchiveV1,    // Archive Info
     pub files: InfoFileFilesV1,        // File Names
-    pub targets: Vec<String>,          // Targets Built For
+    #[allow(dead_code)]
+    pub targets: Vec<String>, // Targets Built For
 }
 
 #[derive(Debug, Deserialize)]
@@ -156,10 +162,11 @@ pub struct InfoFileArchiveV1 {
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct InfoFileFilesV1 {
-    pub hash: String,             // Hashes File
-    pub license: String,          // License File
-    pub deps: String,             // Deps File
-    pub audit: String,            // Audit File
+    pub hash: String,    // Hashes File
+    pub license: String, // License File
+    pub deps: String,    // Deps File
+    pub audit: String,   // Audit File
+    #[allow(dead_code)]
     pub sig_info: Option<String>, // Sig File For Info.json
     pub sig_hash: Option<String>, // Sig File For Hashes.json
 }

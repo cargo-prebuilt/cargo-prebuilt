@@ -1,6 +1,6 @@
 [package]
 name = "cargo-prebuilt"
-version = "0.7.0"
+version = "0.7.1-dev.0"
 edition = "2021"
 authors = ["harmless-tech"]
 description = "Download prebuilt crate binaries for many different platforms"
@@ -22,25 +22,25 @@ include = [
 ]
 
 [dependencies]
-anyhow = "1.0.83"
+anyhow = "1.0.86"
 basic-toml = "0.1.9"
 bpaf = { version = "0.9.12", features = ["bright-color", "derive"] }
 bpaf_derive = "0.5.10"
-const-hex = "1.11.4"
+const-hex = "1.12.0"
 directories = "5.0.1"
 dunce = "1.0.4"
 flate2 = "1.0.30"
 home = "0.5.9"
 indexmap = { version = "2.2.6", features = ["serde"] }
-mimalloc = { version = "0.1.41", optional = true }
+mimalloc = { version = "0.1.42", optional = true }
 minisign-verify = "0.2.1"
-native-tls = { version = "0.2.11", optional = true }
+native-tls = { version = "0.2.12", optional = true }
 owo-colors = { version = "4.0.0", features = ["supports-colors"] }
-serde = { version = "1.0.202", features = ["derive"] }
+serde = { version = "1.0.203", features = ["derive"] }
 serde_json = "1.0.117"
 sha2 = "0.10.8"
 sha3 = "0.10.8"
-tar = "0.4.40"
+tar = "0.4.41"
 ureq = { version = "2.9.7", default-features = false, features = ["gzip"] }
 
 [features]

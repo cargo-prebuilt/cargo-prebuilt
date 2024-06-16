@@ -60,6 +60,18 @@
 }
 ```
 
+## No Update
+
+```json
+{
+  "crate": "$CRATE",
+  "version": "$VERSION",
+  "event_version": "1",
+  "event": "no_update",
+  "data": "skip"
+}
+```
+
 ## Latest Version (--get-latest)
 
 ```json
