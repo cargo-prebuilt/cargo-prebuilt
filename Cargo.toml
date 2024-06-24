@@ -32,7 +32,7 @@ dunce = "1.0.4"
 flate2 = "1.0.30"
 home = "0.5.9"
 indexmap = { version = "2.2.6", features = ["serde"] }
-mimalloc = { version = "0.1.42", optional = true }
+mimalloc = { version = "0.1.43", optional = true }
 minisign-verify = "0.2.1"
 native-tls = { version = "0.2.12", optional = true }
 owo-colors = { version = "4.0.0", features = ["supports-colors"] }
