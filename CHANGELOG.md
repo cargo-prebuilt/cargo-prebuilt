@@ -2,6 +2,10 @@
 
 ## Upcoming
 
+## [0.7.1](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.7.1)
+
+- Bump deps.
+
 ## [0.7.0](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.7.0)
 
 - Switch from hex to const-hex.
@@ -79,7 +83,7 @@
 ## [0.6.3](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.6.3)
 
 - Changed config file to include auth on a per repository basis.
-- Changed config file to better support multiple indexes.
+- Changed config file to better support multiple indices.
 - Changed how --gen-config works.
 - Changed some of the cli colors.
 - Bump MSRV from Rust 1.66+ to Rust 1.67+.
@@ -117,7 +121,7 @@
 - File install locations are outputted into stdout. (#45)
 - Switch to gen2 index. (#43)
 - Reports can no longer be printed to stdout.
-- Permissions are now explicitly set to 755 on unix platforms.
+- Permissions are now explicitly set to 755 on Unix platforms.
 - To opt in or out of colors use the env vars FORCE_COLOR/NO_COLOR.
 - Releases are signed using minisign.
 - Color feature is now linked to owo-colors and supports-color.
@@ -153,7 +157,7 @@
 - Switch to bpaf for argument parsing. (#20)
 - Add env vars for some options. (#20)
 - Add owo-colors. (#20)
-- Support for custom indexes. [GitHub public] (#24)
+- Support for custom indices. [GitHub public] (#24)
 - Removed which/where detection.
 - Check if path exists before downloading.
 

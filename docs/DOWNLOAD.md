@@ -9,7 +9,7 @@
 - Cargo prebuilt: `cargo prebuilt cargo-prebuilt`
 - Cargo binstall: `cargo binstall cargo-prebuilt --no-confirm`
 - Cargo quickinstall: `cargo quickinstall cargo-prebuilt`
-- Install script (unix platforms):
+- Install script (Unix platforms):
 
   ```shell
   curl --proto '=https' --tlsv1.2 -sSf \
