@@ -1,12 +1,12 @@
 [package]
 name = "cargo-prebuilt"
-version = "0.7.1"
+version = "0.7.2"
 edition = "2021"
 authors = ["harmless-tech"]
 description = "Download prebuilt crate binaries for many different platforms"
 readme = "README.md"
 license = "MIT"
-#homepage = ""
+homepage = "https://github.com/cargo-prebuilt/cargo-prebuilt"
 repository = "https://github.com/cargo-prebuilt/cargo-prebuilt"
 categories = ["development-tools", "development-tools::cargo-plugins"]
 keywords = ["cargo", "cargo-subcommand", "binary"]
