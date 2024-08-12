@@ -28,20 +28,20 @@ bpaf = { version = "0.9.12", features = ["bright-color", "derive"] }
 bpaf_derive = "0.5.10"
 const-hex = "1.12.0"
 directories = "5.0.1"
-dunce = "1.0.4"
-flate2 = "1.0.30"
+dunce = "1.0.5"
+flate2 = "1.0.31"
 home = "0.5.9"
-indexmap = { version = "2.2.6", features = ["serde"] }
+indexmap = { version = "2.3.0", features = ["serde"] }
 mimalloc = { version = "0.1.43", optional = true }
 minisign-verify = "0.2.1"
 native-tls = { version = "0.2.12", optional = true }
 owo-colors = { version = "4.0.0", features = ["supports-colors"] }
-serde = { version = "1.0.204", features = ["derive"] }
-serde_json = "1.0.120"
+serde = { version = "1.0.206", features = ["derive"] }
+serde_json = "1.0.124"
 sha2 = "0.10.8"
 sha3 = "0.10.8"
 tar = "0.4.41"
-ureq = { version = "2.10.0", default-features = false, features = ["gzip"] }
+ureq = { version = "2.10.1", default-features = false, features = ["gzip"] }
 
 [features]
 default = ["default-rustls"]
