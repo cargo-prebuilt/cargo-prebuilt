@@ -9,11 +9,11 @@ Config info is prioritized in the order of
 
 ## Args
 
-Use ```cargo prebuilt --help```.
+Use `cargo prebuilt --help`.
 
 ## Environmental Vars
 
-Use ```cargo prebuilt --help```.
+Use `cargo prebuilt --help`.
 
 ## File
 
@@ -49,10 +49,10 @@ auth = "$TOKEN"             # (Optional) Auth token to use for this index.
 
 ### Ref
 
-- ```$TARGET``` is a rustc target string. EX: ```aarch64-apple-darwin```
-- ```$INDEX``` is a custom index string. EX: ```gh-pub:github.com/cargo-prebuilt/index```
-- ```$INDEX_KEY``` is any string.
-- ```$TOKEN``` is a auth token for the index.
-- ```$PATH``` is a absolute path. EX: ```/User/devops/.cargo/bin```
-- ```$REPORT_TYPE``` is a type of report. [Report Types](REPORT_TYPES.md)
-- ```$PUBLIC_KEY``` is a public minisign key. (See keys/cargo-prebuilt-index.pub)
+- `$TARGET` is a rustc target string. EX: `aarch64-apple-darwin`
+- `$INDEX` is a custom index string. EX: `gh-pub:github.com/cargo-prebuilt/index`
+- `$INDEX_KEY` is any string.
+- `$TOKEN` is a auth token for the index.
+- `$PATH` is a absolute path. EX: `/User/devops/.cargo/bin`
+- `$REPORT_TYPE` is a type of report. [Report Types](REPORT_TYPES.md)
+- `$PUBLIC_KEY` is a public minisign key. (See keys/cargo-prebuilt-index.pub)

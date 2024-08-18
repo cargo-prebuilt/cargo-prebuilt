@@ -31,10 +31,10 @@ on:
       - rustfmt.toml
   workflow_dispatch:
 
-permissions: { }
+permissions: {}
 
 env:
-  feature-set: ''
+  feature-set: ""
   hack-group: "--group-features default,default-native,default-rustls,\
     default-no-tls,rustls,rustls-native-certs,native,vendored-openssl"
   CARGO_TERM_COLOR: never

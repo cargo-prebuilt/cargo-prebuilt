@@ -9,7 +9,7 @@ updates:
       ga:
         patterns:
           - "*"
-  
+
   - package-ecosystem: cargo
     directory: /
     schedule:

@@ -10,7 +10,7 @@ on:
     paths: [.github/workflows/scripts-test.yml, scripts/**]
   workflow_dispatch:
 
-permissions: { }
+permissions: {}
 
 defaults:
   run:

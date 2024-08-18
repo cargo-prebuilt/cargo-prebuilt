@@ -9,7 +9,7 @@ Pulled from [API.md](https://github.com/cargo-prebuilt/index/blob/main/API.md).
 - Only gzip is supported for compression.
 - Only tar is supported for packaging.
 - Sig file must be under `$INFO_JSON_URL.minisig` for cargo-prebuilt versions
-  \> 0.6.*
+  \> 0.6.\*
 
 ```json
 {
@@ -19,10 +19,7 @@ Pulled from [API.md](https://github.com/cargo-prebuilt/index/blob/main/API.md).
   "license": "SPDX LICENSE",
   "git": "GIT URL",
   "description": "CRATES.IO DESCRIPTION",
-  "bins": [
-    "BINARY",
-    "BINARY?"
-  ],
+  "bins": ["BINARY", "BINARY?"],
   "info": {
     "META": "DATA"
   },
@@ -38,10 +35,7 @@ Pulled from [API.md](https://github.com/cargo-prebuilt/index/blob/main/API.md).
     "sig_info": "OPTIONAL:info.json.minisig",
     "sig_hashes": "OPTIONAL:hashes.json.minisig"
   },
-  "targets": [
-    "TARGET",
-    "TARGET?"
-  ]
+  "targets": ["TARGET", "TARGET?"]
 }
 ```
 
@@ -103,10 +97,7 @@ Pulled from [API.md](https://github.com/cargo-prebuilt/index/blob/main/API.md).
   "license": "SPDX LICENSE",
   "git": "GIT URL",
   "description": "CRATES.IO DESCRIPTION",
-  "bins": [
-    "BINARY",
-    "BINARY?"
-  ],
+  "bins": ["BINARY", "BINARY?"],
   "info": {
     "META": "DATA"
   },

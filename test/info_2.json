@@ -1,1 +1,50 @@
-{"info_version": "1", "id": "cargo-prebuilt", "version": "0.5.3", "license": "MIT", "git": "https://github.com/cargo-prebuilt/cargo-prebuilt", "description": "Download prebuilt crate binaries for many different platforms", "bins": ["cargo-prebuilt"], "info": {"rustc_version_guess": "1.70.0 (90c541806 2023-05-31)", "index_publish_date": "2023-06-29", "features_apple": "None", "features_linux": "None", "features_windows": "None", "no_default_features_apple": "False", "no_default_features_linux": "False", "no_default_features_windows": "False"}, "archive": {"compression": "gz", "ext": "tar.gz"}, "files": {"hash": "hashes.json", "license": "license.report", "deps": "deps.report", "audit": "audit.report"}, "targets": ["s390x-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-unknown-netbsd", "mips64-unknown-linux-muslabi64", "x86_64-unknown-illumos", "x86_64-unknown-linux-gnu", "riscv64gc-unknown-linux-gnu", "x86_64-unknown-linux-musl", "powerpc64le-unknown-linux-gnu", "aarch64-apple-darwin", "x86_64-sun-solaris", "x86_64-unknown-freebsd", "mips64el-unknown-linux-muslabi64", "mips64-unknown-linux-gnuabi64", "armv7-unknown-linux-musleabihf", "mips64el-unknown-linux-gnuabi64", "aarch64-pc-windows-msvc", "powerpc64-unknown-linux-gnu", "armv7-unknown-linux-gnueabihf", "aarch64-unknown-linux-musl", "x86_64-pc-windows-msvc", "aarch64-unknown-linux-gnu"]}
+{
+  "info_version": "1",
+  "id": "cargo-prebuilt",
+  "version": "0.5.3",
+  "license": "MIT",
+  "git": "https://github.com/cargo-prebuilt/cargo-prebuilt",
+  "description": "Download prebuilt crate binaries for many different platforms",
+  "bins": ["cargo-prebuilt"],
+  "info": {
+    "rustc_version_guess": "1.70.0 (90c541806 2023-05-31)",
+    "index_publish_date": "2023-06-29",
+    "features_apple": "None",
+    "features_linux": "None",
+    "features_windows": "None",
+    "no_default_features_apple": "False",
+    "no_default_features_linux": "False",
+    "no_default_features_windows": "False"
+  },
+  "archive": { "compression": "gz", "ext": "tar.gz" },
+  "files": {
+    "hash": "hashes.json",
+    "license": "license.report",
+    "deps": "deps.report",
+    "audit": "audit.report"
+  },
+  "targets": [
+    "s390x-unknown-linux-gnu",
+    "x86_64-apple-darwin",
+    "x86_64-unknown-netbsd",
+    "mips64-unknown-linux-muslabi64",
+    "x86_64-unknown-illumos",
+    "x86_64-unknown-linux-gnu",
+    "riscv64gc-unknown-linux-gnu",
+    "x86_64-unknown-linux-musl",
+    "powerpc64le-unknown-linux-gnu",
+    "aarch64-apple-darwin",
+    "x86_64-sun-solaris",
+    "x86_64-unknown-freebsd",
+    "mips64el-unknown-linux-muslabi64",
+    "mips64-unknown-linux-gnuabi64",
+    "armv7-unknown-linux-musleabihf",
+    "mips64el-unknown-linux-gnuabi64",
+    "aarch64-pc-windows-msvc",
+    "powerpc64-unknown-linux-gnu",
+    "armv7-unknown-linux-gnueabihf",
+    "aarch64-unknown-linux-musl",
+    "x86_64-pc-windows-msvc",
+    "aarch64-unknown-linux-gnu"
+  ]
+}

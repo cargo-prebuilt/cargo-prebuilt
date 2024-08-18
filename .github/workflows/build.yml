@@ -27,11 +27,11 @@ on:
       - Cross.toml
   workflow_dispatch:
 
-permissions: { }
+permissions: {}
 
 env:
   bin-name: cargo-prebuilt
-  feature-set: ''
+  feature-set: ""
   CARGO_TERM_COLOR: always
 
 defaults:
