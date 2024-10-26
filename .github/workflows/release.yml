@@ -260,7 +260,7 @@ jobs:
         with:
           pkgs: cargo-binstall
       - name: Install cargo-msrv
-        run: cargo binstall --version 0.15.1 --no-confirm cargo-msrv
+        run: cargo binstall --no-confirm cargo-msrv
       - uses: Swatinem/rust-cache@v2
         if: ${{ env.cache == 'true' }}
       - name: MSRV Check

@@ -43,13 +43,9 @@ More ways and how to verify your download [here](docs/DOWNLOAD.md).
 - Cargo quickinstall: `cargo quickinstall cargo-prebuilt`
 - Install script (Unix platforms):
 
-  ```shell
-  curl --proto '=https' --tlsv1.2 -sSf \
-  https://raw.githubusercontent.com/cargo-prebuilt/cargo-prebuilt/main/scripts/install-cargo-prebuilt.sh \
-  -o install-cargo-prebuilt.sh \
-  && bash install-cargo-prebuilt.sh \
-  && rm install-cargo-prebuilt.sh
-  ```
+```shell
+bash -c "$(curl -fsSL --tlsv1.2 https://raw.githubusercontent.com/cargo-prebuilt/cargo-prebuilt/main/scripts/install-cargo-prebuilt.sh)"
+```
 
 - For GitHub Actions you can use
   [cargo-prebuilt/cargo-prebuilt-action](https://github.com/cargo-prebuilt/cargo-prebuilt-action)
