@@ -131,7 +131,7 @@ jobs:
           - target: x86_64-apple-darwin
             os: macos-13
           - target: aarch64-apple-darwin
-            os: macos-14
+            os: macos-latest
     runs-on: ${{ matrix.info.os }}
     steps:
       - uses: actions/checkout@v4
