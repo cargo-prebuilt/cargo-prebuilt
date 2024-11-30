@@ -12,11 +12,7 @@
 - Install script (Unix platforms):
 
   ```shell
-  curl --proto '=https' --tlsv1.2 -sSf \
-  https://raw.githubusercontent.com/cargo-prebuilt/cargo-prebuilt/main/scripts/install-cargo-prebuilt.sh \
-  -o install-cargo-prebuilt.sh \
-  && bash install-cargo-prebuilt.sh \
-  && rm install-cargo-prebuilt.sh
+  bash -c "$(curl -fsSL --tlsv1.2 https://raw.githubusercontent.com/cargo-prebuilt/cargo-prebuilt/main/scripts/install-cargo-prebuilt.sh)"
   ```
 
 ## Verify

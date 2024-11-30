@@ -1,5 +1,6 @@
 .fleet/
 .idea/
+.nova/
 .vscode/
 .vs/
 

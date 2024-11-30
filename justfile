@@ -105,7 +105,7 @@ msrv:
     --mount type=bind,source=$HOME/.cargo/registry,target=/usr/local/cargo/registry \
     -w /prebuilt \
     rust:latest \
-    bash -c 'cargo install cargo-msrv && cargo msrv find -- cargo check --verbose --locked'
+    bash -c 'cargo run -- cargo-msrv && cargo msrv find -- cargo check --verbose --locked'
 
 msrv-verify:
     docker run -t --rm --pull=always \
@@ -114,4 +114,4 @@ msrv-verify:
     --mount type=bind,source=$HOME/.cargo/registry,target=/usr/local/cargo/registry \
     -w /prebuilt \
     rust:latest \
-    bash -c 'cargo install cargo-msrv && cargo msrv verify -- cargo check --verbose --release --locked'
+    bash -c 'cargo run -- cargo-msrv && cargo msrv verify -- cargo check --verbose --release --locked'
