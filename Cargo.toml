@@ -1,6 +1,6 @@
 [package]
 name = "cargo-prebuilt"
-version = "0.7.5"
+version = "0.8.0-dev.0"
 edition = "2021"
 authors = ["harmless-tech"]
 description = "Download prebuilt crate binaries for many different platforms"
@@ -10,7 +10,7 @@ homepage = "https://github.com/cargo-prebuilt/cargo-prebuilt"
 repository = "https://github.com/cargo-prebuilt/cargo-prebuilt"
 categories = ["development-tools", "development-tools::cargo-plugins"]
 keywords = ["cargo", "cargo-subcommand", "binary"]
-rust-version = "1.70"
+rust-version = "1.71.1"
 include = [
   "keys/",
   "src/",
@@ -34,14 +34,13 @@ home = "0.5.9"
 indexmap = { version = "2.6.0", features = ["serde"] }
 mimalloc = { version = "0.1.43", optional = true }
 minisign-verify = "0.2.2"
-native-tls = { version = "0.2.12", optional = true }
 owo-colors = { version = "4.1.0", features = ["supports-colors"] }
 serde = { version = "1.0.215", features = ["derive"] }
 serde_json = "1.0.133"
 sha2 = "0.10.8"
 sha3 = "0.10.8"
 tar = "0.4.43"
-ureq = { version = "2.11.0", default-features = false, features = ["gzip"] }
+ureq = { version = "3.0.0-rc3", default-features = false, features = ["gzip"] }
 
 [features]
 default = ["default-rustls"]
@@ -63,12 +62,11 @@ github-private = [] # Considered beta
 #custom-http-private = [] #TODO: Under dev
 
 # Use rustls for tls
-rustls = ["ureq/tls"]
-rustls-native-certs = ["rustls", "ureq/native-certs"]
+rustls = ["ureq/rustls"]
 
-# Use openssl/native for tls
-native = ["native-tls", "ureq/native-tls"]
-vendored-openssl = ["native", "native-tls/vendored"]
+# Use native for tls
+native = ["ureq/native-tls"]
+vendored-openssl = ["native", "ureq/vendored"]
 
 # Allow downloading of compressed files with brotli
 dl-cp-brotli = ["ureq/brotli"]
