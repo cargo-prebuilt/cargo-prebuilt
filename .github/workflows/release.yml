@@ -432,7 +432,7 @@ jobs:
         run: |
           tar czvf ${{ matrix.info.target }}.tar.gz \
           -C ./target/${{ matrix.info.target }}/release ${{ env.bin-name }}
-      - uses: actions/attest-build-provenance@v1
+      - uses: actions/attest-build-provenance@v2
         with:
           subject-path: ${{ matrix.info.target }}.tar.gz
       - name: Hash
@@ -487,7 +487,7 @@ jobs:
         run: |
           tar czvf ${{ matrix.info.target }}.tar.gz \
           -C ./target/${{ matrix.info.target }}/release ${{ env.bin-name }}
-      - uses: actions/attest-build-provenance@v1
+      - uses: actions/attest-build-provenance@v2
         with:
           subject-path: ${{ matrix.info.target }}.tar.gz
       - name: Hash
@@ -544,7 +544,7 @@ jobs:
         run: |
           cd target/${{ matrix.info.target }}/release
           7z a -tzip ../../../${{ matrix.info.target }}.zip ${{ env.bin-name }}.exe
-      - uses: actions/attest-build-provenance@v1
+      - uses: actions/attest-build-provenance@v2
         with:
           subject-path: ${{ matrix.info.target }}.zip
       - name: Hash
