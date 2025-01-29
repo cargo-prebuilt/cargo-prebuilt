@@ -1,4 +1,4 @@
-use crate::interact::Interact;
+use crate::{interact::Interact, BLOB_LIMIT};
 use serde::{de::DeserializeOwned, Deserialize};
 use std::collections::HashMap;
 use ureq::Agent;
@@ -40,35 +40,35 @@ impl GithubPrivate {
     }
 
     fn api_call<T: DeserializeOwned>(&self, url: &str) -> anyhow::Result<T> {
-        let res = self
+        let mut res = self
             .agent
             .get(url)
-            .set("Accept", "application/vnd.github+json")
-            .set("X-GitHub-Api-Version", "2022-11-28")
-            .set(
+            .header("Accept", "application/vnd.github+json")
+            .header("X-GitHub-Api-Version", "2022-11-28")
+            .header(
                 "Authorization",
                 format!("Bearer {}", self.auth_token).as_str(),
             )
             .call()?;
 
-        let s = res.into_string()?;
+        let s = res.body_mut().read_to_string()?;
         let json = serde_json::from_str(&s)
             .unwrap_or_else(|_| panic!("Could not parse api json from {url}"));
         Ok(json)
     }
 
     fn call(&self, url: &str) -> anyhow::Result<String> {
-        let res = self
+        let mut res = self
             .agent
             .get(url)
-            .set("Accept", "application/octet-stream")
-            .set(
+            .header("Accept", "application/octet-stream")
+            .header(
                 "Authorization",
                 format!("Bearer {}", self.auth_token).as_str(),
             )
             .call()?;
 
-        let s = res.into_string()?;
+        let s = res.body_mut().read_to_string()?;
         Ok(s.trim().to_string())
     }
 
@@ -130,18 +130,21 @@ impl Interact for GithubPrivate {
         let mut val = None;
         for i in &release.assets {
             if i.name.eq(file_name) {
-                let mut bytes = Vec::new();
-                let res = self
+                let mut res = self
                     .agent
                     .get(&i.url)
-                    .set("Accept", "application/octet-stream")
-                    .set(
+                    .header("Accept", "application/octet-stream")
+                    .header(
                         "Authorization",
                         format!("Bearer {}", self.auth_token).as_str(),
                     )
                     .call()?;
 
-                res.into_reader().read_to_end(&mut bytes)?;
+                let bytes = res
+                    .body_mut()
+                    .with_config()
+                    .limit(BLOB_LIMIT)
+                    .read_to_vec()?;
 
                 val = Some(bytes);
                 break;

@@ -48,12 +48,10 @@ sup-lint LOG_LEVEL=default_log_level:
 
 docker:
     docker run -it --rm --pull=always \
-    -e CARGO_TARGET_DIR=/ptarget \
-    --mount type=bind,source={{pwd}},target=/prebuilt \
+    --mount type=bind,source={{pwd}},target=/project \
     --mount type=bind,source=$HOME/.cargo/registry,target=/usr/local/cargo/registry \
-    -w /prebuilt \
-    rust:latest \
-    bash
+    --entrypoint=/bin/bash \
+    ghcr.io/cargo-prebuilt/ink-cross:stable-native
 
 docker-alpine:
     docker run -it --rm --pull=always \
@@ -81,37 +79,33 @@ ink-crossr TARGET:
     build --verbose --workspace --locked --target {{TARGET}} --release
 
 deny:
-    docker run -t --rm --pull=always \
-    -e CARGO_TARGET_DIR=/ptarget \
-    --mount type=bind,source={{pwd}},target=/prebuilt \
+    docker run -it --rm --pull=always \
+    --mount type=bind,source={{pwd}},target=/project \
     --mount type=bind,source=$HOME/.cargo/registry,target=/usr/local/cargo/registry \
-    -w /prebuilt \
-    rust:latest \
-    bash -c 'cargo run -- cargo-deny && cargo-deny check'
+    --entrypoint=/bin/bash \
+    ghcr.io/cargo-prebuilt/ink-cross:stable-native \
+    -c 'cargo prebuilt cargo-deny && cargo deny check'
 
 hack:
-    docker run -t --rm --pull=always \
-    -e CARGO_TARGET_DIR=/ptarget \
-    --mount type=bind,source={{pwd}},target=/prebuilt \
+    docker run -it --rm --pull=always \
+    --mount type=bind,source={{pwd}},target=/project \
     --mount type=bind,source=$HOME/.cargo/registry,target=/usr/local/cargo/registry \
-    -w /prebuilt \
-    rust:latest \
-    bash -c 'cargo run -- cargo-hack && cargo hack check --each-feature --no-dev-deps --verbose --workspace --locked && cargo hack check --feature-powerset --group-features default,default-native,default-rustls,default-no-tls,rustls,rustls-native-certs,native,vendored-openssl --no-dev-deps --verbose --workspace --locked'
+    --entrypoint=/bin/bash \
+    ghcr.io/cargo-prebuilt/ink-cross:stable-native \
+    -c 'cargo prebuilt cargo-hack && cargo hack check --each-feature --no-dev-deps --verbose --workspace --locked && cargo hack check --feature-powerset --group-features default,default-native,default-rustls,default-no-tls,rustls,native,vendored-openssl --no-dev-deps --verbose --workspace --locked'
 
 msrv:
-    docker run -t --rm --pull=always \
-    -e CARGO_TARGET_DIR=/ptarget \
-    --mount type=bind,source={{pwd}},target=/prebuilt \
+    docker run -it --rm --pull=always \
+    --mount type=bind,source={{pwd}},target=/project \
     --mount type=bind,source=$HOME/.cargo/registry,target=/usr/local/cargo/registry \
-    -w /prebuilt \
-    rust:latest \
-    bash -c 'cargo run -- cargo-msrv && cargo msrv find -- cargo check --verbose --locked'
+    --entrypoint=/bin/bash \
+    ghcr.io/cargo-prebuilt/ink-cross:stable-native \
+    -c 'cargo prebuilt cargo-msrv && cargo msrv find -- cargo check --verbose --locked'
 
 msrv-verify:
-    docker run -t --rm --pull=always \
-    -e CARGO_TARGET_DIR=/ptarget \
-    --mount type=bind,source={{pwd}},target=/prebuilt \
+    docker run -it --rm --pull=always \
+    --mount type=bind,source={{pwd}},target=/project \
     --mount type=bind,source=$HOME/.cargo/registry,target=/usr/local/cargo/registry \
-    -w /prebuilt \
-    rust:latest \
-    bash -c 'cargo run -- cargo-msrv && cargo msrv verify -- cargo check --verbose --release --locked'
+    --entrypoint=/bin/bash \
+    ghcr.io/cargo-prebuilt/ink-cross:stable-native \
+    -c 'cargo prebuilt cargo-msrv && cargo msrv verify -- cargo check --verbose --release --locked'

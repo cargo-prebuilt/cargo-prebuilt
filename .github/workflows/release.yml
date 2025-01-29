@@ -17,7 +17,7 @@ env:
   bin-name: cargo-prebuilt
   feature-set: ""
   hack-group: "--group-features default,default-native,default-rustls,\
-    default-no-tls,rustls,rustls-native-certs,native,vendored-openssl"
+    default-no-tls,rustls,native,vendored-openssl"
   cache: false
   CARGO_TERM_COLOR: always
 
@@ -403,7 +403,6 @@ jobs:
         run: |
           docker run --rm \
           --userns host --user "$(id -u)":"$(id -g)" \
-          -v "$HOME"/.cargo/registry:/usr/local/cargo/registry \
           -v ./:/project \
           ghcr.io/cargo-prebuilt/ink-cross:nightly-${{ matrix.info.target }} \
           test --verbose --workspace --release --locked \
@@ -412,7 +411,6 @@ jobs:
         run: |
           docker run --rm \
           --userns host --user "$(id -u)":"$(id -g)" \
-          -v "$HOME"/.cargo/registry:/usr/local/cargo/registry \
           -v ./:/project \
           ghcr.io/cargo-prebuilt/ink-cross:nightly-${{ matrix.info.target }} \
           auditable build --verbose --workspace --release --locked \
@@ -432,7 +430,7 @@ jobs:
         run: |
           tar czvf ${{ matrix.info.target }}.tar.gz \
           -C ./target/${{ matrix.info.target }}/release ${{ env.bin-name }}
-      - uses: actions/attest-build-provenance@v1
+      - uses: actions/attest-build-provenance@v2
         with:
           subject-path: ${{ matrix.info.target }}.tar.gz
       - name: Hash
@@ -487,7 +485,7 @@ jobs:
         run: |
           tar czvf ${{ matrix.info.target }}.tar.gz \
           -C ./target/${{ matrix.info.target }}/release ${{ env.bin-name }}
-      - uses: actions/attest-build-provenance@v1
+      - uses: actions/attest-build-provenance@v2
         with:
           subject-path: ${{ matrix.info.target }}.tar.gz
       - name: Hash
@@ -544,7 +542,7 @@ jobs:
         run: |
           cd target/${{ matrix.info.target }}/release
           7z a -tzip ../../../${{ matrix.info.target }}.zip ${{ env.bin-name }}.exe
-      - uses: actions/attest-build-provenance@v1
+      - uses: actions/attest-build-provenance@v2
         with:
           subject-path: ${{ matrix.info.target }}.zip
       - name: Hash

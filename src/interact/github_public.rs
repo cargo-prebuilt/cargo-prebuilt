@@ -1,4 +1,4 @@
-use crate::interact::Interact;
+use crate::{interact::Interact, BLOB_LIMIT};
 use ureq::Agent;
 
 pub struct GithubPublic {
@@ -16,8 +16,8 @@ impl GithubPublic {
     }
 
     fn call(&self, url: &str) -> anyhow::Result<String> {
-        let res = self.agent.get(url).call()?;
-        let s = res.into_string()?;
+        let mut res = self.agent.get(url).call()?;
+        let s = res.body_mut().read_to_string()?;
         Ok(s.trim().to_string())
     }
 }
@@ -35,9 +35,12 @@ impl Interact for GithubPublic {
     fn get_blob(&mut self, id: &str, version: &str, file_name: &str) -> anyhow::Result<Vec<u8>> {
         let url = self.url(id, version, file_name);
 
-        let mut bytes = Vec::new();
-        let res = self.agent.get(&url).call()?;
-        res.into_reader().read_to_end(&mut bytes)?;
+        let mut res = self.agent.get(&url).call()?;
+        let bytes = res
+            .body_mut()
+            .with_config()
+            .limit(BLOB_LIMIT)
+            .read_to_vec()?;
 
         Ok(bytes)
     }

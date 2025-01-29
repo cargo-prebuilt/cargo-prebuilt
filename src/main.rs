@@ -4,6 +4,10 @@
 #![deny(clippy::std_instead_of_core)]
 #![deny(clippy::alloc_instead_of_core)]
 
+// TODO: Allow setting timeout!
+// TODO: Allow retries!
+// TODO: Improve errors! Make them more readable.
+
 mod coloring;
 mod config;
 mod data;
@@ -17,8 +21,10 @@ use std::{
     io::{Read, Write},
     path::Path,
     str,
+    sync::Arc,
 };
 use tar::Archive;
+use ureq::config::AutoHeaderValue;
 
 use crate::{
     data::{InfoFileImm, Meta},
@@ -62,6 +68,8 @@ static DEFAULT_TARGET: &str = match option_env!("PREBUILT_BUILD_DEFAULT_TARGET")
     Some(s) => s,
     None => env!("TARGET"),
 };
+
+const BLOB_LIMIT: u64 = 1_048_576 * 30; // 30 MB
 
 fn main() {
     #[cfg(debug_assertions)]
@@ -321,22 +329,34 @@ const fn should_error() {
 
 fn create_agent() -> ureq::Agent {
     #[cfg(feature = "native")]
-    let agent = ureq::AgentBuilder::new().tls_connector(std::sync::Arc::new(
-        native_tls::TlsConnector::new().expect("Could not create TlsConnector"),
-    ));
+    let agent = {
+        use ureq::tls::{TlsConfig, TlsProvider};
+        ureq::Agent::config_builder().tls_config(
+            TlsConfig::builder()
+                .provider(TlsProvider::NativeTls)
+                .build(),
+        )
+    };
 
     #[cfg(feature = "rustls")]
-    let agent = ureq::AgentBuilder::new();
+    let agent = {
+        use ureq::tls::{TlsConfig, TlsProvider};
+        ureq::Agent::config_builder()
+            .tls_config(TlsConfig::builder().provider(TlsProvider::Rustls).build())
+    };
 
     #[cfg(any(feature = "native", feature = "rustls"))]
     let agent = agent
         .https_only(true)
-        .user_agent(format!("cargo-prebuilt_cli {}", env!("CARGO_PKG_VERSION")).as_str())
+        .user_agent(AutoHeaderValue::Provided(Arc::new(format!(
+            "cargo-prebuilt_cli {}",
+            env!("CARGO_PKG_VERSION")
+        ))))
         .build();
 
     // Allows for any feature set to be built for, even though this is unsupported.
     #[cfg(not(any(feature = "native", feature = "rustls")))]
     let agent = ureq::agent();
 
-    agent
+    agent.into()
 }

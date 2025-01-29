@@ -31,12 +31,16 @@ on:
       - rustfmt.toml
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions: {}
 
 env:
   feature-set: ""
   hack-group: "--group-features default,default-native,default-rustls,\
-    default-no-tls,rustls,rustls-native-certs,native,vendored-openssl"
+    default-no-tls,rustls,native,vendored-openssl"
   CARGO_TERM_COLOR: never
 
 defaults:
