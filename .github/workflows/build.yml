@@ -139,7 +139,7 @@ jobs:
         with:
           toolchain: ${{ matrix.rust-version }}
           targets: ${{ matrix.info.target }}
-          # components: rust-src
+          components: rust-src
       - uses: cargo-prebuilt/cargo-prebuilt-action@v4
         with:
           pkgs: cargo-auditable
@@ -183,7 +183,7 @@ jobs:
         with:
           toolchain: ${{ matrix.rust-version }}
           targets: ${{ matrix.info.target }}
-          # components: rust-src
+          components: rust-src
       - uses: cargo-prebuilt/cargo-prebuilt-action@v4
         with:
           pkgs: cargo-auditable
