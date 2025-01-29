@@ -90,7 +90,6 @@ jobs:
         run: |
           docker run --rm \
           --userns host --user "$(id -u)":"$(id -g)" \
-          -v "$HOME"/.cargo/registry:/usr/local/cargo/registry \
           -v ./:/project \
           ghcr.io/cargo-prebuilt/ink-cross:${{ matrix.rust-version }}-${{ matrix.info.target }} \
           test --verbose --workspace --locked \
@@ -99,7 +98,6 @@ jobs:
         run: |
           docker run --rm \
           --userns host --user "$(id -u)":"$(id -g)" \
-          -v "$HOME"/.cargo/registry:/usr/local/cargo/registry \
           -v ./:/project \
           ghcr.io/cargo-prebuilt/ink-cross:${{ matrix.rust-version }}-${{ matrix.info.target }} \
           auditable build --verbose --workspace --locked \
