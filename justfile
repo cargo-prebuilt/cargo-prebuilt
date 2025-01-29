@@ -84,7 +84,7 @@ deny:
     --mount type=bind,source=$HOME/.cargo/registry,target=/usr/local/cargo/registry \
     --entrypoint=/bin/bash \
     ghcr.io/cargo-prebuilt/ink-cross:stable-native \
-    -c 'cargo prebuilt cargo-deny && cargo deny check'
+    -c 'cargo prebuilt --ci cargo-deny && cargo deny check'
 
 hack:
     docker run -it --rm --pull=always \
@@ -92,7 +92,7 @@ hack:
     --mount type=bind,source=$HOME/.cargo/registry,target=/usr/local/cargo/registry \
     --entrypoint=/bin/bash \
     ghcr.io/cargo-prebuilt/ink-cross:stable-native \
-    -c 'cargo prebuilt cargo-hack && cargo hack check --each-feature --no-dev-deps --verbose --workspace --locked && cargo hack check --feature-powerset --group-features default,default-native,default-rustls,default-no-tls,rustls,native,vendored-openssl --no-dev-deps --verbose --workspace --locked'
+    -c 'cargo prebuilt --ci cargo-hack && cargo hack check --each-feature --no-dev-deps --verbose --workspace --locked && cargo hack check --feature-powerset --group-features default,default-native,default-rustls,default-no-tls,rustls,native,vendored-openssl --no-dev-deps --verbose --workspace --locked'
 
 msrv:
     docker run -it --rm --pull=always \
@@ -100,7 +100,7 @@ msrv:
     --mount type=bind,source=$HOME/.cargo/registry,target=/usr/local/cargo/registry \
     --entrypoint=/bin/bash \
     ghcr.io/cargo-prebuilt/ink-cross:stable-native \
-    -c 'cargo prebuilt cargo-msrv && cargo msrv find -- cargo check --verbose --locked'
+    -c 'cargo prebuilt --ci cargo-msrv && cargo msrv find -- cargo check --verbose --locked'
 
 msrv-verify:
     docker run -it --rm --pull=always \
@@ -108,4 +108,4 @@ msrv-verify:
     --mount type=bind,source=$HOME/.cargo/registry,target=/usr/local/cargo/registry \
     --entrypoint=/bin/bash \
     ghcr.io/cargo-prebuilt/ink-cross:stable-native \
-    -c 'cargo prebuilt cargo-msrv && cargo msrv verify -- cargo check --verbose --release --locked'
+    -c 'cargo prebuilt --ci cargo-msrv && cargo msrv verify -- cargo check --verbose --release --locked'
