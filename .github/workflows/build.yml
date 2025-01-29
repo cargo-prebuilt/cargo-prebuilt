@@ -128,21 +128,18 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        rust-version: [stable, nightly]
+        rust-version: [1.71.1, stable, nightly]
         info:
           - target: x86_64-apple-darwin
-            os: macos-13
           - target: aarch64-apple-darwin
-            os: macos-latest
-    runs-on: ${{ matrix.info.os }}
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Update Rust and add target
-        run: |
-          rustup toolchain install ${{ matrix.rust-version }}
-          rustc +${{ matrix.rust-version }} --version
-          rustup target add ${{ matrix.info.target }}
-          rustup component add rust-src --toolchain ${{ matrix.rust-version }} --target ${{ matrix.info.target }}
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust-version }}
+          targets: ${{ matrix.info.target }}
+          # components: rust-src
       - uses: cargo-prebuilt/cargo-prebuilt-action@v4
         with:
           pkgs: cargo-auditable
@@ -173,7 +170,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        rust-version: [stable, nightly]
+        rust-version: [1.71.1, stable, nightly]
         info:
           - target: x86_64-pc-windows-msvc
             can-test: true
@@ -182,12 +179,11 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Update Rust and add target
-        run: |
-          rustup toolchain install ${{ matrix.rust-version }}
-          rustc +${{ matrix.rust-version }} --version
-          rustup target add ${{ matrix.info.target }}
-          rustup component add rust-src --toolchain ${{ matrix.rust-version }} --target ${{ matrix.info.target }}
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust-version }}
+          targets: ${{ matrix.info.target }}
+          # components: rust-src
       - uses: cargo-prebuilt/cargo-prebuilt-action@v4
         with:
           pkgs: cargo-auditable
