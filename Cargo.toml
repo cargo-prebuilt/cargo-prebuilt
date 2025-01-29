@@ -27,7 +27,7 @@ basic-toml = "0.1.9"
 bpaf = { version = "0.9.16", features = ["autocomplete", "bright-color", "derive"] }
 bpaf_derive = "0.5.16"
 const-hex = "1.14.0"
-directories = "5.0.1"
+directories = "6.0.0"
 dunce = "1.0.5"
 flate2 = "1.0.35"
 home = "0.5.9"
