@@ -24,10 +24,7 @@ use std::{
     sync::Arc,
 };
 use tar::Archive;
-use ureq::{
-    config::AutoHeaderValue,
-    tls::{TlsConfig, TlsProvider},
-};
+use ureq::config::AutoHeaderValue;
 
 use crate::{
     data::{InfoFileImm, Meta},
@@ -332,15 +329,21 @@ const fn should_error() {
 
 fn create_agent() -> ureq::Agent {
     #[cfg(feature = "native")]
-    let agent = ureq::Agent::config_builder().tls_config(
-        TlsConfig::builder()
-            .provider(TlsProvider::NativeTls)
-            .build(),
-    );
+    let agent = {
+        use ureq::tls::{TlsConfig, TlsProvider};
+        ureq::Agent::config_builder().tls_config(
+            TlsConfig::builder()
+                .provider(TlsProvider::NativeTls)
+                .build(),
+        )
+    };
 
     #[cfg(feature = "rustls")]
-    let agent = ureq::Agent::config_builder()
-        .tls_config(TlsConfig::builder().provider(TlsProvider::Rustls).build());
+    let agent = {
+        use ureq::tls::{TlsConfig, TlsProvider};
+        ureq::Agent::config_builder()
+            .tls_config(TlsConfig::builder().provider(TlsProvider::Rustls).build())
+    };
 
     #[cfg(any(feature = "native", feature = "rustls"))]
     let agent = agent
