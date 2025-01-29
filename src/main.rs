@@ -72,6 +72,8 @@ static DEFAULT_TARGET: &str = match option_env!("PREBUILT_BUILD_DEFAULT_TARGET")
     None => env!("TARGET"),
 };
 
+const BLOB_LIMIT: u64 = 1_048_576 * 30; // 30 MB
+
 fn main() {
     #[cfg(debug_assertions)]
     dbg!(

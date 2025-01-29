@@ -1,4 +1,4 @@
-use crate::interact::Interact;
+use crate::{interact::Interact, BLOB_LIMIT};
 use serde::{de::DeserializeOwned, Deserialize};
 use std::collections::HashMap;
 use ureq::Agent;
@@ -140,7 +140,11 @@ impl Interact for GithubPrivate {
                     )
                     .call()?;
 
-                let bytes = res.body_mut().read_to_vec()?;
+                let bytes = res
+                    .body_mut()
+                    .with_config()
+                    .limit(BLOB_LIMIT)
+                    .read_to_vec()?;
 
                 val = Some(bytes);
                 break;

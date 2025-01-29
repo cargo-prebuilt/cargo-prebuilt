@@ -22,25 +22,25 @@ include = [
 ]
 
 [dependencies]
-anyhow = "1.0.93"
+anyhow = "1.0.95"
 basic-toml = "0.1.9"
-bpaf = { version = "0.9.15", features = ["autocomplete", "bright-color", "derive"] }
-bpaf_derive = "0.5.13"
+bpaf = { version = "0.9.16", features = ["autocomplete", "bright-color", "derive"] }
+bpaf_derive = "0.5.16"
 const-hex = "1.14.0"
 directories = "5.0.1"
 dunce = "1.0.5"
 flate2 = "1.0.35"
 home = "0.5.9"
-indexmap = { version = "2.6.0", features = ["serde"] }
+indexmap = { version = "2.7.1", features = ["serde"] }
 mimalloc = { version = "0.1.43", optional = true }
-minisign-verify = "0.2.2"
+minisign-verify = "0.2.3"
 owo-colors = { version = "4.1.0", features = ["supports-colors"] }
-serde = { version = "1.0.215", features = ["derive"] }
-serde_json = "1.0.133"
+serde = { version = "1.0.217", features = ["derive"] }
+serde_json = "1.0.138"
 sha2 = "0.10.8"
 sha3 = "0.10.8"
 tar = "0.4.43"
-ureq = { version = "3.0.0-rc3", default-features = false, features = ["gzip"] }
+ureq = { version = "3.0.2", default-features = false, features = ["gzip", "socks-proxy"] }
 
 [features]
 default = ["default-rustls"]

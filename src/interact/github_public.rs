@@ -1,4 +1,4 @@
-use crate::interact::Interact;
+use crate::{interact::Interact, BLOB_LIMIT};
 use ureq::Agent;
 
 pub struct GithubPublic {
@@ -36,7 +36,11 @@ impl Interact for GithubPublic {
         let url = self.url(id, version, file_name);
 
         let mut res = self.agent.get(&url).call()?;
-        let bytes = res.body_mut().read_to_vec()?;
+        let bytes = res
+            .body_mut()
+            .with_config()
+            .limit(BLOB_LIMIT)
+            .read_to_vec()?;
 
         Ok(bytes)
     }
