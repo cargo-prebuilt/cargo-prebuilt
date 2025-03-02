@@ -120,6 +120,10 @@ jobs:
             target: x86_64-pc-windows-msvc
             archive_ext: .zip
             file_ext: .exe
+          - os: windows-latest
+            target: aarch64-pc-windows-msvc
+            archive_ext: .zip
+            file_ext: .exe
     runs-on: ${{ matrix.info.os }}
     steps:
       - uses: actions/checkout@v4
@@ -135,10 +139,12 @@ jobs:
           targets: ${{ matrix.info.target }}
           components: rust-src
       - name: Test
+        if: ${{ matrix.info.target != 'aarch64-pc-windows-msvc' }}
         run: cargo +${{steps.toolchain.outputs.name}} test --verbose --workspace --release --locked --target ${{ matrix.info.target }}
       - name: Build
         run: cargo +${{steps.toolchain.outputs.name}} auditable build --verbose --workspace --release --locked --target ${{ matrix.info.target }}
       - name: Test Run
+        if: ${{ matrix.info.target != 'aarch64-pc-windows-msvc' }}
         run: |
           target/${{ matrix.info.target }}/release/${{ env.bin-name }}${{ matrix.info.file_ext }} just
           just --version
@@ -190,9 +196,6 @@ jobs:
       - uses: cargo-prebuilt/cargo-prebuilt-action@v4
         with:
           pkgs: coreutils
-      - uses: Swatinem/rust-cache@v2
-        with:
-          key: ink-build-${{ matrix.info.target }}
       - name: Build with ink cross
         run: |
           docker run --rm \
