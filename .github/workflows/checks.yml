@@ -4,7 +4,7 @@ name: Rust Checks
 
 on:
   push:
-    branches: [main]
+    branches: [main, releases/0.7]
     paths:
       - .github/workflows/checks.yml
       - keys/**
@@ -17,7 +17,7 @@ on:
       - deny.toml
       - rustfmt.toml
   pull_request:
-    branches: [main]
+    branches: [main, releases/0.7]
     paths:
       - .github/workflows/checks.yml
       - keys/**

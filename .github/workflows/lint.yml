@@ -3,10 +3,10 @@ name: Lint
 
 on:
   push:
-    branches: [main]
+    branches: [main, releases/0.7]
     paths: ["**.md", "**.yml", "**.sh", "**.json"]
   pull_request:
-    branches: [main]
+    branches: [main, releases/0.7]
   workflow_dispatch:
 
 permissions:
