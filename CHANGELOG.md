@@ -12,7 +12,7 @@
 ## [0.7.6](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.7.6)
 
 - Bump deps.
-- Make blob download size limit 50 MB. (Backported)
+- Bump MSRV to 1.71.1.
 
 ## [0.7.5](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.7.5)
 
