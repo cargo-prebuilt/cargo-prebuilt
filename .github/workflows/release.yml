@@ -1,6 +1,4 @@
----
-name: Rust Build, Test, and Release
-### https://github.com/harmless-tech/rust-github-actions
+name: Rust Release
 
 on:
   push:
@@ -8,22 +6,17 @@ on:
       - "v**"
   workflow_dispatch:
 
-permissions:
-  id-token: write
-  attestations: write
-  contents: write
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   bin-name: cargo-prebuilt
-  feature-set: ""
-  hack-group: "--group-features default,default-native,default-rustls,\
-    default-no-tls,rustls,native,vendored-openssl"
-  cache: false
-  CARGO_TERM_COLOR: always
 
-defaults:
-  run:
-    shell: bash
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
 
 jobs:
   release:
@@ -34,6 +27,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: KyoriPowered/action-regex-match@v4
         id: regex-tag
         with:
@@ -43,35 +38,25 @@ jobs:
   publish-crates-io:
     if: ${{ ! contains(github.ref, '-dev') }}
     runs-on: ubuntu-latest
-    needs:
-      - release
-      - check-fmt
-      - clippy
-      - ink-cross
-      - apple-darwin
-      - pc-windows-msvc
+    needs: [release, build-native, build-ink-cross]
     steps:
       - uses: actions/checkout@v4
-      - name: Update Rust
-        run: |
-          rustup update
-          rustc --version
+      - uses: dtolnay/rust-toolchain@master
+        id: toolchain
+        with:
+          toolchain: stable
       - name: Publish
-        run: cargo publish --verbose --locked --token "${CRATES_TOKEN}"
+        run: cargo +${{steps.toolchain.outputs.name}} publish --verbose --locked --token "${CRATES_TOKEN}"
         env:
           CRATES_TOKEN: ${{ secrets.CRATES_TOKEN }}
 
-  publish-github-releases:
+  publish-github-com:
     runs-on: ubuntu-latest
-    needs:
-      - release
-      - check-fmt
-      - clippy
-      - ink-cross
-      - apple-darwin
-      - pc-windows-msvc
+    needs: [release, build-native, build-ink-cross]
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/download-artifact@v4
       - name: Merge hashes
         run: |
@@ -119,440 +104,118 @@ jobs:
           artifacts: "target-*/*.minisig,target-*/*.tar.gz,target-*/*.zip,hashes.sha256"
           body: ""
 
-  check-fmt:
-    env:
-      CARGO_TERM_COLOR: never
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install nightly
-        run: rustup toolchain install nightly --allow-downgrade -c rustfmt
-      - name: Rustfmt Check
-        run: |
-          set -o pipefail
-          cargo +nightly fmt --check 2>&1 | tee .step-data.txt
-      - name: Put into summary (success)
-        if: success()
-        run: echo "Success" >> "$GITHUB_STEP_SUMMARY"
-      - name: Put into summary (failure)
-        if: failure()
-        run: |
-          {
-            echo "Failed!"
-            echo "\`\`\`shell"
-            cat .step-data.txt
-            echo "\`\`\`"
-          } >> "$GITHUB_STEP_SUMMARY"
-
-  clippy:
+  build-native:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - target: x86_64-unknown-linux-gnu
-            os: ubuntu-latest
-          - target: aarch64-apple-darwin
-            os: macos-latest
-          - target: x86_64-pc-windows-msvc
-            os: windows-latest
-    env:
-      CARGO_TERM_COLOR: never
-    runs-on: ${{ matrix.os }}
+        rust-version: [nightly]
+        info:
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            archive_ext: .tar.gz
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            archive_ext: .tar.gz
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            archive_ext: .zip
+            file_ext: .exe
+          - os: windows-latest
+            target: aarch64-pc-windows-msvc
+            archive_ext: .zip
+            file_ext: .exe
+    runs-on: ${{ matrix.info.os }}
     steps:
       - uses: actions/checkout@v4
-      - name: Update Rust
-        run: |
-          rustup update
-          rustc --version
-      - uses: Swatinem/rust-cache@v2
-        if: ${{ env.cache == 'true' }}
-      - name: Clippy Check
-        run: |
-          set -o pipefail
-          cargo clippy --all-targets --verbose --workspace --release --locked \
-          -- -D warnings 2>&1 | tee .step-data.txt
-          cargo clippy --all-targets --verbose --workspace --release --locked \
-          ${{ env.feature-set }} -- -D warnings 2>&1 | tee .step-data.txt
-      - name: Put into summary (success)
-        if: success()
-        run: echo "Success" >> "$GITHUB_STEP_SUMMARY"
-      - name: Put into summary (failure)
-        if: failure()
-        run: |
-          {
-            echo "Failed!"
-            echo "\`\`\`shell"
-            cat .step-data.txt
-            echo "\`\`\`"
-          } >> "$GITHUB_STEP_SUMMARY"
-
-  cargo-hack:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - target: x86_64-unknown-linux-gnu
-            os: ubuntu-latest
-          - target: aarch64-apple-darwin
-            os: macos-latest
-          - target: x86_64-pc-windows-msvc
-            os: windows-latest
-    env:
-      CARGO_TERM_COLOR: never
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v4
-      - name: Update Rust
-        run: |
-          rustup update
-          rustc --version
+        with:
+          persist-credentials: false
       - uses: cargo-prebuilt/cargo-prebuilt-action@v4
         with:
-          pkgs: cargo-hack
-      - uses: Swatinem/rust-cache@v2
-        if: ${{ env.cache == 'true' }}
-      - name: Hack Check (each-feature)
-        run: |
-          set -o pipefail
-          cargo hack check --each-feature --no-dev-deps --verbose --workspace \
-          --release --locked 2>&1 | tee .step-data.txt
-      - name: Hack Check (feature-powerset)
-        run: |
-          set -o pipefail
-          cargo hack check --feature-powerset ${{ env.hack-group }} \
-          --no-dev-deps --verbose --workspace --release \
-          --locked 2>&1 | tee .step-data.txt
-      - name: Put into summary (success)
-        if: success()
-        run: echo "Success" >> "$GITHUB_STEP_SUMMARY"
-      - name: Put into summary (failure)
-        if: failure()
-        run: |
-          {
-            echo "Failed!"
-            echo "\`\`\`shell"
-            cat .step-data.txt
-            echo "\`\`\`"
-          } >> "$GITHUB_STEP_SUMMARY"
-
-  cargo-msrv:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - target: x86_64-unknown-linux-gnu
-            os: ubuntu-latest
-          - target: aarch64-apple-darwin
-            os: macos-latest
-          # Disable for now. For some reason the rust toolchain cannot be installed.
-          #- target: x86_64-pc-windows-msvc
-          #  os: windows-latest
-    env:
-      CARGO_TERM_COLOR: never
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v4
-      - name: Update Rust
-        run: |
-          rustup update
-          rustc --version
-      - uses: cargo-prebuilt/cargo-prebuilt-action@v4
+          pkgs: cargo-auditable,coreutils
+      - uses: dtolnay/rust-toolchain@master
+        id: toolchain
         with:
-          pkgs: cargo-binstall
-      - name: Install cargo-msrv
-        run: cargo binstall --no-confirm cargo-msrv
-      - uses: Swatinem/rust-cache@v2
-        if: ${{ env.cache == 'true' }}
-      - name: MSRV Check
+          toolchain: ${{ matrix.rust-version }}
+          targets: ${{ matrix.info.target }}
+          components: rust-src
+      - name: Test
+        if: ${{ matrix.info.target != 'aarch64-pc-windows-msvc' }}
+        run: cargo +${{steps.toolchain.outputs.name}} test --verbose --workspace --release --locked --target ${{ matrix.info.target }}
+      - name: Build
+        run: cargo +${{steps.toolchain.outputs.name}} auditable build --verbose --workspace --release --locked --target ${{ matrix.info.target }}
+      - name: Test Run
+        if: ${{ matrix.info.target != 'aarch64-pc-windows-msvc' }}
         run: |
-          set -o pipefail
-          cargo msrv verify -- cargo check --verbose --release \
-          --locked 2>&1 | tee .step-data.txt
-      - name: Put into summary (success)
-        if: success()
-        run: echo "Success" >> "$GITHUB_STEP_SUMMARY"
-      - name: Put into summary (failure)
-        if: failure()
+          target/${{ matrix.info.target }}/release/${{ env.bin-name }}${{ matrix.info.file_ext }} just
+          just --version
+      - name: Tar
+        if: ${{ contains(matrix.info.os, 'macos') }}
+        run: tar czvf ${{ matrix.info.target }}${{ matrix.info.archive_ext }} -C ./target/${{ matrix.info.target }}/release ${{ env.bin-name }}${{ matrix.info.file_ext }}
+      - name: Zip
+        if: ${{ contains(matrix.info.os, 'windows') }}
         run: |
-          {
-            echo "Failed!"
-            echo "\`\`\`shell"
-            cat .step-data.txt
-            echo "\`\`\`"
-          } >> "$GITHUB_STEP_SUMMARY"
-
-  cargo-deny:
-    env:
-      CARGO_TERM_COLOR: never
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Update Rust
-        run: |
-          rustup update
-          rustc --version
-      - uses: cargo-prebuilt/cargo-prebuilt-action@v4
+          cd target/${{ matrix.info.target }}/release
+          7z a -tzip ../../../${{ matrix.info.target }}${{ matrix.info.archive_ext }} ${{ env.bin-name }}${{ matrix.info.file_ext }}
+      - uses: actions/attest-build-provenance@v2
         with:
-          pkgs: cargo-deny
-      - name: Cargo Deny
-        run: |
-          set -o pipefail
-          cargo deny check 2>&1 | tee .step-data.txt
-      - name: Put into summary (success)
-        if: success()
-        run: echo "Success" >> "$GITHUB_STEP_SUMMARY"
-      - name: Put into summary (failure)
-        if: failure()
-        run: |
-          {
-            echo "Failed!"
-            echo "\`\`\`shell"
-            cat .step-data.txt
-            echo "\`\`\`"
-          } >> "$GITHUB_STEP_SUMMARY"
-
-  reports:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Update Rust
-        run: |
-          rustup update
-          rustc --version
-      - uses: cargo-prebuilt/cargo-prebuilt-action@v4
+          subject-path: |
+            ${{ matrix.info.target }}${{ matrix.info.archive_ext }}
+            ./target/${{ matrix.info.target }}/release/${{ env.bin-name }}${{ matrix.info.file_ext }}
+      - name: Hash
+        run: coreutils sha256sum ${{ matrix.info.target }}${{ matrix.info.archive_ext }} > ${{ matrix.info.target }}.sha256
+      - name: Artifact
+        uses: actions/upload-artifact@v4
         with:
-          pkgs: cargo-audit
-      - uses: Swatinem/rust-cache@v2
-        if: ${{ env.cache == 'true' }}
-      - name: Cache Advisory DB
-        uses: actions/cache@v4
-        with:
+          name: target-${{ matrix.info.target }}
           path: |
-            ~/.cargo/advisory-db
-          key: cache-advisory-db
-      - name: Deps Report
-        run: |
-          test -f Cargo.lock || cargo generate-lockfile --verbose
-          {
-            echo "### Deps:"
-            echo "Generated on: $(date --utc)"
-            echo "\`\`\`"
-            cargo tree --verbose -e normal,build --locked
-            echo "\`\`\`"
-          } >> "$GITHUB_STEP_SUMMARY"
-      - name: Audit Report
-        run: |
-          {
-            echo "### Audit:"
-            echo "Generated on: $(date --utc)"
-            echo "\`\`\`"
-          } >> "$GITHUB_STEP_SUMMARY"
-          cargo audit >> "$GITHUB_STEP_SUMMARY" || true
-          echo "\`\`\`" >> "$GITHUB_STEP_SUMMARY"
+            ${{ matrix.info.target }}${{ matrix.info.archive_ext }}
+            ${{ matrix.info.target }}.sha256
 
-  ink-cross:
+  build-ink-cross:
     strategy:
-      fail-fast: false
       matrix:
+        rust-version: [nightly]
         info:
           - target: aarch64-unknown-linux-gnu
-            can-test: false
-            docker-arch: linux/arm64
           - target: aarch64-unknown-linux-musl
-            can-test: false
-            docker-arch: linux/arm64
           - target: armv7-unknown-linux-gnueabihf
-            can-test: false
-            docker-arch: linux/arm/v7
           - target: armv7-unknown-linux-musleabihf
-            can-test: false
-            docker-arch: linux/arm/v7
           - target: powerpc64le-unknown-linux-gnu
-            can-test: false
-            docker-arch: linux/ppc64le
           - target: powerpc64-unknown-linux-gnu
-            can-test: false
-            docker-arch: ""
           - target: riscv64gc-unknown-linux-gnu
-            can-test: false
-            docker-arch: linux/riscv64
           - target: s390x-unknown-linux-gnu
-            can-test: false
-            docker-arch: linux/s390x
           - target: x86_64-unknown-linux-gnu
-            can-test: true
-            docker-arch: linux/amd64
           - target: x86_64-unknown-linux-musl
-            can-test: true
-            docker-arch: linux/amd64
           - target: x86_64-unknown-freebsd
-            can-test: false
           - target: x86_64-unknown-netbsd
-            can-test: false
     runs-on: ubuntu-latest
-    needs: [check-fmt, clippy, cargo-hack, cargo-msrv, cargo-deny]
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: cargo-prebuilt/cargo-prebuilt-action@v4
         with:
           pkgs: coreutils
-      - uses: Swatinem/rust-cache@v2
-        if: ${{ env.cache == 'true' }}
-      - name: Run tests
-        if: ${{ matrix.info.can-test }}
+      - name: Build with ink cross
         run: |
           docker run --rm \
           --userns host --user "$(id -u)":"$(id -g)" \
           -v ./:/project \
-          ghcr.io/cargo-prebuilt/ink-cross:nightly-${{ matrix.info.target }} \
-          test --verbose --workspace --release --locked \
-          --target ${{ matrix.info.target }} ${{ env.feature-set }}
-      - name: Build
-        run: |
-          docker run --rm \
-          --userns host --user "$(id -u)":"$(id -g)" \
-          -v ./:/project \
-          ghcr.io/cargo-prebuilt/ink-cross:nightly-${{ matrix.info.target }} \
-          auditable build --verbose --workspace --release --locked \
-          --target ${{ matrix.info.target }} ${{ env.feature-set }}
-      - name: Run cargo-prebuilt
-        if: ${{ matrix.info.docker-arch != '' }}
-        run: |
-          sudo docker run --privileged --rm \
-          tonistiigi/binfmt:master --install all &&
-          docker run --rm --platform='${{ matrix.info.docker-arch }}' \
-          -v ./target/${{ matrix.info.target }}/release/:/project \
-          -w /project \
-          debian:unstable-slim \
-          bash -c \
-          './${{ env.bin-name }} just && ./${{ env.bin-name }} --color just'
+          ghcr.io/cargo-prebuilt/ink-cross:${{ matrix.rust-version }}-${{ matrix.info.target }} \
+          auditable build --verbose --workspace --release --locked --target ${{ matrix.info.target }}
       - name: Tar
-        run: |
-          tar czvf ${{ matrix.info.target }}.tar.gz \
-          -C ./target/${{ matrix.info.target }}/release ${{ env.bin-name }}
+        run: tar czvf ${{ matrix.info.target }}.tar.gz -C ./target/${{ matrix.info.target }}/release ${{ env.bin-name }}
       - uses: actions/attest-build-provenance@v2
         with:
-          subject-path: ${{ matrix.info.target }}.tar.gz
+          subject-path: |
+            ${{ matrix.info.target }}.tar.gz
+            ./target/${{ matrix.info.target }}/release/${{ env.bin-name }}
       - name: Hash
-        run: |
-          coreutils sha256sum ${{ matrix.info.target }}.tar.gz \
-          > ${{ matrix.info.target }}.sha256
+        run: coreutils sha256sum ${{ matrix.info.target }}.tar.gz > ${{ matrix.info.target }}.sha256
       - name: Artifact
         uses: actions/upload-artifact@v4
         with:
           name: target-${{ matrix.info.target }}
           path: |
             ${{ matrix.info.target }}.tar.gz
-            ${{ matrix.info.target }}.sha256
-
-  apple-darwin:
-    strategy:
-      fail-fast: false
-      matrix:
-        info:
-          - target: x86_64-apple-darwin
-            os: macos-13
-          - target: aarch64-apple-darwin
-            os: macos-latest
-    runs-on: ${{ matrix.info.os }}
-    needs: [check-fmt, clippy, cargo-hack, cargo-msrv, cargo-deny]
-    steps:
-      - uses: actions/checkout@v4
-      - name: Update Rust and add target
-        run: |
-          rustup toolchain install nightly
-          rustc +nightly --version
-          rustup target add ${{ matrix.info.target }}
-          rustup component add rust-src --toolchain nightly --target ${{ matrix.info.target }}
-      - uses: cargo-prebuilt/cargo-prebuilt-action@v4
-        with:
-          pkgs: cargo-auditable,coreutils
-      - uses: Swatinem/rust-cache@v2
-        if: ${{ env.cache == 'true' }}
-      - name: Run tests
-        run: |
-          cargo +nightly test --verbose --workspace --release --locked \
-          --target ${{ matrix.info.target }} --no-default-features --features default-native ${{ env.feature-set }}
-      - name: Build
-        run: |
-          cargo +nightly auditable build --verbose --workspace --release --locked \
-          --target ${{ matrix.info.target }} --no-default-features --features default-native ${{ env.feature-set }}
-      - name: Run cargo-prebuilt
-        run: |
-          target/${{ matrix.info.target }}/release/${{ env.bin-name }} just
-          just --version
-      - name: Tar
-        run: |
-          tar czvf ${{ matrix.info.target }}.tar.gz \
-          -C ./target/${{ matrix.info.target }}/release ${{ env.bin-name }}
-      - uses: actions/attest-build-provenance@v2
-        with:
-          subject-path: ${{ matrix.info.target }}.tar.gz
-      - name: Hash
-        run: |
-          coreutils sha256sum ${{ matrix.info.target }}.tar.gz \
-          > ${{ matrix.info.target }}.sha256
-      - name: Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: target-${{ matrix.info.target }}
-          path: |
-            ${{ matrix.info.target }}.tar.gz
-            ${{ matrix.info.target }}.sha256
-
-  pc-windows-msvc:
-    strategy:
-      fail-fast: false
-      matrix:
-        info:
-          - target: x86_64-pc-windows-msvc
-            can-test: true
-          - target: aarch64-pc-windows-msvc
-            can-test: false
-    runs-on: windows-latest
-    needs: [check-fmt, clippy, cargo-hack, cargo-msrv, cargo-deny]
-    steps:
-      - uses: actions/checkout@v4
-      - name: Update Rust and add target
-        run: |
-          rustup toolchain install nightly
-          rustc +nightly --version
-          rustup target add ${{ matrix.info.target }}
-          rustup component add rust-src --toolchain nightly --target ${{ matrix.info.target }}
-      - uses: cargo-prebuilt/cargo-prebuilt-action@v4
-        with:
-          pkgs: cargo-auditable,coreutils
-      - uses: Swatinem/rust-cache@v2
-        if: ${{ env.cache == 'true' }}
-      - name: Run tests
-        if: ${{ matrix.info.can-test }}
-        run: |
-          cargo +nightly test --verbose --workspace --release --locked \
-          --target ${{ matrix.info.target }} ${{ env.feature-set }}
-      - name: Build
-        run: |
-          cargo +nightly auditable build --verbose --workspace --release --locked \
-          --target ${{ matrix.info.target }} ${{ env.feature-set }}
-      - name: Run cargo-prebuilt
-        if: ${{ matrix.info.can-test }}
-        run: |
-          target/${{ matrix.info.target }}/release/${{ env.bin-name }}.exe just
-          just --version
-      - name: Zip
-        run: |
-          cd target/${{ matrix.info.target }}/release
-          7z a -tzip ../../../${{ matrix.info.target }}.zip ${{ env.bin-name }}.exe
-      - uses: actions/attest-build-provenance@v2
-        with:
-          subject-path: ${{ matrix.info.target }}.zip
-      - name: Hash
-        run: |
-          coreutils sha256sum ${{ matrix.info.target }}.zip \
-          > ${{ matrix.info.target }}.sha256
-      - name: Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: target-${{ matrix.info.target }}
-          path: |
-            ${{ matrix.info.target }}.zip
             ${{ matrix.info.target }}.sha256

@@ -1,28 +1,115 @@
----
-name: Lint
+name: Rust Lint
 
 on:
   push:
     branches: [main]
-    paths: ["**.md", "**.yml", "**.sh", "**.json"]
+    paths:
+      - .github/workflows/lint.yml
+      - .cargo/**
+      - keys/**
+      - src/**
+      - test/**
+      - build.rs
+      - Cargo.lock
+      - Cargo.toml
+      - deny.toml
+      - rustfmt.toml
   pull_request:
     branches: [main]
+    paths:
+      - .github/workflows/lint.yml
+      - .cargo/**
+      - keys/**
+      - src/**
+      - test/**
+      - build.rs
+      - Cargo.lock
+      - Cargo.toml
+      - deny.toml
+      - rustfmt.toml
   workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-permissions:
-  contents: read
-  packages: read
-  statuses: write
+env:
+  hack-group: "--group-features default,default-native,default-rustls,default-no-tls,rustls,native,vendored-openssl"
 
-defaults:
-  run:
-    shell: bash
+permissions: {}
 
 jobs:
+  fmt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@master
+        id: toolchain
+        with:
+          toolchain: nightly
+          components: rustfmt
+      - name: Fmt Check
+        run: cargo +${{steps.toolchain.outputs.name}} fmt --check
+
+  clippy:
+    strategy:
+      fail-fast: false
+      matrix:
+        rust-version: [stable]
+        info:
+          - os: macos-latest
+          - os: ubuntu-latest
+          - os: windows-latest
+    runs-on: ${{ matrix.info.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@master
+        id: toolchain
+        with:
+          toolchain: ${{ matrix.rust-version }}
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: clippy
+      - name: Clippy
+        run: cargo +${{steps.toolchain.outputs.name}} clippy --all-targets --all-features --verbose --workspace --locked -- -D warnings
+      - name: Clippy Release
+        run: cargo +${{steps.toolchain.outputs.name}} clippy --all-targets --all-features --verbose --workspace --release --locked -- -D warnings
+
+  cargo-hack:
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+          - target: aarch64-apple-darwin
+            os: macos-latest
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@master
+        id: toolchain
+        with:
+          toolchain: stable
+      - uses: cargo-prebuilt/cargo-prebuilt-action@v4
+        with:
+          pkgs: cargo-hack
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: hack
+      - name: Test all features
+        run: cargo hack check --each-feature --no-dev-deps --verbose --workspace --locked
+      - name: Test all feature powersets
+        run: cargo hack check --feature-powerset ${{ env.hack-group }} --no-dev-deps --verbose --workspace --locked
+
   typos:
     runs-on: ubuntu-latest
     steps:
@@ -32,6 +119,10 @@ jobs:
 
   super-linter:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+      statuses: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -47,4 +138,103 @@ jobs:
           VALIDATE_RUST_2015: false
           VALIDATE_RUST_2018: false
           VALIDATE_RUST_2021: false
+          VALIDATE_RUST_2024: false
           VALIDATE_RUST_CLIPPY: false
+
+  # https://github.com/EmbarkStudios/cargo-deny/issues/324
+  cargo-deny:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: aarch64-apple-darwin
+        uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          command: check
+          log-level: error
+          arguments: --all-features --target aarch64-apple-darwin
+      - name: aarch64-unknown-linux-gnu
+        uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          command: check
+          log-level: error
+          arguments: --all-features --target aarch64-unknown-linux-gnu
+      - name: aarch64-unknown-linux-musl
+        uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          command: check
+          log-level: error
+          arguments: --all-features --target aarch64-unknown-linux-musl
+      - name: i686-pc-windows-gnu
+        uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          command: check
+          log-level: error
+          arguments: --all-features --target i686-pc-windows-gnu
+      - name: i686-pc-windows-msvc
+        uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          command: check
+          log-level: error
+          arguments: --all-features --target i686-pc-windows-msvc
+      - name: i686-unknown-linux-gnu
+        uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          command: check
+          log-level: error
+          arguments: --all-features --target i686-unknown-linux-gnu
+      - name: riscv64gc-unknown-linux-gnu
+        uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          command: check
+          log-level: error
+          arguments: --all-features --target riscv64gc-unknown-linux-gnu
+      - name: riscv64gc-unknown-linux-musl
+        uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          command: check
+          log-level: error
+          arguments: --all-features --target riscv64gc-unknown-linux-musl
+      - name: wasm32-unknown-unknown
+        uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          command: check
+          log-level: error
+          arguments: --all-features --target wasm32-unknown-unknown
+      - name: x86_64-apple-darwin
+        uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          command: check
+          log-level: error
+          arguments: --all-features --target x86_64-apple-darwin
+      - name: x86_64-pc-windows-gnu
+        uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          command: check
+          log-level: error
+          arguments: --all-features --target x86_64-pc-windows-gnu
+      - name: x86_64-pc-windows-msvc
+        uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          command: check
+          log-level: error
+          arguments: --all-features --target x86_64-pc-windows-msvc
+      - name: x86_64-unknown-linux-gnu
+        uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          command: check
+          log-level: error
+          arguments: --all-features --target x86_64-unknown-linux-gnu
+      - name: x86_64-unknown-linux-musl
+        uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          command: check
+          log-level: error
+          arguments: --all-features --target x86_64-unknown-linux-musl
+      - name: x86_64-unknown-redox
+        uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          command: check
+          log-level: error
+          arguments: --all-features --target x86_64-unknown-redox
