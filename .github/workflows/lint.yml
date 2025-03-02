@@ -2,7 +2,7 @@ name: Rust Lint
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
     paths:
       - .github/workflows/lint.yml
       - .cargo/**
@@ -15,7 +15,7 @@ on:
       - deny.toml
       - rustfmt.toml
   pull_request:
-    branches: [ main ]
+    branches: [main]
     paths:
       - .github/workflows/lint.yml
       - .cargo/**
@@ -36,7 +36,7 @@ concurrency:
 env:
   hack-group: "--group-features default,default-native,default-rustls,default-no-tls,rustls,native,vendored-openssl"
 
-permissions: { }
+permissions: {}
 
 jobs:
   fmt:
@@ -57,7 +57,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        rust-version: [ stable ]
+        rust-version: [stable]
         info:
           - os: macos-latest
           - os: ubuntu-latest
@@ -119,6 +119,10 @@ jobs:
 
   super-linter:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+      statuses: write
     steps:
       - uses: actions/checkout@v4
         with:
