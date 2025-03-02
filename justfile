@@ -61,7 +61,7 @@ ink-crossr TARGET:
     ghcr.io/cargo-prebuilt/ink-cross:stable-{{TARGET}} \
     build --verbose --workspace --locked --release --target {{TARGET}}
 
-default_log_level := 'ERROR'
+default_log_level := 'INFO'
 sup-lint LOG_LEVEL=default_log_level:
     docker run \
     -t --rm --pull=always \

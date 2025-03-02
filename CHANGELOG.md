@@ -2,10 +2,17 @@
 
 ## Upcoming
 
+[//]: # "## [0.8.0](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.8.0)"
+
 - Update to ureq 3.
 - Update to directories 6.
 - Make blob download size limit 50 MB.
 - Removed and changed features.
+
+## [0.7.6](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.7.6)
+
+- Bump deps.
+- Make blob download size limit 50 MB. (Backported)
 
 ## [0.7.5](https://github.com/cargo-prebuilt/cargo-prebuilt/releases/tag/v0.7.5)
 

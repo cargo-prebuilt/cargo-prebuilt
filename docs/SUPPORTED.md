@@ -9,16 +9,16 @@ You should be viewing this on the
 - ⚠️ = Will be unsupported after $DATE
 - ❌ = Unsupported
 
-| Version | Supported | Notes |
-| ------- | --------- | ----- |
-| 0.8.\*  | ✅        |       |
-| 0.7.\*  | ✅        |       |
-| 0.6.\*  | ❌        |       |
-| 0.5.\*  | ❌        |       |
-| 0.4.\*  | ❌        |       |
-| 0.3.\*  | ❌        |       |
-| 0.2.\*  | ❌        |       |
-| 0.1.\*  | ❌        |       |
+| Version | Supported | Notes                        |
+| ------- | --------- | ---------------------------- |
+| 0.8.\*  | ✅        |                              |
+| 0.7.\*  | ✅        | Updates may be very limited. |
+| 0.6.\*  | ❌        |                              |
+| 0.5.\*  | ❌        |                              |
+| 0.4.\*  | ❌        |                              |
+| 0.3.\*  | ❌        |                              |
+| 0.2.\*  | ❌        |                              |
+| 0.1.\*  | ❌        |                              |
 
 ## Support Policy
 
