@@ -1,12 +1,13 @@
 #![forbid(unsafe_code)]
-#![allow(clippy::module_name_repetitions)]
+#![deny(clippy::all)]
 #![allow(clippy::multiple_crate_versions)]
 #![deny(clippy::std_instead_of_core)]
+// #![deny(clippy::std_instead_of_alloc)]
 #![deny(clippy::alloc_instead_of_core)]
 
-// TODO: Allow setting timeout!
-// TODO: Allow retries!
-// TODO: Improve errors! Make them more readable.
+// TODO: Allow setting timeout?
+// TODO: Allow retries?
+// TODO: Improve errors? Make them more readable.
 
 mod coloring;
 mod config;
@@ -69,7 +70,7 @@ static DEFAULT_TARGET: &str = match option_env!("PREBUILT_BUILD_DEFAULT_TARGET")
     None => env!("TARGET"),
 };
 
-const BLOB_LIMIT: u64 = 1_048_576 * 30; // 30 MB
+const BLOB_LIMIT: u64 = 1_048_576 * 50; // 50 MB
 
 fn main() {
     #[cfg(debug_assertions)]
@@ -89,8 +90,7 @@ fn main() {
             println!("Default Index: {DEFAULT_INDEX}");
             println!("Default Index Key(s): {DEFAULT_INDEX_KEY}");
             std::process::exit(0);
-        }
-        else if a.eq("--docs") {
+        } else if a.eq("--docs") {
             println!("Repo: {BUILD_REPO_LINK}");
             println!("Issues: {BUILD_ISSUES_LINK}");
             println!("Docs: {BUILD_DOCS_LINK}");
@@ -108,8 +108,7 @@ fn main() {
 
     if !config.no_create_path && create_dir_all(&config.path).is_err() {
         panic!("Could not create the directory '{:?}'.", config.path);
-    }
-    else if !Path::new(&config.path).exists() {
+    } else if !Path::new(&config.path).exists() {
         panic!("Directory does not exist! '{:?}'.", config.path);
     }
 
@@ -117,8 +116,7 @@ fn main() {
     if !config.ci && !config.reports.is_empty() {
         if !config.no_create_path && create_dir_all(&config.report_path).is_err() {
             panic!("Could not create the directory '{:?}'.", config.report_path);
-        }
-        else if !Path::new(&config.report_path).exists() {
+        } else if !Path::new(&config.report_path).exists() {
             panic!("Directory does not exist! '{:?}'.", config.report_path);
         }
     }
@@ -329,6 +327,7 @@ const fn should_error() {
 
 fn create_agent() -> ureq::Agent {
     #[cfg(feature = "native")]
+    #[allow(unused_variables)]
     let agent = {
         use ureq::tls::{TlsConfig, TlsProvider};
         ureq::Agent::config_builder().tls_config(

@@ -156,13 +156,11 @@ fn parse_packages(s: String) -> Result<IndexSet<String>, String> {
 fn fill_from_file(args: &mut Arguments) {
     let conf = if let Some(p) = args.config.clone() {
         p
-    }
-    else if let Some(project) = ProjectDirs::from(QUALIFIER, ORG, APPLICATION) {
+    } else if let Some(project) = ProjectDirs::from(QUALIFIER, ORG, APPLICATION) {
         let mut conf = PathBuf::from(project.config_dir());
         conf.push(CONFIG_FILE);
         conf
-    }
-    else {
+    } else {
         eprintln!("Could not find default config directory! Config file will be ignored.");
         return;
     };
@@ -250,8 +248,7 @@ fn fill_from_file(args: &mut Arguments) {
             }
             Err(err) => panic!("Failed to parse config file.\n{err}"),
         }
-    }
-    else {
+    } else {
         eprintln!("WARN: Could not find config, it will be ignored.");
     }
 

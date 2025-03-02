@@ -1,8 +1,5 @@
+edition = "2021"
 unstable_features = true
 newline_style = "Native"
-control_brace_style = "ClosingNextLine"
 reorder_imports = true
-imports_granularity = "Crate"
-edition = "2021"
-single_line_if_else_max_width = 100
-single_line_let_else_max_width = 100
+imports_granularity = "Crate" # Use `Item` when finding crates that could be core or alloc.

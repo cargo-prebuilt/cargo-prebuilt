@@ -90,8 +90,7 @@ impl GithubPrivate {
 
         if let Some(item) = self.index.get(&key) {
             Ok(item.clone())
-        }
-        else {
+        } else {
             let rel = self.api_call(&format!(
                 "{}/repos/{}/{}/releases/tags/{id}-{version}",
                 self.u_url, self.u_owner, self.u_repo

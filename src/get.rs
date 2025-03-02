@@ -107,8 +107,7 @@ impl Fetcher {
                         let v =
                             self.verify_file(meta, &polyfill.hash_file, &sig_file, raw_hashes_file);
                         events::hashes_verify(meta, v);
-                    }
-                    else {
+                    } else {
                         panic!(
                             "Could not force sig for index {}. hashes.json is not signed for {}@{}.",
                             meta.config.index, meta.id, meta.version
@@ -264,8 +263,7 @@ impl Fetcher {
                 meta.id,
                 meta.version
             );
-        }
-        else {
+        } else {
             panic!(
                 "{} verify {file} for {}@{}.",
                 color!(bright_red, "Could not"),

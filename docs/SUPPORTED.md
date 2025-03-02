@@ -11,6 +11,7 @@ You should be viewing this on the
 
 | Version | Supported | Notes |
 | ------- | --------- | ----- |
+| 0.8.\*  | ✅        |       |
 | 0.7.\*  | ✅        |       |
 | 0.6.\*  | ❌        |       |
 | 0.5.\*  | ❌        |       |
