@@ -1,9 +1,7 @@
 # cargo-prebuilt
 
-[![Rust Build and Test](https://github.com/cargo-prebuilt/cargo-prebuilt/actions/workflows/build.yml/badge.svg?event=push)](https://github.com/cargo-prebuilt/cargo-prebuilt/actions/workflows/build.yml)
-[![Rust Checks](https://github.com/cargo-prebuilt/cargo-prebuilt/actions/workflows/checks.yml/badge.svg?event=push)](https://github.com/cargo-prebuilt/cargo-prebuilt/actions/workflows/checks.yml)
 [![Crates.io](https://img.shields.io/crates/v/cargo-prebuilt)](https://crates.io/crates/cargo-prebuilt)
-[![rustc-msrv](https://img.shields.io/badge/rustc-1.70%2B-blue?logo=rust)](https://www.rust-lang.org/tools/install)
+[![rustc-msrv](https://img.shields.io/badge/rustc-1.71.1%2B-blue?logo=rust)](https://www.rust-lang.org/tools/install)
 
 Download prebuilt binaries of some crate.io crates.
 
