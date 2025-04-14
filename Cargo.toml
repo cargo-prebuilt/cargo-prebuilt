@@ -22,7 +22,7 @@ include = [
 ]
 
 [dependencies]
-anyhow = "1.0.97"
+anyhow = "1.0.98"
 basic-toml = "0.1.10"
 bpaf = { version = "0.9.19", features = ["autocomplete", "bright-color", "derive"] }
 const-hex = "1.14.0"
