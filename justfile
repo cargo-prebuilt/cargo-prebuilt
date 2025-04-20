@@ -47,7 +47,6 @@ runq +ARGS:
 
 ink-cross TARGET:
     docker run -it --rm --pull=always \
-    -e CARGO_TARGET_DIR=/ptarget \
     --mount type=bind,source={{pwd}},target=/project \
     --mount type=bind,source=$HOME/.cargo/registry,target=/usr/local/cargo/registry \
     ghcr.io/cargo-prebuilt/ink-cross:stable-{{TARGET}} \
@@ -55,7 +54,6 @@ ink-cross TARGET:
 
 ink-crossr TARGET:
     docker run -it --rm --pull=always \
-    -e CARGO_TARGET_DIR=/ptarget \
     --mount type=bind,source={{pwd}},target=/project \
     --mount type=bind,source=$HOME/.cargo/registry,target=/usr/local/cargo/registry \
     ghcr.io/cargo-prebuilt/ink-cross:stable-{{TARGET}} \

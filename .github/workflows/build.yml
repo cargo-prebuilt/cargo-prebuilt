@@ -101,6 +101,7 @@ jobs:
           - target: powerpc64le-unknown-linux-gnu
           - target: powerpc64-unknown-linux-gnu
           - target: riscv64gc-unknown-linux-gnu
+          - target: riscv64gc-unknown-linux-musl
           - target: s390x-unknown-linux-gnu
           - target: x86_64-unknown-linux-gnu
           - target: x86_64-unknown-linux-musl
