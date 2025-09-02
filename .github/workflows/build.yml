@@ -55,7 +55,7 @@ jobs:
             file_ext: .exe
     runs-on: ${{ matrix.info.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           persist-credentials: false
       - uses: cargo-prebuilt/cargo-prebuilt-action@v4
@@ -109,7 +109,7 @@ jobs:
           - target: x86_64-unknown-netbsd
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           persist-credentials: false
       - uses: Swatinem/rust-cache@v2
