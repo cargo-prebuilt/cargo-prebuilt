@@ -26,7 +26,7 @@ jobs:
       prerelease: ${{ steps.regex-tag.outputs.match == '' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           persist-credentials: false
       - uses: KyoriPowered/action-regex-match@v4
@@ -40,7 +40,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [release, build-native, build-ink-cross]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@master
         id: toolchain
         with:
@@ -54,10 +54,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: [release, build-native, build-ink-cross]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           persist-credentials: false
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
       - name: Merge hashes
         run: |
           set -euxo pipefail
@@ -126,10 +126,10 @@ jobs:
             file_ext: .exe
     runs-on: ${{ matrix.info.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           persist-credentials: false
-      - uses: cargo-prebuilt/cargo-prebuilt-action@v4
+      - uses: cargo-prebuilt/cargo-prebuilt-action@v5
         with:
           pkgs: cargo-auditable,coreutils
       - uses: dtolnay/rust-toolchain@master
@@ -156,7 +156,7 @@ jobs:
         run: |
           cd target/${{ matrix.info.target }}/release
           7z a -tzip ../../../${{ matrix.info.target }}${{ matrix.info.archive_ext }} ${{ env.bin-name }}${{ matrix.info.file_ext }}
-      - uses: actions/attest-build-provenance@v2
+      - uses: actions/attest-build-provenance@v3
         with:
           subject-path: |
             ${{ matrix.info.target }}${{ matrix.info.archive_ext }}
@@ -191,10 +191,10 @@ jobs:
           - target: x86_64-unknown-netbsd
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           persist-credentials: false
-      - uses: cargo-prebuilt/cargo-prebuilt-action@v4
+      - uses: cargo-prebuilt/cargo-prebuilt-action@v5
         with:
           pkgs: coreutils
       - name: Build with ink cross
@@ -206,7 +206,7 @@ jobs:
           auditable build --verbose --workspace --release --locked --target ${{ matrix.info.target }}
       - name: Tar
         run: tar czvf ${{ matrix.info.target }}.tar.gz -C ./target/${{ matrix.info.target }}/release ${{ env.bin-name }}
-      - uses: actions/attest-build-provenance@v2
+      - uses: actions/attest-build-provenance@v3
         with:
           subject-path: |
             ${{ matrix.info.target }}.tar.gz
