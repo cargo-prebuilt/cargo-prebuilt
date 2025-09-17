@@ -258,7 +258,8 @@ fn fill_from_file(args: &mut Arguments) {
     );
     assert!(
         !args.require_config,
-        "Config file required, but not found at {conf:?}. Did you mean to use --config=$PATH?"
+        "Config file required, but not found at {}. Did you mean to use --config=$PATH?",
+        conf.display()
     );
 }
 

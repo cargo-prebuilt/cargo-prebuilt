@@ -107,17 +107,26 @@ fn main() {
     should_error();
 
     if !config.no_create_path && create_dir_all(&config.path).is_err() {
-        panic!("Could not create the directory '{:?}'.", config.path);
+        panic!(
+            "Could not create the directory '{}'.",
+            config.path.display()
+        );
     } else if !Path::new(&config.path).exists() {
-        panic!("Directory does not exist! '{:?}'.", config.path);
+        panic!("Directory does not exist! '{}'.", config.path.display());
     }
 
     // Only create/check reports path if needed.
     if !config.ci && !config.reports.is_empty() {
         if !config.no_create_path && create_dir_all(&config.report_path).is_err() {
-            panic!("Could not create the directory '{:?}'.", config.report_path);
+            panic!(
+                "Could not create the directory '{}'.",
+                config.report_path.display()
+            );
         } else if !Path::new(&config.report_path).exists() {
-            panic!("Directory does not exist! '{:?}'.", config.report_path);
+            panic!(
+                "Directory does not exist! '{}'.",
+                config.report_path.display()
+            );
         }
     }
 
@@ -318,7 +327,9 @@ fn extract(meta: &Meta, info: &InfoFileImm, tar_bytes: Vec<u8>) {
 const fn should_error() {
     // No TLS
     #[cfg(not(any(feature = "native", feature = "rustls")))]
-    panic!("cargo-prebuilt only supports https and was built without the 'native' or 'rustls' feature.");
+    panic!(
+        "cargo-prebuilt only supports https and was built without the 'native' or 'rustls' feature."
+    );
 
     // No Indexes
     #[cfg(not(any(feature = "github-public", feature = "github-private")))]

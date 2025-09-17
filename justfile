@@ -68,6 +68,7 @@ sup-lint LOG_LEVEL=default_log_level:
     -e RUN_LOCAL=true \
     -e SHELL=/bin/bash \
     -e DEFAULT_BRANCH=main \
+    -e LINTER_RULES_PATH=/tmp/lint \
     -e VALIDATE_ALL_CODEBASE=true \
     -e VALIDATE_JSCPD=false \
     -e VALIDATE_RUST_2015=false \
