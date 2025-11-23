@@ -249,7 +249,7 @@ fn fill_from_file(args: &mut Arguments) {
             Err(err) => panic!("Failed to parse config file.\n{err}"),
         }
     } else {
-        eprintln!("WARN: Could not find config, it will be ignored.");
+        eprintln!("WARN: Could not find config file, it will be ignored.");
     }
 
     assert!(

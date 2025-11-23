@@ -8,6 +8,8 @@
 // TODO: Allow setting timeout?
 // TODO: Allow retries?
 // TODO: Improve errors? Make them more readable.
+// TODO: --blob-max-size (-b), --text-max-size (-t), --retry (-r), --concurrent (-j)
+// TODO: https://lib.rs/crates/indicatif with rayon. --no-progress (combine with --ci) (Disable )
 
 mod coloring;
 mod config;
@@ -139,13 +141,15 @@ fn main() {
     // Get pkgs
     for pkg in &config.packages {
         let mut id = pkg.as_str();
-        let mut version = None; // None will pull the latest version
 
         // If there is a version string get it
-        if let Some((i, j)) = id.split_once('@') {
+        let version = if let Some((i, j)) = id.split_once('@') {
             id = i;
-            version = Some(j);
-        }
+            Some(j)
+        } else {
+            // None will pull the latest version
+            None
+        };
 
         // If --get-latest then get latest version and print out latest event
         if config.get_latest {

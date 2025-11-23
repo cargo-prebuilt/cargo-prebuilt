@@ -36,6 +36,9 @@ impl Interact for GithubPublic {
         let url = self.url(id, version, file_name);
 
         let mut res = self.agent.get(&url).call()?;
+
+        // res.body_mut().content_length()
+
         let bytes = res
             .body_mut()
             .with_config()

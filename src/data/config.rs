@@ -69,6 +69,7 @@ pub struct ConfigFile {
     pub index: Option<HashMap<String, ConfigFileIndexes>>,
 }
 
+// TODO: Provide defaults instead. (https://serde.rs/attr-default.html)
 #[derive(Debug, Default, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ConfigFilePrebuilt {

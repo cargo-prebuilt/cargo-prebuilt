@@ -39,7 +39,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        rust-version: [stable, beta, nightly, 1.71.1] # Stable, Beta, Nightly, MSRV
+        rust-version: [stable, nightly, 1.71.1] # Stable, Nightly, MSRV
         info:
           - os: macos-latest
             target: aarch64-apple-darwin
@@ -83,7 +83,7 @@ jobs:
           target/${{ matrix.info.target }}/debug/${{ env.bin-name }}${{ matrix.info.file_ext }} --color --out just
       - name: Artifact
         if: ${{ matrix.rust-version == 'nightly' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: target-na-${{ matrix.info.target }}
           path: |
@@ -127,7 +127,7 @@ jobs:
           auditable build --verbose --workspace --locked --target ${{ matrix.info.target }}
       - name: Artifact
         if: ${{ matrix.rust-version == 'nightly' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: target-ic-${{ matrix.info.target }}
           path: |
