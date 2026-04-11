@@ -2,8 +2,15 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:recommended",
+    "abandonments:recommended",
     ":automergeDisabled",
     ":dependencyDashboard",
     ":dependencyDashboardApproval"
+  ],
+  "packageRules": [
+    {
+      "matchDatasources": ["*"],
+      "minimumReleaseAge": "3 days"
+    }
   ]
 }

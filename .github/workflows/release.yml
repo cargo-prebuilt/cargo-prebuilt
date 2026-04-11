@@ -26,7 +26,7 @@ jobs:
       prerelease: ${{ steps.regex-tag.outputs.match == '' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           persist-credentials: false
       - uses: KyoriPowered/action-regex-match@v5
@@ -40,7 +40,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [release, build-native, build-ink-cross]
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@master
         id: toolchain
         with:
@@ -54,10 +54,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: [release, build-native, build-ink-cross]
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           persist-credentials: false
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v7
       - name: Merge hashes
         run: |
           set -euxo pipefail
@@ -126,7 +126,7 @@ jobs:
             file_ext: .exe
     runs-on: ${{ matrix.info.os }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           persist-credentials: false
       - uses: cargo-prebuilt/cargo-prebuilt-action@v5
@@ -156,7 +156,7 @@ jobs:
         run: |
           cd target/${{ matrix.info.target }}/release
           7z a -tzip ../../../${{ matrix.info.target }}${{ matrix.info.archive_ext }} ${{ env.bin-name }}${{ matrix.info.file_ext }}
-      - uses: actions/attest-build-provenance@v3
+      - uses: actions/attest-build-provenance@v4
         with:
           subject-path: |
             ${{ matrix.info.target }}${{ matrix.info.archive_ext }}
@@ -164,7 +164,7 @@ jobs:
       - name: Hash
         run: coreutils sha256sum ${{ matrix.info.target }}${{ matrix.info.archive_ext }} > ${{ matrix.info.target }}.sha256
       - name: Artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: target-${{ matrix.info.target }}
           path: |
@@ -191,7 +191,7 @@ jobs:
           - target: x86_64-unknown-netbsd
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           persist-credentials: false
       - uses: cargo-prebuilt/cargo-prebuilt-action@v5
@@ -206,7 +206,7 @@ jobs:
           auditable build --verbose --workspace --release --locked --target ${{ matrix.info.target }}
       - name: Tar
         run: tar czvf ${{ matrix.info.target }}.tar.gz -C ./target/${{ matrix.info.target }}/release ${{ env.bin-name }}
-      - uses: actions/attest-build-provenance@v3
+      - uses: actions/attest-build-provenance@v4
         with:
           subject-path: |
             ${{ matrix.info.target }}.tar.gz
@@ -214,7 +214,7 @@ jobs:
       - name: Hash
         run: coreutils sha256sum ${{ matrix.info.target }}.tar.gz > ${{ matrix.info.target }}.sha256
       - name: Artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: target-${{ matrix.info.target }}
           path: |
