@@ -1,7 +1,7 @@
 [package]
 name = "cargo-prebuilt"
 version = "0.8.0-rc.0"
-edition = "2021" # Use 2024 edition? When home_dir is available.
+edition = "2024"
 authors = ["harmless-tech"]
 description = "Download prebuilt crate binaries for many different platforms"
 readme = "README.md"
@@ -10,7 +10,7 @@ homepage = "https://github.com/cargo-prebuilt/cargo-prebuilt"
 repository = "https://github.com/cargo-prebuilt/cargo-prebuilt"
 categories = ["development-tools", "development-tools::cargo-plugins"]
 keywords = ["cargo", "cargo-subcommand", "binary"]
-rust-version = "1.71.1" # 1.87 when std::env::home_dir is undeprecated.
+rust-version = "1.90"
 include = [
   "keys/",
   "src/",
@@ -22,24 +22,24 @@ include = [
 ]
 
 [dependencies]
-anyhow = "1.0.100"
+anyhow = "1.0.102"
 basic-toml = "0.1.10"
-bpaf = { version = "0.9.20", features = ["autocomplete", "bright-color", "derive"] }
-const-hex = "1.17.0"
+bpaf = { version = "0.9.24", features = ["autocomplete", "bright-color", "derive"] }
+const-hex = "1.18.1"
 directories = "6.0.0"
 dunce = "1.0.5"
-flate2 = "1.1.5"
-home = "=0.5.9" # Fixed since home 0.5.11 ups msrv to 1.81.
-indexmap = { version = "2.11.4", features = ["serde"] }
+flate2 = "1.1.9"
+home = "=0.5.12"
+indexmap = { version = "2.14.0", features = ["serde"] }
 mimalloc = { version = "0.1.48", optional = true }
-minisign-verify = "0.2.4"
-owo-colors = { version = "4.2.3", features = ["supports-colors"] }
+minisign-verify = "0.2.5"
+owo-colors = { version = "4.3.0", features = ["supports-colors"] }
 serde = { version = "1.0.228", features = ["derive"] }
-serde_json = "1.0.145"
-sha2 = "0.10.9"
-sha3 = "0.10.8"
-tar = "0.4.44"
-ureq = { version = "3.1.4", default-features = false, features = ["gzip"] }
+serde_json = "1.0.149"
+sha2 = "0.11.0"
+sha3 = "0.11.0"
+tar = "0.4.45"
+ureq = { version = "3.3.0", default-features = false, features = ["gzip"] }
 
 [features]
 default = ["default-rustls"]
